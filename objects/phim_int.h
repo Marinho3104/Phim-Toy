@@ -7,16 +7,22 @@
 
 namespace objects {
 
-    struct Phim_Int : public Phim_Object<4> {
+    struct Phim_Int : public Phim_Object {
+
+        unsigned char data[4]; // Represents bytes information be aware that is backwards meaning -> data[0] is the biggest bit
 
         ~Phim_Int() = default;
 
         Phim_Int();
 
-        Phim_Int(char*);
+        unsigned char* getData();
+
+        int getDataLen();
 
 
     };
+
+    Phim_Int* PhimIntFromCString(char*);
 
 }
 

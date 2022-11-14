@@ -7,17 +7,19 @@
 #include "./../parser/token.h"
 #include "./../parser/ast.h"
 #include "./../objects/phim_int.h"
-#include "./../objects/phim_string.h"
 
 #include <iostream>
 
 int main() {
 
-    objects::Phim_String<7>* _ = new objects::Phim_String<7>("ola meu");
+    objects::Phim_Int* _ = objects::PhimIntFromCString("1234");
 
+    objects::Phim_Object* __ = _;
 
-    _->bitsRepresentation();
-    std::cout << _->toString() << std::endl;
+    std::cout << "pass" << std::endl;
+    __->bitsRepresentation();
+
+    // _->bitsRepresentation();
 
     return 0;
 

@@ -1,10 +1,19 @@
 #include "./phim_int.h"
 
+#include "./../utils/byteOperations.h"
+
 #include <iostream>
 
-objects::Phim_Int::Phim_Int() : Phim_Object() {}
+objects::Phim_Int::Phim_Int() {}
 
-objects::Phim_Int::Phim_Int(char* _) {
+unsigned char* objects::Phim_Int::getData() { return data; }
+
+int objects::Phim_Int::getDataLen() { return 4; }
+
+objects::Phim_Int* objects::PhimIntFromCString(char* _) {
+
+    objects::Phim_Int* _rtr = new objects::Phim_Int();
+    _rtr->clean();
 
     int _t = 0;
 
@@ -14,11 +23,13 @@ objects::Phim_Int::Phim_Int(char* _) {
 
     for (int _c = 3; _c >= 0; _c--) {
 
-        setByte(_c, _t);
+        _rtr->setByte(_c, _t);
 
         _t >>= 8;
 
     }
+
+    return _rtr;
 
 }
 

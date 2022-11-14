@@ -7,13 +7,16 @@
 namespace objects {
 
     /* Default object */
-    template <int bytesCount>
     struct Phim_Object {
-        unsigned char data[bytesCount]; // Represents bytes information be aware that is backwards meaning -> data[0] is the biggest bit
+        // unsigned char data[bytesCount]; // Represents bytes information be aware that is backwards meaning -> data[0] is the biggest bit
         /**/
         ~Phim_Object();
         /**/
         Phim_Object();
+        /**/
+        virtual unsigned char* getData() = 0;
+        /**/
+        virtual int getDataLen() = 0;
         /* Set every byte into 0 */
         void clean();
         /* Copy number of bytes into data field from bigger field
@@ -49,36 +52,36 @@ namespace objects {
         /* Return true if all data field are 0 */
         bool isZero(); 
 
-        bool operator<(Phim_Object<bytesCount>&);
-        bool operator>(Phim_Object<bytesCount>&);
-        bool operator<=(Phim_Object<bytesCount>&);
-        bool operator>=(Phim_Object<bytesCount>&);
+        bool operator<(Phim_Object*);
+        bool operator>(Phim_Object*);
+        bool operator<=(Phim_Object*);
+        bool operator>=(Phim_Object*);
 
-        bool operator==(Phim_Object<bytesCount>&);
-        bool operator!=(Phim_Object<bytesCount>&); 
+        bool operator==(Phim_Object*);
+        bool operator!=(Phim_Object*); 
 
-        Phim_Object<bytesCount> operator&(Phim_Object<bytesCount>&);
-        Phim_Object<bytesCount> operator|(Phim_Object<bytesCount>&);
-        Phim_Object<bytesCount> operator^(Phim_Object<bytesCount>&);
-        Phim_Object<bytesCount> operator~();
-        void operator&=(Phim_Object<bytesCount>&);
-        void operator|=(Phim_Object<bytesCount>&);
-        void operator^=(Phim_Object<bytesCount>&);
+        Phim_Object* operator&(Phim_Object*);
+        Phim_Object* operator|(Phim_Object*);
+        Phim_Object* operator^(Phim_Object*);
+        Phim_Object* operator~();
+        void operator&=(Phim_Object*);
+        void operator|=(Phim_Object*);
+        void operator^=(Phim_Object*);
 
-        Phim_Object<bytesCount> operator+(Phim_Object<bytesCount>&);
-        Phim_Object<bytesCount> operator-(Phim_Object<bytesCount>&);
-        void operator+=(Phim_Object<bytesCount>&);
-        void operator-=(Phim_Object<bytesCount>&);
+        Phim_Object* operator+(Phim_Object*);
+        Phim_Object* operator-(Phim_Object*);
+        void operator+=(Phim_Object*);
+        void operator-=(Phim_Object*);
 
-        Phim_Object<bytesCount> operator*(Phim_Object<bytesCount>&);
-        Phim_Object<bytesCount> operator/(Phim_Object<bytesCount>&);
-        Phim_Object<bytesCount> operator%(Phim_Object<bytesCount>&);
-        void operator*=(Phim_Object<bytesCount>&);
-        void operator/=(Phim_Object<bytesCount>&);
-        void operator%=(Phim_Object<bytesCount>&);
+        Phim_Object* operator*(Phim_Object*);
+        Phim_Object* operator/(Phim_Object*);
+        Phim_Object* operator%(Phim_Object*);
+        void operator*=(Phim_Object*);
+        void operator/=(Phim_Object*);
+        void operator%=(Phim_Object*);
 
-        Phim_Object<bytesCount> operator<<(int);
-        Phim_Object<bytesCount> operator>>(int);
+        Phim_Object* operator<<(int);
+        Phim_Object* operator>>(int);
         void operator<<=(int);
         void operator>>=(int);
 
@@ -86,7 +89,5 @@ namespace objects {
     };
 
 }
-
-#include "./phim_object.cpp"
 
 #endif

@@ -1,34 +1,36 @@
 #include "./phim_string.h"
 
 #include <iostream>
+#include <string.h>
 
+objects::Phim_String::Phim_String() : str(NULL) {}
 
-template <int strSize>
-objects::Phim_String<strSize>::Phim_String() {}
+// objects::Phim_String::Phim_String(char* _str) {
 
-template <int strSize>
-objects::Phim_String<strSize>::Phim_String(char* _) {
+//     size_t _s = strlen(_str);
 
-    for (int __ = 0; __ < strSize; __++)
+//     str = new Phim_Char[_s];
 
-        this->setByte(__, (unsigned char) _[__]);
+//     for (int _ = 0; _ < _s; _++) 
 
-}   
+//         str[_] = Phim_Char(_str[_]);
 
-template <int strSize>
-char* objects::Phim_String<strSize>::toString() {
+// }
 
-    char* _rtr = new char[strSize + 1];
+// void objects::Phim_String::toString() {
 
-    for (int _ = 0; _ < strSize; _++)
+//     size_t _ = 0;
 
-        _rtr[_] = this->operator[](_);
+//     while(*str[_].data) {
 
-    _rtr[strSize] = '\0';
+//         std::cout << *str[_++].data;
 
-    return _rtr;
+//     }
 
-}
+//     std::cout << std::endl;
+
+// }
+
 
 
 

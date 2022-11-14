@@ -4,11 +4,13 @@
 #define PHIM_STRING_H
 
 #include "./phim_object.h"
+#include "./phim_char.h"
 
 namespace objects {
 
-    template <int strSize>
-    struct Phim_String : public Phim_Object<strSize> {
+    struct Phim_String : public Phim_Object {
+
+        Phim_Char* str;
 
         ~Phim_String() = default;
 
@@ -16,12 +18,10 @@ namespace objects {
 
         Phim_String(char*);
 
-        char* toString();
+        void toString();
 
     };
 
 }
-
-#include "./phim_string.cpp"
 
 #endif

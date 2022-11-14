@@ -1,49 +1,45 @@
 #include "./../utils/byteOperations.h"
 
+#include "./phim_object.h"
+
 #include <iostream>
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount>::~Phim_Object() {}
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount>::Phim_Object() { clean(); }
+objects::Phim_Object::~Phim_Object() {}
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::clean() { for (int _ = 0; _ < bytesCount; _++) data[_] = 0; }
+objects::Phim_Object::Phim_Object() { } // clean(); }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::copyBytes(unsigned char* _cpy, int _s, int _inPos) { 
-    while(_s && _inPos < bytesCount) data[_inPos++] = _cpy[bytesCount - _s--]; }
+void objects::Phim_Object::clean() { for (int _ = 0; _ < getDataLen(); _++) getData()[_] = 0; }
 
-template <int bytesCount>
-unsigned char& objects::Phim_Object<bytesCount>::operator[](int _) { if (_ >= bytesCount; _ < 0) _ = 0; return data[_]; }
+void objects::Phim_Object::copyBytes(unsigned char* _cpy, int _s, int _inPos) { 
+    while(_s && _inPos < getDataLen()) getData()[_inPos++] = _cpy[getDataLen() - _s--]; }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::getBit(int _) { if (_ >= bytesCount * 8 || _ < 0) _ = 0; return utils::getBit(operator[](_ / 8), _ - _ / 8 * 8); }
+unsigned char& objects::Phim_Object::operator[](int _) { if (_ >= getDataLen() || _ < 0) _ = 0; return getData()[_]; }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::setByte(int _, unsigned char _v) { if (_ >= bytesCount || _ < 0) return false; operator[](_) = _v; }
+bool objects::Phim_Object::getBit(int _) { if (_ >= getDataLen() * 8 || _ < 0) _ = 0; return utils::getBit(operator[](_ / 8), _ - _ / 8 * 8); }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::setBit(int _, bool _v) {
+bool objects::Phim_Object::setByte(int _, unsigned char _v) { if (_ >= getDataLen() || _ < 0) return false; operator[](_) = _v; }
 
-    if (_ >= bytesCount * 8 || _ < 0) return false;
+bool objects::Phim_Object::setBit(int _, bool _v) {
+
+    if (_ >= getDataLen() * 8 || _ < 0) return false;
 
     return utils::setBit(
-        data + _ / 8,
+        getData() + _ / 8,
         _ - _ / 8 * 8,
         _v
     );
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::bitsRepresentation() {
+void objects::Phim_Object::bitsRepresentation() {
 
-    char _rtr[bytesCount * 9];
+    std::cout << "Len -> " << getDataLen() << std::endl;
+
+    char _rtr[getDataLen() * 9];
     char* _t = _rtr;
 
-    for (int _ = 0; _ < bytesCount; _++) {
+    for (int _ = 0; _ < getDataLen(); _++) {
 
         utils::getByteRepresentation(
             operator[](_),
@@ -62,27 +58,25 @@ void objects::Phim_Object<bytesCount>::bitsRepresentation() {
 
 }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::isOdd() { return getBit(bytesCount * 8 - 1); }
+bool objects::Phim_Object::isOdd() { return getBit(getDataLen() * 8 - 1); }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::isZero() {
-    for (int _ = 0; _ < bytesCount; _++)
+bool objects::Phim_Object::isZero() {
+    for (int _ = 0; _ < getDataLen(); _++)
         if (operator[](_)) return false;
     return true;
 }
 
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::operator<(objects::Phim_Object<bytesCount>& _) {
+
+bool objects::Phim_Object::operator<(objects::Phim_Object* _) {
 
     unsigned char _val1, _val2;
     bool _rtr = 0;
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++) {
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++) {
 
         _val1 = operator[](_crrntByte);
-        _val2 = _[_crrntByte];
+        _val2 = (*_)[_crrntByte];
 
         if (_val1 == _val2) continue;
 
@@ -96,16 +90,15 @@ bool objects::Phim_Object<bytesCount>::operator<(objects::Phim_Object<bytesCount
 
 }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::operator>(objects::Phim_Object<bytesCount>& _) {
+bool objects::Phim_Object::operator>(objects::Phim_Object* _) {
 
     unsigned char _val1, _val2;
     bool _rtr = 0;
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++) {
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++) {
 
         _val1 = operator[](_crrntByte);
-        _val2 = _[_crrntByte];
+        _val2 = (*_)[_crrntByte];
 
         if (_val1 == _val2) continue;
 
@@ -119,16 +112,15 @@ bool objects::Phim_Object<bytesCount>::operator>(objects::Phim_Object<bytesCount
 
 }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::operator<=(objects::Phim_Object<bytesCount>& _) {
+bool objects::Phim_Object::operator<=(objects::Phim_Object* _) {
 
     unsigned char _val1, _val2;
     bool _rtr = 1;
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++) {
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++) {
 
         _val1 = operator[](_crrntByte);
-        _val2 = _[_crrntByte];
+        _val2 = (*_)[_crrntByte];
 
         if (_val1 == _val2) continue;
 
@@ -142,16 +134,15 @@ bool objects::Phim_Object<bytesCount>::operator<=(objects::Phim_Object<bytesCoun
 
 }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::operator>=(objects::Phim_Object<bytesCount>& _) {
+bool objects::Phim_Object::operator>=(objects::Phim_Object* _) {
 
     unsigned char _val1, _val2;
     bool _rtr = 1;
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++) {
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++) {
 
         _val1 = operator[](_crrntByte);
-        _val2 = _[_crrntByte];
+        _val2 = (*_)[_crrntByte];
 
         if (_val1 == _val2) continue;
 
@@ -165,130 +156,120 @@ bool objects::Phim_Object<bytesCount>::operator>=(objects::Phim_Object<bytesCoun
 
 }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::operator==(objects::Phim_Object<bytesCount>& _) {
+bool objects::Phim_Object::operator==(objects::Phim_Object* _) {
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++) if (operator[](_crrntByte) != _[_crrntByte]) return false;
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++) if (operator[](_crrntByte) != (*_)[_crrntByte]) return false;
 
     return true;
 
 }
 
-template <int bytesCount>
-bool objects::Phim_Object<bytesCount>::operator!=(objects::Phim_Object<bytesCount>& _) { return !operator==(_); }  
+bool objects::Phim_Object::operator!=(objects::Phim_Object* _) { return !operator==(_); }  
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator&(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator&(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr; _rtr.clean();
+    objects::Phim_Object* _rtr; _rtr->clean();
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
-        _rtr.setByte(
+        _rtr->setByte(
             _crrntByte,
-            operator[](_crrntByte) & _[_crrntByte]
+            operator[](_crrntByte) & (*_)[_crrntByte]
         );
 
     return _rtr;
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator|(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator|(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr; _rtr.clean();
+    objects::Phim_Object* _rtr; _rtr->clean();
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
-        _rtr.setByte(
+        _rtr->setByte(
             _crrntByte,
-            operator[](_crrntByte) | _[_crrntByte]
+            operator[](_crrntByte) | (*_)[_crrntByte]
         );
 
     return _rtr;
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator^(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator^(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr; _rtr.clean();
+    objects::Phim_Object* _rtr; _rtr->clean();
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
-        _rtr.setByte(
+        _rtr->setByte(
             _crrntByte,
-            operator[](_crrntByte) ^ _[_crrntByte]
+            operator[](_crrntByte) ^ (*_)[_crrntByte]
         );
 
     return _rtr;
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator~() {
+objects::Phim_Object* objects::Phim_Object::operator~() {
 
-    objects::Phim_Object<bytesCount> _rtr; _rtr.clean();
+    objects::Phim_Object* _rtr; _rtr->clean();
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
-        _rtr.setByte(
+        _rtr->setByte(
             _crrntByte,
             ~operator[](_crrntByte)
         );
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator&=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator&=(objects::Phim_Object* _) {
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
         setByte(
             _crrntByte,
-            operator[](_crrntByte) & _[_crrntByte]
+            operator[](_crrntByte) & (*_)[_crrntByte]
         );
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator|=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator|=(objects::Phim_Object* _) {
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
         setByte(
             _crrntByte,
-            operator[](_crrntByte) | _[_crrntByte]
+            operator[](_crrntByte) | (*_)[_crrntByte]
         );
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator^=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator^=(objects::Phim_Object* _) {
 
-    for (int _crrntByte = 0; _crrntByte < bytesCount; _crrntByte++)
+    for (int _crrntByte = 0; _crrntByte < getDataLen(); _crrntByte++)
 
         setByte(
             _crrntByte,
-            operator[](_crrntByte) ^ _[_crrntByte]
+            operator[](_crrntByte) ^ (*_)[_crrntByte]
         );
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator+(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator+(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr;
+    objects::Phim_Object* _rtr;
     bool _over = false;
-    _rtr.clean();
+    _rtr->clean();
 
-    for (int _crrntByte = bytesCount - 1; _crrntByte >= 0; _crrntByte--)
+    for (int _crrntByte = getDataLen() - 1; _crrntByte >= 0; _crrntByte--)
 
-        _rtr.setByte(
+        _rtr->setByte(
             _crrntByte,
             utils::addBytes(
                 operator[](_crrntByte),
-                _[_crrntByte],
+                (*_)[_crrntByte],
                 _over
             )
         );
@@ -297,20 +278,19 @@ objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator+(obj
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator-(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator-(objects::Phim_Object* _) {
     
-    objects::Phim_Object<bytesCount> _rtr;
+    objects::Phim_Object* _rtr;
     bool _over = false;
-    _rtr.clean();
+    _rtr->clean();
 
-    for (int _crrntByte = bytesCount - 1; _crrntByte >= 0; _crrntByte--)
+    for (int _crrntByte = getDataLen() - 1; _crrntByte >= 0; _crrntByte--)
 
-        _rtr.setByte(
+        _rtr->setByte(
             _crrntByte,
             utils::subBytes(
                 operator[](_crrntByte),
-                _[_crrntByte],
+                (*_)[_crrntByte],
                 _over
             )
         );
@@ -319,56 +299,53 @@ objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator-(obj
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator+=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator+=(objects::Phim_Object* _) {
 
     bool _over = false;
 
-    for (int _crrntByte = bytesCount - 1; _crrntByte >= 0; _crrntByte--)
+    for (int _crrntByte = getDataLen() - 1; _crrntByte >= 0; _crrntByte--)
 
         setByte(
             _crrntByte,
             utils::addBytes(
                 operator[](_crrntByte),
-                _[_crrntByte],
+                (*_)[_crrntByte],
                 _over
             )
         );
     
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator-=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator-=(objects::Phim_Object* _) {
 
     bool _over = false;
 
-    for (int _crrntByte = bytesCount - 1; _crrntByte >= 0; _crrntByte--)
+    for (int _crrntByte = getDataLen() - 1; _crrntByte >= 0; _crrntByte--)
 
         setByte(
             _crrntByte,
             utils::subBytes(
                 operator[](_crrntByte),
-                _[_crrntByte],
+                (*_)[_crrntByte],
                 _over
             )
         );
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator*(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator*(objects::Phim_Object* _) {
 
-    objects::Phim_Object <bytesCount> _rtr, _mul1, _mul2;
+    objects::Phim_Object* _rtr, *_mul1, *_mul2;
     
-    _rtr.clean();
-    _mul1.copyBytes(data, bytesCount, 0);
-    _mul2.copyBytes(_.data, bytesCount, 0);
+    _rtr->clean();
+    _mul1->copyBytes(getData(), getDataLen(), 0);
+    _mul2->copyBytes((*_).getData(), getDataLen(), 0);
 
-    while(!_mul2.isZero()) {
+    while(!_mul2->isZero()) {
 
-        if (_mul2.isOdd()) _rtr += _mul1;
+        if (_mul2->isOdd()) *_rtr += _mul1;
 
-        _mul2 >>= 1;
-        _mul1 <<= 1;
+        *_mul2 >>= 1;
+        *_mul1 <<= 1;
 
     }
 
@@ -376,37 +353,36 @@ objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator*(obj
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator/(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator/(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr, _temp;
-    _rtr.clean(); _temp.clean();
+    objects::Phim_Object* _rtr, *_temp;
+    _rtr->clean(); _temp->clean();
     int _crrntBit = 0;
 
     while(1) {
 
         while(1) {
 
-            if (_crrntBit >= bytesCount * 8) goto rtrn;
+            if (_crrntBit >= getDataLen() * 8) goto rtrn;
 
-            _temp <<= 1;
+            *_temp <<= 1;
 
-            _temp.setBit(
-                bytesCount * 8 - 1,
+            _temp->setBit(
+                getDataLen() * 8 - 1,
                 getBit(_crrntBit++)
             );
 
-            if (_temp >= _) break;
+            if (*_temp >= _) break;
 
-            _rtr <<= 1;
+            *_rtr <<= 1;
 
         }
 
-        _temp -= _;
+        *_temp -= _;
 
-        _rtr <<= 1;
+        *_rtr <<= 1;
 
-        _rtr.setBit(bytesCount * 8 - 1, 1);
+        _rtr->setBit(getDataLen() * 8 - 1, 1);
 
     }
 
@@ -415,37 +391,36 @@ rtrn:
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator%(objects::Phim_Object<bytesCount>& _) {
+objects::Phim_Object* objects::Phim_Object::operator%(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr, _temp;
-    _rtr.clean(); _temp.clean();
+    objects::Phim_Object* _rtr, *_temp;
+    _rtr->clean(); _temp->clean();
     int _crrntBit = 0;
 
     while(1) {
 
         while(1) {
 
-            if (_crrntBit >= bytesCount * 8) goto rtrn;
+            if (_crrntBit >= getDataLen() * 8) goto rtrn;
 
-            _temp <<= 1;
+            *_temp <<= 1;
 
-            _temp.setBit(
-                bytesCount * 8 - 1,
+            _temp->setBit(
+                getDataLen() * 8 - 1,
                 getBit(_crrntBit++)
             );
 
-            if (_temp >= _) break;
+            if (*_temp >= _) break;
 
-            _rtr <<= 1;
+            *_rtr <<= 1;
 
         }
 
-        _temp -= _;
+        *_temp -= _;
 
-        _rtr <<= 1;
+        *_rtr <<= 1;
 
-        _rtr.setBit(bytesCount * 8 - 1, 1);
+        _rtr->setBit(getDataLen() * 8 - 1, 1);
 
     }
 
@@ -454,113 +429,109 @@ rtrn:
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator*=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator*=(objects::Phim_Object* _) {
 
-    objects::Phim_Object <bytesCount> _mul1, _mul2;
+    objects::Phim_Object* _mul1, *_mul2;
     
-    _mul1.copyBytes(data, bytesCount, 0);
-    _mul2.copyBytes(_.data, bytesCount, 0);
+    _mul1->copyBytes(getData(), getDataLen(), 0);
+    _mul2->copyBytes(_->getData(), getDataLen(), 0);
 
-    while(!_mul2.isZero()) {
+    while(!_mul2->isZero()) {
 
-        if (_mul2.isOdd()) *this += _mul1;
+        if (_mul2->isOdd()) *this += _mul1;
 
-        _mul2 >>= 1;
-        _mul1 <<= 1;
+        *_mul2 >>= 1;
+        *_mul1 <<= 1;
 
     }
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator/=(objects::Phim_Object<bytesCount>& _) {
-    objects::Phim_Object<bytesCount> _rtr, _temp;
-    _rtr.clean(); _temp.clean();
+void objects::Phim_Object::operator/=(objects::Phim_Object* _) {
+    objects::Phim_Object* _rtr, *_temp;
+    _rtr->clean(); _temp->clean();
     int _crrntBit = 0;
 
     while(1) {
 
         while(1) {
 
-            if (_crrntBit >= bytesCount * 8) { copyBytes(_rtr.data, bytesCount, 0); return; }
+            if (_crrntBit >= getDataLen() * 8) { copyBytes(_rtr->getData(), getDataLen(), 0); return; }
 
-            _temp <<= 1;
+            *_temp <<= 1;
 
-            _temp.setBit(
-                bytesCount * 8 - 1,
+            _temp->setBit(
+                getDataLen() * 8 - 1,
                 getBit(_crrntBit++)
             );
 
-            if (_temp >= _) break;
+            if (*_temp >= _) break;
 
-            _rtr <<= 1;
+            *_rtr <<= 1;
 
         }
 
-        _temp -= _;
+        *_temp -= _;
 
-        _rtr <<= 1;
+        *_rtr <<= 1;
 
-        _rtr.setBit(bytesCount * 8 - 1, 1);
+        _rtr->setBit(getDataLen() * 8 - 1, 1);
 
     }
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator%=(objects::Phim_Object<bytesCount>& _) {
+void objects::Phim_Object::operator%=(objects::Phim_Object* _) {
 
-    objects::Phim_Object<bytesCount> _rtr, _temp;
-    _rtr.clean(); _temp.clean();
+    objects::Phim_Object* _rtr, *_temp;
+    _rtr->clean(); _temp->clean();
     int _crrntBit = 0;
 
     while(1) {
 
         while(1) {
 
-            if (_crrntBit >= bytesCount * 8) { copyBytes(_temp.data, bytesCount, 0); return; }
+            if (_crrntBit >= getDataLen() * 8) { copyBytes(_temp->getData(), getDataLen(), 0); return; }
 
-            _temp <<= 1;
+            *_temp <<= 1;
 
-            _temp.setBit(
-                bytesCount * 8 - 1,
+            _temp->setBit(
+                getDataLen() * 8 - 1,
                 getBit(_crrntBit++)
             );
 
-            if (_temp >= _) break;
+            if (*_temp >= _) break;
 
-            _rtr <<= 1;
+            *_rtr <<= 1;
 
         }
 
-        _temp -= _;
+        *_temp -= _;
 
-        _rtr <<= 1;
+        *_rtr <<= 1;
 
-        _rtr.setBit(bytesCount * 8 - 1, 1);
+        _rtr->setBit(getDataLen() * 8 - 1, 1);
 
     }
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator<<(int _) {
+objects::Phim_Object* objects::Phim_Object::operator<<(int _) {
 
-    objects::Phim_Object <bytesCount> _rtr;
-    _rtr.copyBytes(data, bytesCount, 0);
+    objects::Phim_Object* _rtr;
+    _rtr->copyBytes(getData(), getDataLen(), 0);
 
     for (int _crrntShift = 0; _crrntShift < _; _crrntShift++) {
 
-        for (int _crrntBit = 0; _crrntBit < bytesCount * 8 - 1; _crrntBit++) 
+        for (int _crrntBit = 0; _crrntBit < getDataLen() * 8 - 1; _crrntBit++) 
 
-            _rtr.setBit(
+            _rtr->setBit(
                 _crrntBit,
-                _rtr.getBit(_crrntBit + 1)
+                _rtr->getBit(_crrntBit + 1)
             );
 
-        _rtr.setBit(
-            bytesCount * 8 - 1,
+        _rtr->setBit(
+            getDataLen() * 8 - 1,
             0
         );
     
@@ -570,22 +541,21 @@ objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator<<(in
 
 }
 
-template <int bytesCount>
-objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator>>(int _) {
+objects::Phim_Object* objects::Phim_Object::operator>>(int _) {
 
-    objects::Phim_Object <bytesCount> _rtr;
-    _rtr.copyBytes(data, bytesCount, 0);
+    objects::Phim_Object* _rtr;
+    _rtr->copyBytes(getData(), getDataLen(), 0);
 
     for (int _crrntShift = 0; _crrntShift < _; _crrntShift++) {
 
-        for (int _crrntBit = bytesCount * 8 - 1; _crrntBit >= 0; _crrntBit--) 
+        for (int _crrntBit = getDataLen() * 8 - 1; _crrntBit >= 0; _crrntBit--) 
 
-            _rtr.setBit(
+            _rtr->setBit(
                 _crrntBit,
-                _rtr.getBit(_crrntBit - 1)
+                _rtr->getBit(_crrntBit - 1)
             );
 
-        _rtr.setBit(
+        _rtr->setBit(
             0,
             0
         );
@@ -595,12 +565,11 @@ objects::Phim_Object<bytesCount> objects::Phim_Object<bytesCount>::operator>>(in
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator<<=(int _) {
+void objects::Phim_Object::operator<<=(int _) {
 
     for (int _crrntShift = 0; _crrntShift < _; _crrntShift++) {
 
-        for (int _crrntBit = 0; _crrntBit < bytesCount * 8 - 1; _crrntBit++) 
+        for (int _crrntBit = 0; _crrntBit < getDataLen() * 8 - 1; _crrntBit++) 
 
             setBit(
                 _crrntBit,
@@ -608,7 +577,7 @@ void objects::Phim_Object<bytesCount>::operator<<=(int _) {
             );
 
         setBit(
-            bytesCount * 8 - 1,
+            getDataLen() * 8 - 1,
             0
         );
     
@@ -616,12 +585,11 @@ void objects::Phim_Object<bytesCount>::operator<<=(int _) {
 
 }
 
-template <int bytesCount>
-void objects::Phim_Object<bytesCount>::operator>>=(int _) {
+void objects::Phim_Object::operator>>=(int _) {
 
     for (int _crrntShift = 0; _crrntShift < _; _crrntShift++) {
 
-        for (int _crrntBit = bytesCount * 8 - 1; _crrntBit >= 0; _crrntBit--) 
+        for (int _crrntBit = getDataLen() * 8 - 1; _crrntBit >= 0; _crrntBit--) 
 
             setBit(
                 _crrntBit,
@@ -635,6 +603,5 @@ void objects::Phim_Object<bytesCount>::operator>>=(int _) {
     }
 
 }
-
 
 
