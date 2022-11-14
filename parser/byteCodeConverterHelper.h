@@ -38,6 +38,12 @@ namespace parser_helper {
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeVariableDeclaration(
         parser::Ast_Node_Variable_Declaration*, parser::Byte_Code_Converter_Control*);
 
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodePointerOperators(parser::Ast_Node_Pointer_Operators*, parser::Byte_Code_Converter_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeVariableAssign(parser::Ast_Node_Variable_Assignment*, parser::Byte_Code_Converter_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeFunctionCall(parser::Ast_Node_Function_Call*, parser::Byte_Code_Converter_Control*);
+
 }
 
 #endif

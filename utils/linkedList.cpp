@@ -143,6 +143,19 @@ type utils::LinkedList<type>::operator[](int _indx) {
 }
 
 template <typename type>
+utils::DataLL<type>* utils::LinkedList<type>::getDataLL(int _indx) {
+
+    if (_indx >= count) return NULL;
+
+    utils::DataLL <type>* _rtr = frst;
+
+    for (int _ = 0; _ < _indx; _++) _rtr = _rtr->next;
+
+    return _rtr;
+
+}
+
+template <typename type>
 int utils::LinkedList<type>::getObjectPosition(type _toCmp, bool (*func) (type, type)) {
 
     for (int _ = 0; _ < count; _++)

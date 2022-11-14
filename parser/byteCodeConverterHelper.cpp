@@ -53,6 +53,44 @@ byte_code::Byte_Code* parser_helper::getByteCodeOfExpressionId(int _expressionId
         new(_) byte_code::Byte_Code(BYTECODE_MODULOS, 0);
 
         break;   
+    
+    case TOKEN_ADDITIONASSIGMENT:
+        
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_ADDITION, 0);
+
+        break;
+    case TOKEN_SUBTRACTIONASSIGMENT:
+        
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_SUBTRACTION, 0);
+
+        break;
+    case TOKEN_MULTIPLICATIONASSIGMENT:
+        
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_MULTIPLICATION, 0);
+
+        break;
+    case TOKEN_DIVISIONASSIGMENT:
+        
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_DIVISION, 0);
+
+        break;
+    case TOKEN_MODULOSASSIGMENT:
+        
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_MODULOS, 0);
+
+        break; 
+    case TOKEN_INCREMENT:
+
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_INCREMENT, 0);
+
+        break;
+
+    case TOKEN_DECREMENT:
+
+        new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_DECREMENT, 0);
+
+        break;
+        
     default: return NULL;
     }
 
@@ -65,15 +103,18 @@ utils::LinkedList <byte_code::Byte_Code*>*
 
         switch (_crrntNode->type)
         {
-        case AST_NODE_VALUE: return parser_helper::getByteCodeFromNodeValue((parser::Ast_Node_Value*) _crrntNode);
-        case AST_NODE_EXPRESSION: return parser_helper::getByteCodeFromNodeExpressison((parser::Ast_Node_Expression*) _crrntNode, _bcCnvrCntrl);
-        case AST_NODE_PARENTHESIS: return parser_helper::getByteCodeFromNodeParenthesis((parser::Ast_Node_Parenthesis*) _crrntNode, _bcCnvrCntrl);
-        case AST_NODE_VARIABLE_DECLARATION: return parser_helper::getByteCodeFromNodeVariableDeclaration((parser::Ast_Node_Variable_Declaration*) _crrntNode, _bcCnvrCntrl);
-        case AST_NODE_VARIABLE: return parser_helper::getByteCodeFromNodeVariable((parser::Ast_Node_Variable*) _crrntNode);
-
-        default:
-            break;
+            case AST_NODE_VALUE: return parser_helper::getByteCodeFromNodeValue((parser::Ast_Node_Value*) _crrntNode);
+            case AST_NODE_EXPRESSION: return parser_helper::getByteCodeFromNodeExpressison((parser::Ast_Node_Expression*) _crrntNode, _bcCnvrCntrl);
+            case AST_NODE_PARENTHESIS: return parser_helper::getByteCodeFromNodeParenthesis((parser::Ast_Node_Parenthesis*) _crrntNode, _bcCnvrCntrl);
+            case AST_NODE_VARIABLE_DECLARATION: return parser_helper::getByteCodeFromNodeVariableDeclaration((parser::Ast_Node_Variable_Declaration*) _crrntNode, _bcCnvrCntrl);
+            case AST_NODE_VARIABLE: return parser_helper::getByteCodeFromNodeVariable((parser::Ast_Node_Variable*) _crrntNode);
+            case AST_NODE_POINTER_OPERATORS: return parser_helper::getByteCodeFromNodePointerOperators((parser::Ast_Node_Pointer_Operators*) _crrntNode, _bcCnvrCntrl);
+            case AST_NODE_VARIABLE_ASSIGNMENT: return parser_helper::getByteCodeFromNodeVariableAssign((parser::Ast_Node_Variable_Assignment*) _crrntNode, _bcCnvrCntrl);
+            case AST_NODE_FUNCTION_CALL: return parser_helper::getByteCodeFromNodeFunctionCall((parser::Ast_Node_Function_Call*) _crrntNode, _bcCnvrCntrl);
+            default: break;
         }
+
+        return NULL;
 
 }
 
@@ -213,5 +254,98 @@ utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVar
         return _rtr;
 
 }
+
+utils::LinkedList <byte_code::Byte_Code*>* 
+    parser_helper::getByteCodeFromNodePointerOperators(parser::Ast_Node_Pointer_Operators* _pointerOperators, parser::Byte_Code_Converter_Control* _bcCnvrCntrl) {
+
+        utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
+
+        _rtr->join(
+            getByteCodeFromNode(
+                _pointerOperators->value, _bcCnvrCntrl
+            )
+        );
+
+        for (int _ = 0; _ < _pointerOperators->operatorsBefore->count; _++) {
+
+            byte_code::Byte_Code* _pointerOp = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+            if ((*_pointerOperators->operatorsBefore)[_] == TOKEN_POINTER) new(_pointerOp) byte_code::Byte_Code(BYTECODE_POINTER_OPERATION, 0);
+            else new(_pointerOp) byte_code::Byte_Code(BYTECODE_ADDRESS_OPERATION, 0);
+
+            _rtr->add(_pointerOp);
+
+        }
+
+        return _rtr;
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* 
+    parser_helper::getByteCodeFromNodeVariableAssign(parser::Ast_Node_Variable_Assignment* _varAssign, parser::Byte_Code_Converter_Control* _bcCnvrCntrl) {
+
+        utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
+        byte_code::Byte_Code* _varCall = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+        new(_varCall) byte_code::Byte_Code(
+            BYTECODE_LOAD_VARIABLE, _varAssign->namePos
+        );
+
+        if (_varAssign->opIsLeft)
+
+            _rtr->add(
+                parser_helper::getByteCodeOfExpressionId(
+                    (*_bcCnvrCntrl->storage->expressionsId)[_varAssign->expressionIdPos]
+                )
+            );
+    
+        _rtr->add(_varCall);
+
+        if (!_varAssign->opIsLeft)
+
+            _rtr->add(
+                parser_helper::getByteCodeOfExpressionId(
+                    (*_bcCnvrCntrl->storage->expressionsId)[_varAssign->expressionIdPos]
+                )
+            );
+    
+        if (_varAssign->value)
+
+            _rtr->join(
+                getByteCodeFromNode(
+                    _varAssign->value, _bcCnvrCntrl                
+                )
+            );
+
+        return _rtr;
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* 
+    parser_helper::getByteCodeFromNodeFunctionCall(parser::Ast_Node_Function_Call* _funcCall, parser::Byte_Code_Converter_Control* _bcCnvrCntrl) {
+
+        utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
+        byte_code::Byte_Code* _bcFuncCall = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+        new (_bcFuncCall) byte_code::Byte_Code(
+            BYTECODE_FUNCTION_CALL,
+            _funcCall->namePos
+        );
+
+        for (int _ = 0; _ < _funcCall->parameters->count; _++)
+
+            _rtr->join(
+                getByteCodeFromNode(
+                    (*_funcCall->parameters)[_], _bcCnvrCntrl
+                )
+            );
+
+        _rtr->add(_bcFuncCall);
+
+        return _rtr;
+
+}
+
+
 
 

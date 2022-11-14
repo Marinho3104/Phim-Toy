@@ -51,6 +51,8 @@ namespace utils {
         void clean();
 
         type operator[](int);
+
+        DataLL<type>* getDataLL(int);
         
         int getObjectPosition(type, bool (*func) (type, type));
 

@@ -24,6 +24,10 @@ parser::Tokenizer_Control::Tokenizer_Control(char* _srcCode) : srcCode(_srcCode)
 
     tokens = new utils::LinkedList <parser::Token*>();
 
+    tokens->add(
+        new parser::Token(-1, NULL)
+    ); // Padding
+
 }
 
 void parser::Tokenizer_Control::addNewToken(parser::Token* _) {
@@ -176,6 +180,11 @@ void parser::Tokenizer_Control::setNewToken() {
 
         if (tokens->last->object->id == TOKEN_ADDRESS && parser::isIdentifierType(tokens->last->previous->object)) tokens->last->object->id = TOKEN_BITWISEAND;
         else if (tokens->last->object->id == TOKEN_POINTER && parser::isIdentifierType(tokens->last->previous->object)) tokens->last->object->id = TOKEN_MULTIPLICATION;
+        else if (tokens->last->object->id == TOKEN_AND && !parser::isIdentifierType(tokens->last->previous->object)) { 
+            tokens->last->object->id = TOKEN_ADDRESS; 
+            parser::Token* _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(TOKEN_ADDRESS, NULL);
+            tokens->add(_tk);
+        }
 
     } else if (setTokenKeyWord());
 
@@ -199,5 +208,7 @@ void parser::Tokenizer_Control::generateTokens() {
     new (_fnl) parser::Token(TOKEN_END_CODE, NULL);
 
     tokens->add(_fnl);
+
+    tokens->removeFrst(); // Removing Padding
 
 }

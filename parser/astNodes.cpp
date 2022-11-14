@@ -213,13 +213,12 @@ utils::LinkedList <parser::Ast_Node*>*
         std::cout << "--> Ast Node Variable Declaration -- Function Parameters <--" << std::endl;
         utils::LinkedList <Ast_Node*>* _rtr = new utils::LinkedList <Ast_Node*>();
         utils::LinkedList <int>* _declaredNames = new utils::LinkedList <int>();
-        TypeInformation* _typeInfo = (TypeInformation*) malloc(sizeof(TypeInformation));
         int _namePos, _pntrLevel, _rfrnLevel, _typeInformationPos;
 
         while((*_astCntrl->tokensColl)[(*_astCntrl->crrntPos)]->id != TOKEN_CLOSEPARENTHESES) {
 
             TypeInformation* _typeInformation = TypeInformation::generate(_astCntrl, _crrntBlock);
-            _typeInformationPos = _astCntrl->globalStorage->addNewType(_typeInfo);
+            _typeInformationPos = _astCntrl->globalStorage->addNewType(_typeInformation);
 
             switch ((*_astCntrl->tokensColl)[(*_astCntrl->crrntPos)]->id)
             {
@@ -341,7 +340,7 @@ parser::Ast_Node_Variable_Assignment* parser::Ast_Node_Variable_Assignment::gene
 
     int _namePos = _astCntrl->globalStorage->addNewName((*_astCntrl->tokensColl)[(*_astCntrl->crrntPos)++]->phr);
 
-    if (_crrntBlock->environment->checkVariableNameIsDeclared(_namePos)) new Ast_Control_Exception("Variable name not declared");
+    if (!_crrntBlock->environment->checkVariableNameIsDeclared(_namePos)) new Ast_Control_Exception("Variable name not declared");
 
     if (!_opIsLeft) {
         _expressionTk = (*_astCntrl->tokensColl)[(*_astCntrl->crrntPos)];

@@ -15,12 +15,12 @@ namespace parser {
 
     struct Byte_Code_Converter_Block {
 
-        int id; // Every block needs a unique id for when its called know what is || id = 0 its the global block
+        int pos; 
         utils::LinkedList <byte_code::Byte_Code*>* byteCode; // Block byteCode
 
         Byte_Code_Converter_Block(int, utils::LinkedList <byte_code::Byte_Code*>*);
         /**/
-        static Byte_Code_Converter_Block* generate(Byte_Code_Converter_Control*, int*);
+        static Byte_Code_Converter_Block* generate(Byte_Code_Converter_Control*, Ast_Node_Block*, int);
 
     };
 
