@@ -1,10 +1,12 @@
 #include "./linkedList.h"
 
-#include "./../parser/byteCodeConverter.h"
-#include "./../byteCode/byteCode.h"
-#include "./../parser/astNodes.h"
-#include "./../parser/token.h"
-#include "./../parser/ast.h"
+// #include "./../parser/byteCodeConverter.h"
+// #include "./../objects/phim_object.h"
+
+#include "./../byteCode/byteCode.h" // Byte Code
+#include "./../parser/ast_nodes.h" // Ast Nodes
+#include "./../parser/token.h" // Tokens Id
+#include "./../parser/ast.h" // Ast Contrl | TypeInformation
 
 #include <type_traits>
 #include <iostream>
@@ -188,17 +190,19 @@ int utils::LinkedList<char*>::getObjectPosition(char* _toCmp, bool (*func) (char
 }
 
 
-template class utils::DataLL <parser::Byte_Code_Converter_Block*>;
+// template class utils::DataLL <parser::Byte_Code_Converter_Block*>;
 template class utils::DataLL <parser::TypeInformation*>;
 template class utils::DataLL <byte_code::Byte_Code*>;
+// template class utils::DataLL <objects::Phim_Object*>;
 template class utils::DataLL <parser::Ast_Node*>;
 template class utils::DataLL <parser::Token*>;
 template class utils::DataLL <char*>;
 template class utils::DataLL <int>;
 
-template class utils::LinkedList <parser::Byte_Code_Converter_Block*>;
+// template class utils::LinkedList <parser::Byte_Code_Converter_Block*>;
 template class utils::LinkedList <parser::TypeInformation*>;
 template class utils::LinkedList <byte_code::Byte_Code*>;
+// template class utils::LinkedList <objects::Phim_Object*>;
 template class utils::LinkedList <parser::Ast_Node*>;
 template class utils::LinkedList <parser::Token*>;
 template class utils::LinkedList <char*>;

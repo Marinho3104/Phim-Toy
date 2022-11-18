@@ -1,31 +1,34 @@
 
-#include "./../parser/byteCodeConverter.h"
-#include "./../byteCode/byteCode.h"
-#include "./../parser/tokenizer.h"
-#include "./../parser/optimizer.h"
-#include "./../utils/linkedList.h"
-#include "./../parser/token.h"
-#include "./../parser/ast.h"
-#include "./../objects/phim_int.h"
+// #include "./../parser/byteCodeConverter.h"
+// #include "./../byteCode/byteCode.h"
+// #include "./../parser/optimizer.h"
+// #include "./../parser/ast.h"
+// #include "./../objects/phim_int.h"
+// #include "./../objects/phim_string.h"
+// #include "./../objects/phim_char.h"
+
+#include "./../parser/tokenizer.h" // Tokenizer
+#include "./../parser/token.h" // Tokens
+
+#include "./../parser/ast_nodes.h" // Ast Nodes
+#include "./../parser/ast.h" // Ast control 
+
+#include "./../utils/linkedList.h" // Linked list
+
+#include "./../vm/vm_stdlib.h"
+#include "./../vm/memory.h"
 
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 
-int main() {
+parser::Tokenizer_Control* getTokens(char* _code) {
 
-    objects::Phim_Int* _ = objects::PhimIntFromCString("1234");
-
-    objects::Phim_Object* __ = _;
-
-    std::cout << "pass" << std::endl;
-    __->bitsRepresentation();
-
-    // _->bitsRepresentation();
-
-    return 0;
-
-    parser::Tokenizer_Control* _tkCntrl = new parser::Tokenizer_Control("void l(int j) { int k; } l(12 + 12, 15); struct lk { int l; }; lk ola;");
+    parser::Tokenizer_Control* _tkCntrl = new parser::Tokenizer_Control(_code);
 
     _tkCntrl->generateTokens();
+
+    std::cout << "--> Tokens <--" << std::endl;
 
     for (int _ = 0; _ < _tkCntrl->tokens->count; _++)
 
@@ -33,30 +36,81 @@ int main() {
 
     std::cout << "-------------------" << std::endl;
 
-    parser::Ast_Control* _astCntrl = new parser::Ast_Control(_tkCntrl->tokens);
+    return _tkCntrl;
+
+}
+
+parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
+
+    parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl);
 
     _astCntrl->generateAst();
 
-    // parser::optimizerNames(_astCntrl->globalStorage->names);
+}
 
-    std::cout << "-------------------" << std::endl;
+void getByteCode(char* _code) {
 
-    parser::Byte_Code_Converter_Control* _bcCntrl = new parser::Byte_Code_Converter_Control(
-        _astCntrl->globalBlock, _astCntrl->globalStorage
-    );
+    parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
-    _bcCntrl->generateByteCode();
-
-    for (int _ = 0; _ < _bcCntrl->byteCodeBlocks->count; _++) {
-
-        std::cout << "--> Code Block <--" << std::endl;
-
-        for (int __ = 0; __ < (*_bcCntrl->byteCodeBlocks)[_]->byteCode->count; __++)
-
-            std::cout << "Byte code -> " << (int) (unsigned char) (*(*_bcCntrl->byteCodeBlocks)[_]->byteCode)[__]->code << " " << (*(*_bcCntrl->byteCodeBlocks)[_]->byteCode)[__]->argument << std::endl;
-
-        std::cout << "--> Code Block End <--" << std::endl;
-
-    }
+    parser::Ast_Control* _astCntrl = getAst(_tkCntrl->tokens);
 
 }
+
+int main() {
+
+    getByteCode("int l = 12 + 12, ll = 10;");
+
+
+
+    return 0;
+
+
+
+    vm::Memory* _memory = new vm::Memory();
+
+    int l = 789; 
+
+
+    address_t _addr;
+    
+    for (int _ = 0; _ < 100 ; _++)
+        _addr = vm_stdlib::allocMemStack(
+            &l, 4, _memory
+        );
+
+    std::cout << _addr << std::endl;
+
+    _memory->addNewAddress(_addr);
+
+    std::cout << _memory->getAddress(0) << std::endl;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // int* l;
+
+    // std::cout << l << std::endl;
+
+    // return 0;
+
+
+
+    
+
+    // vm::Vm* _vmControl = new vm::Vm(
+    //     _bcCntrl
+    // );
+
+    // _vmControl->execute();

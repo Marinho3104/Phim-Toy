@@ -1,7 +1,7 @@
 #include "./byteCodeConverter.h"
 
 #include "./byteCodeConverterHelper.h"
-#include "./../byteCode/definitions.h"
+// #include "./../byteCode/definitions.h"
 #include "./../byteCode/byteCode.h"
 #include "./../utils/linkedList.h"
 #include "./astNodes.h"

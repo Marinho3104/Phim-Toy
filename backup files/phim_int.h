@@ -19,6 +19,20 @@ namespace objects {
 
         int getDataLen();
 
+        Phim_Int* operator&(Phim_Object*);
+        Phim_Int* operator|(Phim_Object*);
+        Phim_Int* operator^(Phim_Object*);
+        Phim_Int* operator~();
+
+        Phim_Int* operator+(Phim_Object*);
+        Phim_Int* operator-(Phim_Object*);
+
+        Phim_Int* operator*(Phim_Object*);
+        Phim_Int* operator/(Phim_Object*);
+        Phim_Int* operator%(Phim_Object*);
+
+        Phim_Int* operator<<(int);
+        Phim_Int* operator>>(int);
 
     };
 
