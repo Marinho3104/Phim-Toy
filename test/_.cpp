@@ -58,9 +58,7 @@ void getByteCode(char* _code) {
 
 int main() {
 
-    getByteCode("int l = 12 + 12, ll = 10;");
-
-
+    getByteCode("int j, lk; ++j;");
 
     return 0;
 

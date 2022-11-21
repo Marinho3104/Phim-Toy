@@ -1,132 +1,78 @@
 #include "./ast.h"
 
-#include "./ast_helper.h" // Ast Helper setPntrRfrnLevel()
 #include "./../utils/linkedList.h" // Linked List
-#include "./ast_nodes.h" // Nodes Representation
-#include "./token.h" // Tokens Id
-
+#include "./definitions.h" // Ast Definitions 
+#include "./ast_helper.h" // Ast Helper
+#include "./ast_nodes.h" // Ast Nodes
+#include "./token.h" // Token
 #include <iostream>
 
 
-/*      Type Information     */
 
-parser::TypeInformation::TypeInformation(bool _userDefined, int _typeId, int _pntrLvl, int _rfrnLvl) 
-    : userDefined(_userDefined), typeId(_typeId), pntrLvl(_pntrLvl), rfrnLvl(_rfrnLvl) {}
+/*      Type Information        */
 
-bool parser::TypeInformation::operator==(TypeInformation& _) {
+parser::Type_Information::Type_Information(int _id, utils::LinkedList <int>* _pntrOprns) 
+    : id(_id), pntrOprns(_pntrOprns) {}
 
-    return (
-        userDefined == _.userDefined &&
-        typeId == _.typeId &&
-        pntrLvl == _.pntrLvl &&
-        rfrnLvl == _.rfrnLvl 
+bool parser::Type_Information::operator==(parser::Type_Information& _) {
+
+    return ( // Compare Operators TODO
+        id == _.id
     );
 
 }
 
-parser::TypeInformation* parser::TypeInformation::generate(Ast_Control* _astCntrl) { // Reference not supported yet TODO
+parser::Type_Information* parser::Type_Information::generate(Ast_Control* _astCntrl) {
 
-    int _pntrLvl = 0, _rfrnLvl = 0, _tkId = (*_astCntrl->tokensColl)[_astCntrl->crrntTk]->id;
+    int _id = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos++]->id;
+    utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
 
-    bool _userDefined = !parser::isPrimativeType((*_astCntrl->tokensColl)[_astCntrl->crrntTk++]);
+    parser_helper::setPointerOperators(_astCntrl, _pntrOprts);
 
-    parser_helper::setPntrRfrnLevel(_astCntrl, &_pntrLvl, &_rfrnLvl);
-
-    TypeInformation* _ = (TypeInformation*) malloc(sizeof(TypeInformation));
-    new (_) TypeInformation(_userDefined, _tkId, _pntrLvl, _rfrnLvl);
+    Type_Information* _ = (Type_Information*) malloc(sizeof(Type_Information));
+    new (_) Type_Information(_id, _pntrOprts);
 
     return _;
 
 }
 
-/*      Storage     */
+/*      Storage        */
 
-parser::Storage::Storage() { values = new utils::LinkedList <char*>(); types = new utils::LinkedList <TypeInformation*>(); }
+parser::Storage::Storage() {
+    implicitValues = new utils::LinkedList <char*>(); 
+    types = new utils::LinkedList <Type_Information*>();
+}
 
 int parser::Storage::addNewValue(char* _) {
     int _rtr;
-    if ((_rtr = values->getObjectPosition(_, NULL)) == -1) 
-        _rtr = values->add(_);
+    if ((_rtr = implicitValues->getObjectPosition(_, NULL)) == -1) 
+        _rtr = implicitValues->add(_);
     return _rtr; 
 }
 
-int parser::Storage::addNewType(parser::TypeInformation* _) {
+int parser::Storage::addNewType(Type_Information* _) {
     int _rtr;
-    if ((_rtr = types->getObjectPosition(_, [](TypeInformation* _f, TypeInformation* _s) -> bool { return *_f == *_s; })) == -1) 
+    if ((_rtr = types->getObjectPosition(_, [](Type_Information* _f, Type_Information* _s) -> bool { return *_f == *_s; })) == -1) 
         _rtr = types->add(_);
-    return _rtr;    
-}
-
-
-/*      Ast Control     */
-
-parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* _tksColl) : tokensColl(_tksColl), crrntTk(0), crrntBlock(NULL) {
-    blockCodes = new utils::LinkedList <parser::Ast_Node*>();
-    storage = new parser::Storage();
-}
-
-utils::LinkedList <parser::Ast_Node*>* parser::Ast_Control::getNewNodes(bool _) {
-
-    utils::LinkedList <Ast_Node*>* _rtr = (utils::LinkedList <Ast_Node*>*) malloc(sizeof(utils::LinkedList <Ast_Node*>));
-    new (_rtr) utils::LinkedList <Ast_Node*>();
-
-    switch ((*tokensColl)[crrntTk]->id)
-    {
-
-    case TOKEN_END_CODE: case TOKEN_CLOSECURLYBRACKET: return _rtr;
-
-    case TOKEN_ENDINSTRUCTION: crrntTk++; return getNewNodes(0);
-
-    case TOKEN_OPENCURLYBRACKET:
-        
-        _rtr->add(
-            Ast_Node_Block_Code::generate(
-                this, AST_NODE_BLOCK_CODE_ENVIRONMENT_BLOCK_CODE
-            )
-        );
-
-        break;
-    
-    default:
-        break;
-    }
-
-    parser::Token* _tk = (*tokensColl)[crrntTk];
-
-    if (parser::isPrimativeType(_tk)) { // Miss struct declarations
-
-        TypeInformation* _typeInformation = TypeInformation::generate(this);
-
-        _rtr->join(
-            Ast_Node_Variable_Declaration::generate(this, _typeInformation)
-        );
-
-    }
-
-    else if (_) {
-
-        if (parser::isImplicitValue(_tk)) _rtr->add(Ast_Node_Value::generate(this));
-
-    }
-
-    else _rtr->add(Ast_Node_Expression::generate(this));
-
     return _rtr;
+}
 
+/*      Ast Control        */
+
+parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* _tknsColl) : tokensColl(_tknsColl), crrntTkPos(0) {
+    code_blocks = new utils::LinkedList <Ast_Node*>();
+    storage = new Storage();
 }
 
 void parser::Ast_Control::generateAst() {
 
-    blockCodes->add(
-        parser::Ast_Node_Block_Code::generate(
-            this, AST_NODE_BLOCK_CODE_ENVIRONMENT_BLOCK_CODE
+    // Just add the "global block" than it will start recursing until end of code
+    code_blocks->add(
+        parser::Ast_Node_Code_Block::generate(
+            this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL
         )
     );
 
 }
-
-
-
-
 
 

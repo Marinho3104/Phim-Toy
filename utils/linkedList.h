@@ -46,7 +46,7 @@ namespace utils {
 
         DataLL <type>* removeFrst();
 
-        void join(LinkedList <type>*);
+        bool join(LinkedList <type>*);
 
         void clean();
 

@@ -109,14 +109,16 @@ utils::DataLL <type>* utils::LinkedList<type>::removeFrst() {
 }
 
 template <typename type>
-void utils::LinkedList<type>::join(utils::LinkedList <type>* _toJoin) {
+bool utils::LinkedList<type>::join(utils::LinkedList <type>* _toJoin) {
 
-    if (!_toJoin) return;
-    if (!_toJoin->count) return;
+    if (!_toJoin) return false;
+    if (!_toJoin->count) return false;
     
     int _  = 0;
 
     for (; _ < _toJoin->count; _++) add( (*_toJoin)[_] );
+
+    return true;
 
 }
 
@@ -191,7 +193,7 @@ int utils::LinkedList<char*>::getObjectPosition(char* _toCmp, bool (*func) (char
 
 
 // template class utils::DataLL <parser::Byte_Code_Converter_Block*>;
-template class utils::DataLL <parser::TypeInformation*>;
+template class utils::DataLL <parser::Type_Information*>;
 template class utils::DataLL <byte_code::Byte_Code*>;
 // template class utils::DataLL <objects::Phim_Object*>;
 template class utils::DataLL <parser::Ast_Node*>;
@@ -200,7 +202,7 @@ template class utils::DataLL <char*>;
 template class utils::DataLL <int>;
 
 // template class utils::LinkedList <parser::Byte_Code_Converter_Block*>;
-template class utils::LinkedList <parser::TypeInformation*>;
+template class utils::LinkedList <parser::Type_Information*>;
 template class utils::LinkedList <byte_code::Byte_Code*>;
 // template class utils::LinkedList <objects::Phim_Object*>;
 template class utils::LinkedList <parser::Ast_Node*>;

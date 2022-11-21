@@ -8,32 +8,36 @@ namespace utils { template <typename> struct LinkedList; }
 namespace parser {
 
     // Forward
-    struct Ast_Node_Block_Code;
-    struct Ast_Control;
-    struct Ast_Node;
-    struct Token;
+    struct Ast_Node_Code_Block; // Code Block Node
+    struct Ast_Control; // Ast Control
+    struct Ast_Node; // Default Node
+    struct Token; // Token 
 
+    struct Type_Information {
+        utils::LinkedList <int>* pntrOprns; // Pointer Operations type
+        int id; // Identification of Type, if is identifier means is user defined
 
-    /* Type Information */
-    struct TypeInformation {
-        bool userDefined;
-        int typeId, pntrLvl, rfrnLvl;
-        ~TypeInformation() = default;
-        TypeInformation(bool, int, int, int);
+        /* Destructor */
+        ~Type_Information() = default;
+        /* Constructor */
+        Type_Information(int, utils::LinkedList <int>*);
 
-        bool operator==(TypeInformation&);
+        bool operator==(Type_Information&);
 
-        static TypeInformation* generate(Ast_Control*);
+        /* Generator */
+        static Type_Information* generate(Ast_Control*);
+
     };
 
     /* Storage */
     struct Storage {
+        utils::LinkedList <Type_Information*>* types; // Types used
+        utils::LinkedList <char*>* implicitValues; // Implicit values used 
 
-        utils::LinkedList <TypeInformation*>* types; // Types used in code
-        utils::LinkedList <char*>* values; // Values used in code
-
+        /* Destructor */
+        ~Storage() = default; // TODO change des
+        /* Constructor */
         Storage();
-
         /* Add new value into Linked List
         *   If value already exists dont add
         *   @return Pos of value given in Linked List 
@@ -43,25 +47,24 @@ namespace parser {
         *   If type already exists dont add
         *   @return Pos of type given in Linked List 
         */
-        int addNewType(TypeInformation*);
+        int addNewType(Type_Information*);
 
     };
 
-    /* Ast Control */
     struct Ast_Control {
 
-        utils::LinkedList <parser::Ast_Node*>* blockCodes; // Hold all block of codes | last block is global block
-        utils::LinkedList <parser::Token*>* tokensColl; // Tokens
-        parser::Storage* storage; // Storage 
-        parser::Ast_Node_Block_Code* crrntBlock; // Current Block of code
-        int crrntTk;
+        utils::LinkedList <parser::Ast_Node*>* code_blocks; // All blocks of code
+        utils::LinkedList <parser::Token*>* tokensColl; // Tokens Collection
+        parser::Ast_Node_Code_Block* crrntBlock; // Current block
+        Storage* storage; // Storage
+        int crrntTkPos; // Keeps track of current token 
 
+        /* Constructor */
         Ast_Control(utils::LinkedList <parser::Token*>*);
-        /* Return nodes from current tokens */
-        utils::LinkedList <Ast_Node*>* getNewNodes(bool);
-        /* Generate Ast Nodes of given tokens */
+
+        /* Generate Ast Nodes from the given tokens collection */
         void generateAst();
-        
+
     };
 
 }

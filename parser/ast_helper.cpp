@@ -1,16 +1,18 @@
 #include "./ast_helper.h"
 
 #include "./../utils/linkedList.h" // Linked List
-#include "./token.h" // Tokens id
 #include "./ast.h" // Ast Control
+#include "./token.h" // Token
 
 #include <iostream>
 
-void parser_helper::setPntrRfrnLevel(parser::Ast_Control* _astCntrl, int* _pntrLvl, int* _rfrnLvl) {
+void parser_helper::setPointerOperators(parser::Ast_Control* _astCntrl, utils::LinkedList<int>* _operators) {
 
-    if ((*_astCntrl->tokensColl)[(_astCntrl->crrntTk)]->id == TOKEN_POINTER) {
-        while((*_astCntrl->tokensColl)[(_astCntrl->crrntTk)]->id == TOKEN_POINTER) { (_astCntrl->crrntTk)++; (*_pntrLvl)++; }
-    }
+    while(
+        (*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->id == TOKEN_POINTER ||
+        (*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->id == TOKEN_ADDRESS
+    ) _operators->add(
+        (*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)++]->id
+    );
 
 }
-
