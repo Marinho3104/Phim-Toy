@@ -15,12 +15,12 @@ namespace parser {
 
     struct Type_Information {
         utils::LinkedList <int>* pntrOprns; // Pointer Operations type
-        int id; // Identification of Type, if is identifier means is user defined
+        int id, usrDefDeclId; // Identification of Type, if is identifier means is user defined | If is user defined this indicates the Declaration Id
 
         /* Destructor */
         ~Type_Information() = default;
         /* Constructor */
-        Type_Information(int, utils::LinkedList <int>*);
+        Type_Information(int, int, utils::LinkedList <int>*);
 
         bool operator==(Type_Information&);
 

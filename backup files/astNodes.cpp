@@ -50,8 +50,6 @@ void parser::Ast_Node_Block::generateBody(Ast_Control* _astCntrl) {
         if (body->last->object->type == AST_NODE_BLOCK_END) { body->remove(body->last); break; }
     }
 
-    // std::cout << "Out body" << std::endl;
-
 }
 
 parser::Ast_Node_Block* parser::Ast_Node_Block::generate(Ast_Control* _astCntrl, Ast_Node_Block* _crrntBlock, int _envType) {

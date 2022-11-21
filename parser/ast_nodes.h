@@ -142,7 +142,7 @@ namespace parser {
     /* Represent a assign to a variable */
     struct Ast_Node_Variable_Assignment : public Ast_Node {
         bool opIsLeft; // Is operator in left side of variable 
-        int id; // Expression Id
+        int expId; // Expression Id
         Ast_Node* valueBeforeAssign, *value; // Value Before Assign | Value assign to || NULL if is single assignment
 
         Ast_Node_Variable_Assignment(bool, Ast_Node*, int, Ast_Node*);
@@ -206,7 +206,7 @@ namespace parser {
 
     };
 
-    /**/
+    /* Represent a struct declaration */
     struct Ast_Node_Struct_Declaration : public Ast_Node {
         int declId; // Struct Declaration id
         bool isContract; // Is contract
@@ -216,6 +216,13 @@ namespace parser {
         
         /* Generator */
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
+    };
+
+    /* Represent end of code */
+    struct Ast_Node_End : public Ast_Node {
+        
+        Ast_Node_End();
+
     };
 
 }

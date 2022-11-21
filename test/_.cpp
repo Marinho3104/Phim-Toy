@@ -7,6 +7,10 @@
 // #include "./../objects/phim_string.h"
 // #include "./../objects/phim_char.h"
 
+#include "./../byteCode/byteCode.h" // Byte Code
+
+#include "./../parser/compiler.h" // Compiler
+
 #include "./../parser/tokenizer.h" // Tokenizer
 #include "./../parser/token.h" // Tokens
 
@@ -46,6 +50,34 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
     _astCntrl->generateAst();
 
+    std::cout << "-------------------" << std::endl;
+
+    return _astCntrl;
+
+}
+
+parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node*>* _ast, parser::Storage* _storage) {
+
+    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_ast, _storage);
+
+    _comCntrl->generateByteCode();
+
+    for (int _ = 0; _ < _comCntrl->code_blocks->count; _++) {
+
+        std::cout << "--> Code Block <--" << std::endl;
+
+        for (int __ = 0; __ < (*_comCntrl->code_blocks)[_]->byte_code->count; __++)
+
+            std::cout << "Byte code -> " << (int) (unsigned char) (*(*_comCntrl->code_blocks)[_]->byte_code)[__]->code << " " << (*(*_comCntrl->code_blocks)[_]->byte_code)[__]->argument << std::endl;
+
+        std::cout << "--> Code Block End <--" << std::endl;
+
+    }
+
+    std::cout << "-------------------" << std::endl;
+
+    return _comCntrl;
+
 }
 
 void getByteCode(char* _code) {
@@ -54,13 +86,14 @@ void getByteCode(char* _code) {
 
     parser::Ast_Control* _astCntrl = getAst(_tkCntrl->tokens);
 
+    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+
 }
 
 int main() {
 
     getByteCode(
-        "void k() { int l; }" \
-        "int g = k();"
+        "int j; *j = 12;"
     );
 
     return 0;
@@ -86,32 +119,3 @@ int main() {
     std::cout << _memory->getAddress(0) << std::endl;
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // int* l;
-
-    // std::cout << l << std::endl;
-
-    // return 0;
-
-
-
-    
-
-    // vm::Vm* _vmControl = new vm::Vm(
-    //     _bcCntrl
-    // );
-
-    // _vmControl->execute();

@@ -11,8 +11,8 @@
 
 /*      Type Information        */
 
-parser::Type_Information::Type_Information(int _id, utils::LinkedList <int>* _pntrOprns) 
-    : id(_id), pntrOprns(_pntrOprns) {}
+parser::Type_Information::Type_Information(int _id, int _usrDefDeclId, utils::LinkedList <int>* _pntrOprns) 
+    : id(_id), usrDefDeclId(_usrDefDeclId), pntrOprns(_pntrOprns) {}
 
 bool parser::Type_Information::operator==(parser::Type_Information& _) {
 
@@ -24,13 +24,16 @@ bool parser::Type_Information::operator==(parser::Type_Information& _) {
 
 parser::Type_Information* parser::Type_Information::generate(Ast_Control* _astCntrl) {
 
-    int _id = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos++]->id;
+    int _id = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos++]->id, _usrDefDeclId = 0;
     utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
+
+    if (_id == TOKEN_IDENTIFIER) 
+        _usrDefDeclId = _astCntrl->crrntBlock->getDeclarationId((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos - 1]->phr);
 
     parser_helper::setPointerOperators(_astCntrl, _pntrOprts);
 
     Type_Information* _ = (Type_Information*) malloc(sizeof(Type_Information));
-    new (_) Type_Information(_id, _pntrOprts);
+    new (_) Type_Information(_id, _usrDefDeclId, _pntrOprts);
 
     return _;
 
@@ -66,11 +69,9 @@ parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* _tknsColl) 
 
 void parser::Ast_Control::generateAst() {
 
-    // Just add the "global block" than it will start recursing until end of code
-    code_blocks->add(
-        parser::Ast_Node_Code_Block::generate(
-            this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL, NULL
-        )
+    // Just initialize the "global block" than it will start recursing until end of code
+    parser::Ast_Node_Code_Block::generate(
+        this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL, NULL
     );
 
 }

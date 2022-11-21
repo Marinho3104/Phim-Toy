@@ -64,7 +64,7 @@ cont:
 
     parser::Token* _tk = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos];
 
-    if (parser::isPrimativeType(_tk)) { // Miss struct declarations
+    if (parser::isPrimativeType(_tk) /*/|| _astCntrl->crrntBlock->getDeclarationId(_tk->phr) != -1 */ ) { // Miss struct declarations TODO
 
         Type_Information* _typeInformation = Type_Information::generate(_astCntrl);
 
@@ -96,6 +96,7 @@ cont:
 }
 
 int parser::Ast_Node_Code_Block::getDeclarationId(char* _) {
+    if (!_) return -1;
     int _rtr;
     if ((_rtr = namesUsedInBlock->getObjectPosition(_, NULL)) == -1)
         if (previousBlock) return previousBlock->getDeclarationId(_);
@@ -142,6 +143,8 @@ parser::Ast_Node_Code_Block* parser::Ast_Node_Code_Block::generate(Ast_Control* 
     );
 
     _astCntrl->crrntBlock = _astCntrl->crrntBlock->previousBlock;
+
+    _astCntrl->code_blocks->add(_);
 
     return _;
 
@@ -321,7 +324,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
             parser_helper::setPointerOperators(_astCntrl, _operators);
             
             _type = (Type_Information*) malloc(sizeof(Type_Information));
-            new(_type) Type_Information(_type->id, _operators);     
+            new(_type) Type_Information(_type->id, _type->usrDefDeclId, _operators);     
 
         }
 
@@ -395,7 +398,7 @@ parser::Ast_Node_Pointer_Operators* parser::Ast_Node_Pointer_Operators::generate
 /*      Ast Node Variable Assignment     */
 
 parser::Ast_Node_Variable_Assignment::Ast_Node_Variable_Assignment(bool _isLft, Ast_Node* _valBefAssign, int _expId, Ast_Node* _value) 
-    : Ast_Node(AST_NODE_VARIABLE_ASSIGNMENT), opIsLeft(_isLft), valueBeforeAssign(_valBefAssign), id(_expId), value(_value) {}
+    : Ast_Node(AST_NODE_VARIABLE_ASSIGNMENT), opIsLeft(_isLft), valueBeforeAssign(_valBefAssign), expId(_expId), value(_value) {}
 
 parser::Ast_Node* parser::Ast_Node_Variable_Assignment::getValueBeforeAssign(Ast_Control* _astCntrl) {
 
@@ -659,6 +662,14 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
         _declId = _astCntrl->crrntBlock->getDeclarationId((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos++]->phr);
 
     }
+    
+    else if ((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos]->id == TOKEN_OPENCURLYBRACKET) {
+
+        // TODO 
+
+        exit(-1);
+
+    }
 
     else {exit(-1); /* TODO */}
 
@@ -672,5 +683,8 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
 
 }
 
+/*      Ast Node End     */
+
+parser::Ast_Node_End::Ast_Node_End() : Ast_Node(AST_NODE_END) {}
 
 
