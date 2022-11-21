@@ -142,7 +142,7 @@ void parser::Ast_Control::generateAst() {
 
     blockCodes->add(
         parser::Ast_Node_Block_Code::generate(
-            this, AST_NODE_BLOCK_CODE_ENVIRONMENT_BLOCK_CODE
+            this, AST_NODE_BLOCK_CODE_ENVIRONMENT_BLOCK_CODE, NULL
         )
     );
 

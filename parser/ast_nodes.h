@@ -32,12 +32,15 @@ namespace parser {
         // Ast Generation Only //
 
         utils::LinkedList <char*>* namesUsedInBlock;
+        Ast_Node_Code_Block* previousBlock;
         
-        Ast_Node_Code_Block(int);
+        Ast_Node_Code_Block(int, utils::LinkedList <char*>*, Ast_Node_Code_Block*k);
 
         static utils::LinkedList <parser::Ast_Node*>* getNewNodes(Ast_Control*);
 
         int getDeclarationId(char*);
+
+        int getDeclarationIdCurrntBlock(char*);
 
         /* Add new name into linked list 
         *   Returns true if name was succesfully added to linked list 
@@ -51,7 +54,7 @@ namespace parser {
         Ast_Node_Code_Block(utils::LinkedList <Ast_Node*>*, int);
 
         /* Generator */
-        static Ast_Node_Code_Block* generate(Ast_Control*, int);
+        static Ast_Node_Code_Block* generate(Ast_Control*, int, utils::LinkedList <char*>*);
 
     };
 
@@ -157,6 +160,66 @@ namespace parser {
 
     };
 
+    /* Represent any parenthesis */
+    struct Ast_Node_Parenthesis : public Ast_Node {
+        Ast_Node* value; // Value inside parenthesis
+        Ast_Node_Parenthesis(Ast_Node*);
+
+        // Ast Generation Only //
+        // Ast Generation Only //
+
+        /* Generator */
+        static Ast_Node_Parenthesis* generate(Ast_Control*);
+    };
+
+    /* Represent a function declaration */
+    struct Ast_Node_Function_Declaration : public Ast_Node {
+        int typeRtrPos, declId; // Type return position || Name position
+        utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
+        Ast_Node* body; // Function body || NULL If is forward declaration
+        /* Constructor */
+        Ast_Node_Function_Declaration(int, int, utils::LinkedList <Ast_Node*>*, Ast_Node*);
+        
+        // Ast Generation Only //
+
+        static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*, utils::LinkedList <char*>*);
+
+        // Ast Generation Only //
+        
+        /* Generator */
+        static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*);
+    };
+
+    /* Represent a function call */
+    struct Ast_Node_Function_Call : public Ast_Node {
+        int declId; // Id
+        utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
+        /* Constructor */
+        Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node*>*);
+
+        // Ast Generation Only //
+        static utils::LinkedList <Ast_Node*>* getFunctionCallParameters(Ast_Control*);
+        // Ast Generation Only //
+        
+        /* Generator */
+        static Ast_Node_Function_Call* generate(Ast_Control*);
+
+    };
+
+    /**/
+    struct Ast_Node_Struct_Declaration : public Ast_Node {
+        int declId; // Struct Declaration id
+        bool isContract; // Is contract
+        Ast_Node* body; // Body || NULL if is forward declaration
+
+        Ast_Node_Struct_Declaration(int, bool, Ast_Node*);
+        
+        /* Generator */
+        static Ast_Node_Struct_Declaration* generate(Ast_Control*);
+    };
+
 }
+
+
 
 #endif

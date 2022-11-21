@@ -58,7 +58,10 @@ void getByteCode(char* _code) {
 
 int main() {
 
-    getByteCode("int j, lk; ++j;");
+    getByteCode(
+        "void k() { int l; }" \
+        "int g = k();"
+    );
 
     return 0;
 

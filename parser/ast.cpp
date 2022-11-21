@@ -59,7 +59,7 @@ int parser::Storage::addNewType(Type_Information* _) {
 
 /*      Ast Control        */
 
-parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* _tknsColl) : tokensColl(_tknsColl), crrntTkPos(0) {
+parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* _tknsColl) : tokensColl(_tknsColl), crrntTkPos(0), crrntBlock(NULL) {
     code_blocks = new utils::LinkedList <Ast_Node*>();
     storage = new Storage();
 }
@@ -69,7 +69,7 @@ void parser::Ast_Control::generateAst() {
     // Just add the "global block" than it will start recursing until end of code
     code_blocks->add(
         parser::Ast_Node_Code_Block::generate(
-            this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL
+            this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL, NULL
         )
     );
 
