@@ -192,6 +192,9 @@ int utils::LinkedList<char*>::getObjectPosition(char* _toCmp, bool (*func) (char
 }
 
 
+template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
+template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
+template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
 template class utils::DataLL <parser::Compiler_Code_Block*>;
 template class utils::DataLL <parser::Type_Information*>;
 template class utils::DataLL <byte_code::Byte_Code*>;
@@ -201,6 +204,9 @@ template class utils::DataLL <parser::Token*>;
 template class utils::DataLL <char*>;
 template class utils::DataLL <int>;
 
+template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
+template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
+template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
 template class utils::LinkedList <parser::Compiler_Code_Block*>;
 template class utils::LinkedList <parser::Type_Information*>;
 template class utils::LinkedList <byte_code::Byte_Code*>;

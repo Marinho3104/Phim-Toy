@@ -26,6 +26,7 @@ int parser::getTokenSymbOneChar(int _f) {
         case '&': return TOKEN_ADDRESS;
         case ',': return TOKEN_COMMA;
         case '#': return TOKEN_HASHTAG;
+        case '\'': return TOKEN_SINGLE_QUOTE;
 
         case '+': return TOKEN_ADDITION;
         case '-': return TOKEN_SUBTRACTION;
@@ -192,7 +193,7 @@ int parser::getTokenIdKeyWord(char** _) {
 
 }
 
-int parser::getTokenIdIndetifier(char* _) {
+int parser::getTokenIdIdetifier(char* _) {
 
     if (utils::isInt(_)) return TOKEN_NUMBERINT;
     if (utils::isLong(_)) return TOKEN_NUMBERLONG;

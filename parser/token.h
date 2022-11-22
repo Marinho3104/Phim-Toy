@@ -144,7 +144,7 @@
 #define TOKEN_SCOPE_RESOLUTION 107
 #define TOKEN_ELSE_IF 108
 #define TOKEN_END_CODE 109
-
+#define TOKEN_SINGLE_QUOTE 110
 
 namespace parser {
 
@@ -159,7 +159,7 @@ namespace parser {
     int getTokenSymbTwoChars(int, int);
     int getTokenSymbThreeChars(int, int, int);
     int getTokenIdKeyWord(char**);
-    int getTokenIdIndetifier(char*);
+    int getTokenIdIdetifier(char*);
 
     bool isIdentifierType(parser::Token*);
     bool isImplicitValue(parser::Token*);

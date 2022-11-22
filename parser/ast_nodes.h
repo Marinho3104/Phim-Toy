@@ -13,6 +13,8 @@ namespace parser {
     // Forward
     struct Type_Information; // Type Infor,ation
     struct Ast_Control; // Ast Control
+    struct Ast_Node_Variable_Declaration; // Ast Variable Declaration
+    struct Ast_Node_Function_Declaration; // Ast Function Declaration
 
     /* Node default representation for all types of nodes 
     *   Should never be declared by it self !!
@@ -67,6 +69,9 @@ namespace parser {
         /* Constructor */
         Ast_Node_Expression(Ast_Node*, Ast_Node*, int);
 
+        /* Return size result of expression */
+        int getResultSize(utils::LinkedList <Ast_Node_Variable_Declaration*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*, utils::LinkedList <Type_Information*>*);
+
         // Ast Generation Only //
 
         static Ast_Node* getFirstNode(Ast_Control*);
@@ -81,10 +86,16 @@ namespace parser {
 
     /* Node Value representa implicit value */
     struct Ast_Node_Value : public Ast_Node {
-        int valuePos, id; // Value position in storage || Token id type
+        int valuePos, tkId; // Value position in storage || Token id type
 
         /* Constructor */ 
         Ast_Node_Value(int, int);
+
+        /* Return size of value */
+        int getTypeSize();
+
+        /* Return type id */
+        Type_Information* getType();
 
         /* Generator */
         static Ast_Node_Value* generate(Ast_Control*);
@@ -104,6 +115,12 @@ namespace parser {
         // Ast Generation Only //
         // Ast Generation Only //
 
+        /* Return size of variable type */
+        int getTypeSize(utils::LinkedList <Type_Information*>*);
+
+        /* Return size of variable type */
+        Type_Information* getType(utils::LinkedList <Type_Information*>*);
+
         /* Generator */
         static utils::LinkedList <Ast_Node*>* generate(Ast_Control*, Type_Information*);
 
@@ -117,6 +134,9 @@ namespace parser {
         // Ast Generation Only //
         // Ast Generation Only //
 
+        /* Return Size of type */
+        int getTypeSize(utils::LinkedList <Ast_Node_Variable_Declaration*>*, utils::LinkedList <Type_Information*>*);
+
         /**/
         static Ast_Node_Variable* generate(Ast_Control*);
     };
@@ -126,6 +146,7 @@ namespace parser {
 
         utils::LinkedList <int>* operations; // All operators before variable -> * &
         Ast_Node* value;
+        int pntrLvl;
         Ast_Node_Pointer_Operators(utils::LinkedList <int>*, Ast_Node*);
 
         // Ast Generation Only //
@@ -134,6 +155,8 @@ namespace parser {
 
         // Ast Generation Only //
 
+        /**/
+        int getTypeSize(); 
 
         static Ast_Node_Pointer_Operators* generate(Ast_Control*, utils::LinkedList <int>*);
 
@@ -168,6 +191,8 @@ namespace parser {
         // Ast Generation Only //
         // Ast Generation Only //
 
+        int getTypeSize(utils::LinkedList <Ast_Node_Variable_Declaration*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*, utils::LinkedList <Type_Information*>*);
+
         /* Generator */
         static Ast_Node_Parenthesis* generate(Ast_Control*);
     };
@@ -185,6 +210,8 @@ namespace parser {
         static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*, utils::LinkedList <char*>*);
 
         // Ast Generation Only //
+
+        int getTypeSize(utils::LinkedList <Type_Information*>*);
         
         /* Generator */
         static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*);
@@ -200,6 +227,8 @@ namespace parser {
         // Ast Generation Only //
         static utils::LinkedList <Ast_Node*>* getFunctionCallParameters(Ast_Control*);
         // Ast Generation Only //
+
+        int getTypeSize(utils::LinkedList <Ast_Node_Function_Declaration*>*, utils::LinkedList <Type_Information*>*);
         
         /* Generator */
         static Ast_Node_Function_Call* generate(Ast_Control*);

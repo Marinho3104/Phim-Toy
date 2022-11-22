@@ -309,13 +309,21 @@ utils::LinkedList <byte_code::Byte_Code*>*
                 )
             );
     
-        if (_varAssign->value)
+        if (_varAssign->value) {
 
             _rtr->join(
                 getByteCodeFromNode(
                     _varAssign->value, _bcCnvrCntrl                
                 )
             );
+        
+            _rtr->add(
+                getByteCodeOfExpressionId(
+                    _varAssign->
+                )
+            );
+
+        }
 
         return _rtr;
 

@@ -10,20 +10,18 @@
 
 parser::Compiler_Code_Block::Compiler_Code_Block(utils::LinkedList <byte_code::Byte_Code*>* _byteCode) : byte_code(_byteCode) {}
 
-parser::Compiler_Code_Block* parser::Compiler_Code_Block::generate(Compiler_Control* _comCntrl, int _crrntNode) {
+parser::Compiler_Code_Block* parser::Compiler_Code_Block::generate(Compiler_Control* _comCntrl, Ast_Node_Code_Block* _crrntNode) {
 
-    if ((*_comCntrl->ast)[_crrntNode]->id == AST_NODE_END) return NULL;
+    // if ((*_comCntrl->ast)[_comCntrl->crrntNode]->id == AST_NODE_END) return NULL;
 
     utils::LinkedList <byte_code::Byte_Code*>* _byteCode = new utils::LinkedList <byte_code::Byte_Code*>();
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
 
-    parser::Ast_Node_Code_Block* _node = (parser::Ast_Node_Code_Block*) (*_comCntrl->ast)[_crrntNode];
-
-    for (int _ = 0; _ < _node->body->count; _++) {
+    for (int _ = 0; _ < _crrntNode->body->count; _++) {
 
         _byteCode->join(
             parser_helper::getByteCodeFromNode(
-                (*_node->body)[_], _comCntrl
+                (*_crrntNode->body)[_], _comCntrl
             )
         );
 
@@ -39,13 +37,14 @@ parser::Compiler_Code_Block* parser::Compiler_Code_Block::generate(Compiler_Cont
 
 
 parser::Compiler_Control::Compiler_Control(utils::LinkedList <Ast_Node*>* _ast, Storage* _astStorage) 
-    : ast(_ast), ast_storage(_astStorage), code_blocks(new utils::LinkedList <Compiler_Code_Block*>()) {}
+    : ast(_ast), ast_storage(_astStorage), code_blocks(new utils::LinkedList <Compiler_Code_Block*>()), funcDecl(new utils::LinkedList <Ast_Node_Function_Declaration*>()),
+        structDecl(new utils::LinkedList <Ast_Node_Struct_Declaration*>()), varDecl(new utils::LinkedList <Ast_Node_Variable_Declaration*>()) {}
 
 void parser::Compiler_Control::generateByteCode() {
 
     code_blocks->add(
         parser::Compiler_Code_Block::generate(
-            this, 0
+            this, (Ast_Node_Code_Block*) (*ast)[ast->count - 1]
         )
     );
 

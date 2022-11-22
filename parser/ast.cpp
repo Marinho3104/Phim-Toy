@@ -1,6 +1,7 @@
 #include "./ast.h"
 
 #include "./../utils/linkedList.h" // Linked List
+#include "./parser_helper.h" // Parser helper 
 #include "./definitions.h" // Ast Definitions 
 #include "./ast_helper.h" // Ast Helper
 #include "./ast_nodes.h" // Ast Nodes
@@ -12,13 +13,53 @@
 /*      Type Information        */
 
 parser::Type_Information::Type_Information(int _id, int _usrDefDeclId, utils::LinkedList <int>* _pntrOprns) 
-    : id(_id), usrDefDeclId(_usrDefDeclId), pntrOprns(_pntrOprns) {}
+    : id(_id), usrDefDeclId(_usrDefDeclId), pntrOprns(_pntrOprns), pntrLvl(0), rfrnLvl(0) {
+
+        for (int _ = 0; _ < _pntrOprns->count; _++)
+
+            if ((*pntrOprns)[_] == TOKEN_POINTER) {
+
+                if (!rfrnLvl) {
+                    std::cout << "Pointer to reference not allowed" << std::endl; // TODO
+                    exit(-1);
+                }
+
+                pntrLvl++;
+
+            }        
+
+            else {
+
+                rfrnLvl++;
+
+                if (rfrnLvl > 2) {
+                    std::cout << "Reference to a reference not allowed " << std::endl; // TODO
+                    exit(-1);
+                }
+
+            }
+
+}
 
 bool parser::Type_Information::operator==(parser::Type_Information& _) {
 
     return ( // Compare Operators TODO
         id == _.id
     );
+
+}
+
+int parser::Type_Information::getByteSize() {
+
+    if (!pntrLvl) {
+
+        if (id == TOKEN_IDENTIFIER) { std::cout << "User defined get size not implemented " << std::endl; exit(-1); }
+
+        return parser_helper::getSizePrimitiveType(id);
+
+    }
+
+    return PRIMITIVES_TYPE_POINTER_SIZE;
 
 }
 

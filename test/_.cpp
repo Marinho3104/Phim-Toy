@@ -93,7 +93,10 @@ void getByteCode(char* _code) {
 int main() {
 
     getByteCode(
-        "int j; *j = 12;"
+        "void jk(int) { void k; }" \
+        "int kk() {} " \
+        "jk(kk());" \
+        "jk + 12;"
     );
 
     return 0;

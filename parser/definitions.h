@@ -30,5 +30,14 @@
 
 // Ast Node Code Block Environemt Type //
 
+// Primatives Types Sizes //
+
+#define PRIMITIVES_TYPE_POINTER_SIZE 2
+#define PRIMATIVES_TYPE_INT_SIZE 4
+#define PRIMATIVES_TYPE_VOID_SIZE 0
+
+// Primatives Types Sizes //
+
+
 
 #endif

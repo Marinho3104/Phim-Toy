@@ -5,6 +5,8 @@
 #include "./ast_helper.h" // Ast Helper
 #include "./token.h" // Token 
 #include "./ast.h" // Ast Control
+#include "./parser_helper.h" // Parser helper
+
 #include <iostream>
 
 /*      Ast Node     */
@@ -64,7 +66,15 @@ cont:
 
     parser::Token* _tk = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos];
 
-    if (parser::isPrimativeType(_tk) /*/|| _astCntrl->crrntBlock->getDeclarationId(_tk->phr) != -1 */ ) { // Miss struct declarations TODO
+    if (parser::isPrimativeType(_tk) || _astCntrl->crrntBlock->getDeclarationId(_tk->phr) != -1 ) { // Miss struct declarations TODO
+
+        switch ((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos + 1]->id)
+        {
+        case TOKEN_EQUAL: case TOKEN_OPENPARENTHESES: goto expressionGen;
+        
+        default:
+            break;
+        }
 
         Type_Information* _typeInformation = Type_Information::generate(_astCntrl);
 
@@ -82,6 +92,8 @@ cont:
     }
 
     else {
+
+    expressionGen:
 
         _rtr->add(
             Ast_Node_Expression::generate(
@@ -245,6 +257,31 @@ parser::Ast_Node* parser::Ast_Node_Expression::getSecondNode(Ast_Control* _astCn
 
 }
 
+int parser::Ast_Node_Expression::getResultSize(utils::LinkedList <Ast_Node_Variable_Declaration*>* _varDeclTable, utils::LinkedList <Ast_Node_Function_Declaration*>* _funcDeclTable, utils::LinkedList <Type_Information*>* _typeTable) {
+
+    int _ = 0;
+
+    if (!frst) return _;
+
+    switch (frst->id)
+    {
+    case AST_NODE_VALUE: _ =  ((Ast_Node_Value*) frst)->getTypeSize(); break;
+    case AST_NODE_VARIABLE: _ =  ((Ast_Node_Variable*) frst)->getTypeSize(_varDeclTable, _typeTable); break;
+    case AST_NODE_PARENTHESIS: _ = ((Ast_Node_Parenthesis*) frst)->getTypeSize(_varDeclTable, _funcDeclTable, _typeTable); break;
+    case AST_NODE_FUNCTION_CALL: _ = ((Ast_Node_Function_Call*) frst)->getTypeSize(_funcDeclTable, _typeTable); break;
+    default: break;
+    }
+
+    if (!scnd) return _;
+
+    if (
+        int _n = ((Ast_Node_Expression*) scnd)->getResultSize(_varDeclTable, _funcDeclTable, _typeTable) > _
+    ) _ = _n;
+
+    return _;
+
+}
+
 parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* _astCntrl) {
 
     std::cout << "--> Ast Node Expression <--" << std::endl;
@@ -267,7 +304,28 @@ parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* 
 
 /*      Ast Node Value     */
 
-parser::Ast_Node_Value::Ast_Node_Value(int _valuePos, int _id) : Ast_Node(AST_NODE_VALUE), valuePos(_valuePos), id(_id) {}
+parser::Ast_Node_Value::Ast_Node_Value(int _valuePos, int _id) : Ast_Node(AST_NODE_VALUE), valuePos(_valuePos), tkId(_id) {}
+
+int parser::Ast_Node_Value::getTypeSize() {
+
+    return parser_helper::getSizeImplicitValue(tkId);
+
+}
+
+// Return here needs to be deallocated
+parser::Type_Information* parser::Ast_Node_Value::getType() {
+
+    parser::Type_Information* _ = (parser::Type_Information*) malloc(sizeof(parser::Type_Information));
+    utils::LinkedList <int>* __ = new utils::LinkedList <int>();
+
+    new (_) parser::Type_Information(
+        parser_helper::getTokenIdTypeFromTokenIdImplicitValue(tkId),
+        0, __
+    );
+
+    return _;
+
+}
 
 parser::Ast_Node_Value* parser::Ast_Node_Value::generate(Ast_Control* _astCntrl) {
 
@@ -289,6 +347,14 @@ parser::Ast_Node_Value* parser::Ast_Node_Value::generate(Ast_Control* _astCntrl)
 
 parser::Ast_Node_Variable_Declaration::Ast_Node_Variable_Declaration(int _typePos, int _declId) 
     : Ast_Node(AST_NODE_VARIABLE_DECLARATION), typePos(_typePos), declId(_declId) {}
+
+int parser::Ast_Node_Variable_Declaration::getTypeSize(utils::LinkedList <Type_Information*>* _typeTable) {
+
+    return (*_typeTable)[typePos]->getByteSize();
+
+}
+
+parser::Type_Information* parser::Ast_Node_Variable_Declaration::getType(utils::LinkedList <Type_Information*>* _typeTable) { return (*_typeTable)[typePos]; }
 
 utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::generate(Ast_Control* _astCntrl, Type_Information* _type) {
     
@@ -338,6 +404,18 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
 parser::Ast_Node_Variable::Ast_Node_Variable(int _declId) : Ast_Node(AST_NODE_VARIABLE), declId(_declId) {}
 
+int parser::Ast_Node_Variable::getTypeSize(utils::LinkedList <Ast_Node_Variable_Declaration*>* _varDeclTable, utils::LinkedList <Type_Information*>* _typeTable) {
+
+    for (int _ = 0; _ < _varDeclTable->count; _++)
+
+        if ((*_varDeclTable)[_]->declId == declId) return (*_varDeclTable)[_]->getTypeSize(_typeTable);
+
+    std::cout << "Error get size variable <" << std::endl; exit(-1);
+
+    return -1;
+
+}
+
 parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* _astCntrl) {
 
     std::cout << "--> Ast Node Variable <--" << std::endl;
@@ -356,7 +434,13 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* _ast
 /*      Ast Node Pointer Operators     */
 
 parser::Ast_Node_Pointer_Operators::Ast_Node_Pointer_Operators(utils::LinkedList <int>* _oprs, Ast_Node* _value) 
-    : Ast_Node(AST_NODE_POINTER_OPERATORS), operations(_oprs), value(_value) {}
+    : Ast_Node(AST_NODE_POINTER_OPERATORS), operations(_oprs), value(_value), pntrLvl(0) {
+
+        for (int _ = 0; _ < operations->count; _++)  // TODO & dont mean address is reference fuck ....
+            
+            pntrLvl += ((*operations)[_] == TOKEN_POINTER) ? 1 : -1;
+
+}
 
 parser::Ast_Node* parser::Ast_Node_Pointer_Operators::getNewNode(Ast_Control* _astCntrl) {
 
@@ -377,6 +461,14 @@ parser::Ast_Node* parser::Ast_Node_Pointer_Operators::getNewNode(Ast_Control* _a
     exit(-1);
 
 }
+
+int parser::Ast_Node_Pointer_Operators::getTypeSize() {
+
+    int _fnlS = 0;
+
+
+
+} 
 
 parser::Ast_Node_Pointer_Operators* parser::Ast_Node_Pointer_Operators::generate(Ast_Control* _astCntrl, utils::LinkedList <int>* _operators) {
 
@@ -479,6 +571,12 @@ parser::Ast_Node_Variable_Assignment* parser::Ast_Node_Variable_Assignment::gene
 
 parser::Ast_Node_Parenthesis::Ast_Node_Parenthesis(Ast_Node* _value) : Ast_Node(AST_NODE_PARENTHESIS), value(_value) {}
 
+int parser::Ast_Node_Parenthesis::getTypeSize(utils::LinkedList <Ast_Node_Variable_Declaration*>* _varDeclTable, utils::LinkedList <Ast_Node_Function_Declaration*>* _funcDeclTable, utils::LinkedList <Type_Information*>* _typeTable) {
+
+    return ((Ast_Node_Expression*) value)->getResultSize(_varDeclTable, _funcDeclTable, _typeTable);
+
+}
+
 parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control* _astCntrl) {
     std::cout << "--> Generate Parenthesis <--" << std::endl;
     parser::Ast_Node_Parenthesis* _ = (parser::Ast_Node_Parenthesis*) malloc(sizeof(parser::Ast_Node_Parenthesis));
@@ -516,7 +614,8 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::ge
         {
         case TOKEN_COMMA:
             _astCntrl->crrntTkPos++;
-
+        case TOKEN_CLOSEPARENTHESES: 
+        
             {
 
                 _varDecl = (parser::Ast_Node_Variable_Declaration*) malloc(sizeof(parser::Ast_Node_Variable_Declaration));
@@ -527,8 +626,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::ge
                 _rtr->add(_varDecl);
 
             }
-
-        case TOKEN_CLOSEPARENTHESES: continue;
+            continue;
  
         default:
             break;
@@ -561,6 +659,12 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::ge
 
 }
 
+int parser::Ast_Node_Function_Declaration::getTypeSize(utils::LinkedList <Type_Information*>* _typeTable) {
+
+    return (*_typeTable)[typeRtrPos]->getByteSize();
+
+}
+
 parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* _astCntrl, Type_Information* _typeRtr) {
 
     std::cout << "--> Node Function Declaration <--" << std::endl;
@@ -568,9 +672,9 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
     int _typeRtrPos = _astCntrl->storage->addNewType(_typeRtr), _declId;
     parser::Ast_Node* _body = NULL;
 
-    if (_astCntrl->crrntBlock->getDeclarationId((*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->phr) != -1) { std::cout << "Error" << std::endl; exit(-1); /*TODO*/ }
+    if (!_astCntrl->crrntBlock->addNewName((*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->phr)) { std::cout << "Error" << std::endl; exit(-1); /*TODO*/ }
 
-    _declId = _astCntrl->crrntBlock->addNewName((*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)++]->phr);
+    _declId = _astCntrl->crrntBlock->getDeclarationId((*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)++]->phr); 
 
     utils::LinkedList <char*>* _namesDeclrs = new utils::LinkedList <char*>();
 
@@ -617,6 +721,18 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Call::getFuncti
     _astCntrl->crrntTkPos++;
 
     return _parameters;
+
+}
+
+int parser::Ast_Node_Function_Call::getTypeSize(utils::LinkedList <Ast_Node_Function_Declaration*>* _funcDeclTable, utils::LinkedList <Type_Information*>* _typeTable) {
+
+    for (int _ = 0; _ < _funcDeclTable->count; _++)
+
+        if ((*_funcDeclTable)[_]->declId == declId) return (*_funcDeclTable)[_]->getTypeSize(_typeTable);
+
+    std::cout << "Error get size function call <" << std::endl; exit(-1);
+
+    return -1;
 
 }
 

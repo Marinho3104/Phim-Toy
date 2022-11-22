@@ -41,7 +41,9 @@ namespace parser_helper {
 
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodePointerOperations(parser::Ast_Node_Pointer_Operators*, parser::Compiler_Control*);
     
-    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration*, parser::Compiler_Control*);
+    void getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration*, parser::Compiler_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeFunctionCall(parser::Ast_Node_Function_Call*, parser::Compiler_Control*);
 
 }
 

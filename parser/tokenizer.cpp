@@ -77,6 +77,12 @@ bool parser::Tokenizer_Control::setTokenSymbol() {
                 )
             );
 
+            return 1;
+
+        }
+
+        else if (_tkId == TOKEN_SINGLE_QUOTE) {
+            //TODO
         }
 
     }
@@ -162,7 +168,7 @@ void parser::Tokenizer_Control::setTokenIdentifier() {
     _str[_s] = 0;
     
     new(_tk) Token(
-        parser::getTokenIdIndetifier(_str),
+        parser::getTokenIdIdetifier(_str),
         _str
     );
     

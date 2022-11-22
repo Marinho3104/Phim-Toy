@@ -3,6 +3,8 @@
 #include "./../byteCode/definitions.h" // Byte Code Definitions
 #include "./../byteCode/byteCode.h" // Byte Code
 #include "./../utils/linkedList.h" // Linked List
+#include "./compiler_helper.h" // Compiler helper
+#include "./parser_helper.h" // Parse helper
 #include "./definitions.h" // Parser Definitions
 #include "./compiler.h" // Compiler Control
 #include "./ast_nodes.h" // Ast Nodes
@@ -165,8 +167,16 @@ utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNode(pa
 
     case AST_NODE_FUNCTION_DECLARATION:
 
-        return getByteCodeFromNodeFunctionDeclaration(
+        getByteCodeFromNodeFunctionDeclaration(
             (parser::Ast_Node_Function_Declaration*) _node, _comCntrl
+        );
+
+        break;
+
+    case AST_NODE_FUNCTION_CALL:
+
+        return getByteCodeFromNodeFunctionCall(
+            (parser::Ast_Node_Function_Call*) _node, _comCntrl
         );
     
     default:
@@ -284,23 +294,15 @@ utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVar
         parser::Type_Information* _type = (*_comCntrl->ast_storage->types)[_astVarDecl->typePos];
         int _s = 0;
 
+        _comCntrl->varDecl->add(
+            _astVarDecl
+        );
+
         if (_type->id == TOKEN_IDENTIFIER) { std::cout << "not done variable declaration 1" << std::endl; exit(-1); /* TODO */}
 
         else {
 
-            switch (_type->id)
-            {
-            case TOKEN_TYPE_INT: _s = 4; break;
-
-            /* TODO rest */
-            
-            default: 
-
-                std::cout << "not done variable declaration 2" << std::endl;
-
-                exit(-1);
-
-            }
+            _s = parser_helper::getSizePrimitiveType(_type->id);
 
         }
 
@@ -365,28 +367,105 @@ utils::LinkedList <byte_code::Byte_Code*>*
 
         utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
 
-        for (int _ = _astPntrOprs->operations->count - 1; _ >= 0; _--)
-
-            _rtr->add(
-                getByteCodeOfExpressionId((*_astPntrOprs->operations)[_])
-            );
-
         _rtr->join(
             getByteCodeFromNode(
                 _astPntrOprs->value, _comCntrl
             )
         );
 
+        for (int _ = _astPntrOprs->operations->count - 1; _ >= 0; _--)
+
+            _rtr->add(
+                getByteCodeOfExpressionId((*_astPntrOprs->operations)[_])
+            );
+
         return _rtr;
 
 }
 
-utils::LinkedList <byte_code::Byte_Code*>* 
-    parser_helper::getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration* _astFuncDecl, parser::Compiler_Control* _comCntrl) {
+void parser_helper::getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration* _astFuncDecl, parser::Compiler_Control* _comCntrl) {
 
+    _comCntrl->code_blocks->add(
+        parser::Compiler_Code_Block::generate(
+            _comCntrl, (parser::Ast_Node_Code_Block*) _astFuncDecl->body
+        )
+    );
 
+    // Add the parameters at first inverted
+    for (int _ = 0; _ < _astFuncDecl->parameters->count; _++)
+
+        (*_comCntrl->code_blocks)[_comCntrl->code_blocks->count - 1]->byte_code->addFrst(
+            getByteCodeFromNodeVariableDeclaration( // Memory leak
+                (parser::Ast_Node_Variable_Declaration*) (*_astFuncDecl->parameters)[_], _comCntrl
+            )->frst->object
+        );
+
+    _comCntrl->funcDecl->add(_astFuncDecl);
 
 }
 
+utils::LinkedList <byte_code::Byte_Code*>* 
+    parser_helper::getByteCodeFromNodeFunctionCall(parser::Ast_Node_Function_Call* _astFuncCall, parser::Compiler_Control* _comCntrl) {
+
+        utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
+
+        parser::Ast_Node_Function_Declaration* _astFuncDecl = NULL;
+        int _funcPos = 0;
+
+        for (; _funcPos < _comCntrl->funcDecl->count; _funcPos++)
+
+            if (
+                (*_comCntrl->funcDecl)[_funcPos]->declId == _astFuncCall->declId
+            ) { _astFuncDecl = (*_comCntrl->funcDecl)[_funcPos]; break; }
+
+        if (!_astFuncDecl) { std::cout << "No function declaration with given name" << std::endl; exit(-1); } // TODO
+
+        if (!parser_helper::confirmFunctionParameters(_astFuncDecl->parameters, _astFuncCall->parameters, _comCntrl)) {
+
+            std::cout << "No same lenght of inputs in function declaration and function call" << std::endl;
+            std::cout << "Or No same type size of inputs in function declaration and function call" << std::endl;
+
+            exit(-1);
+
+        }
+
+        byte_code::Byte_Code* _cleanStack = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+        new (_cleanStack) byte_code::Byte_Code(
+            BYTECODE_FUNCTION_CALL_START,
+            0
+        );
+        _rtr->add(_cleanStack);
+
+
+        for (int _ = 0; _ < _astFuncCall->parameters->count; _++) {
+
+            _rtr->join(
+                getByteCodeFromNode(
+                    (*_astFuncCall->parameters)[_], _comCntrl
+                )
+            );
+
+            byte_code::Byte_Code* _assign = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+            new (_assign) byte_code::Byte_Code(
+                BYTECODE_ASSIGN,
+                0
+            );
+            _rtr->add(_assign);
+
+        }
+
+        byte_code::Byte_Code* _tkFuncCall = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+        new (_tkFuncCall) byte_code::Byte_Code(
+            BYTECODE_FUNCTION_CALL,
+            _funcPos
+        );
+        _rtr->add(_tkFuncCall);
+
+        return _rtr;
+
+}
 
 
