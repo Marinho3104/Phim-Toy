@@ -15,9 +15,15 @@ parser::Ast_Node::Ast_Node(int _id) : id(_id) {}
 
 /*      Ast Node Block Code     */
 
-parser::Ast_Node_Code_Block::Ast_Node_Code_Block(int _envId, utils::LinkedList <char*>* _namesDeclrs, Ast_Node_Code_Block* _previousBlock) 
-    : Ast_Node(AST_NODE_CODE_BLOCK), environment(_envId), namesUsedInBlock(_namesDeclrs), previousBlock(_previousBlock) {
+parser::Ast_Node_Code_Block::Ast_Node_Code_Block(int _envId, utils::LinkedList <char*>* _namesDeclrs, Ast_Node_Code_Block* _previousBlock, int _namesCount) 
+    : Ast_Node(AST_NODE_CODE_BLOCK), environment(_envId), namesUsedInBlock(_namesDeclrs), previousBlock(_previousBlock), namesCount(_namesCount) {
         if (!namesUsedInBlock) namesUsedInBlock = new utils::LinkedList <char*>();
+        declarationIdNames = new utils::LinkedList <int>();
+
+        for (int _ = 0; _ < namesUsedInBlock->count; _++) {
+            std::cout << "Names count -> -> -> hey" << namesCount << std::endl;
+            declarationIdNames->add(namesCount++);
+        }       
 }
 
 utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNewNodes(Ast_Control* _astCntrl) {
@@ -68,13 +74,7 @@ cont:
 
     if (parser::isPrimativeType(_tk) || _astCntrl->crrntBlock->getDeclarationId(_tk->phr) != -1 ) { // Miss struct declarations TODO
 
-        switch ((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos + 1]->id)
-        {
-        case TOKEN_EQUAL: case TOKEN_OPENPARENTHESES: goto expressionGen;
-        
-        default:
-            break;
-        }
+        if ((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos + 1]->id != TOKEN_IDENTIFIER) goto expressionGen;
 
         Type_Information* _typeInformation = Type_Information::generate(_astCntrl);
 
@@ -112,14 +112,14 @@ int parser::Ast_Node_Code_Block::getDeclarationId(char* _) {
     int _rtr;
     if ((_rtr = namesUsedInBlock->getObjectPosition(_, NULL)) == -1)
         if (previousBlock) return previousBlock->getDeclarationId(_);
-    return _rtr;
+    return (*declarationIdNames)[_rtr];
 }
-
-int parser::Ast_Node_Code_Block::getDeclarationIdCurrntBlock(char* _) { return namesUsedInBlock->getObjectPosition(_, NULL); }
 
 bool parser::Ast_Node_Code_Block::addNewName(char* _) {
     if (namesUsedInBlock->getObjectPosition(_, NULL) != -1) return false;
     namesUsedInBlock->add(_);
+    std::cout << "Names count -> -> ->" << namesCount << std::endl;
+    declarationIdNames->add(namesCount++);
     return true;
 }
 
@@ -130,7 +130,7 @@ parser::Ast_Node_Code_Block* parser::Ast_Node_Code_Block::generate(Ast_Control* 
     std::cout << "--> Ast Node Block Code <--" << std::endl;
 
     parser::Ast_Node_Code_Block* _ = (parser::Ast_Node_Code_Block*) malloc(sizeof(parser::Ast_Node_Code_Block));
-    new (_) parser::Ast_Node_Code_Block(_envId, _namesDeclrs, _astCntrl->crrntBlock);
+    new (_) parser::Ast_Node_Code_Block(_envId, _namesDeclrs, _astCntrl->crrntBlock, _astCntrl->crrntBlock ? _astCntrl->crrntBlock->namesCount : 0);
 
     utils::LinkedList <parser::Ast_Node*>* _body = new utils::LinkedList <parser::Ast_Node*>();
 
@@ -157,6 +157,8 @@ parser::Ast_Node_Code_Block* parser::Ast_Node_Code_Block::generate(Ast_Control* 
     _astCntrl->crrntBlock = _astCntrl->crrntBlock->previousBlock;
 
     _astCntrl->code_blocks->add(_);
+
+    if (_->previousBlock) _->previousBlock->namesCount = _->namesCount;
 
     return _;
 

@@ -60,7 +60,7 @@ namespace parser {
         utils::LinkedList <parser::Token*>* tokensColl; // Tokens Collection
         parser::Ast_Node_Code_Block* crrntBlock; // Current block
         Storage* storage; // Storage
-        int crrntTkPos; // Keeps track of current token 
+        int crrntTkPos; // Keeps track of current token | Names count
 
         /* Constructor */
         Ast_Control(utils::LinkedList <parser::Token*>*);

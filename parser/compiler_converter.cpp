@@ -204,10 +204,21 @@ utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVal
 
 }
 
-utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVariable(parser::Ast_Node_Variable* _astVariable, parser::Compiler_Control*) {
+utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVariable(parser::Ast_Node_Variable* _astVariable, parser::Compiler_Control* _comCntrl) {
 
     utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
     byte_code::Byte_Code* _loadVar = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    parser::Ast_Node_Variable_Declaration* _astVarDecl = NULL;
+    int _varPos = 0;
+
+    for (; _varPos < _comCntrl->varDecl->count; _varPos++)
+
+        if (
+            (*_comCntrl->varDecl)[_varPos]->declId == _astVariable->declId
+        ) { std::cout << "Var founded" << std::endl; _astVarDecl = (*_comCntrl->varDecl)[_varPos]; break; }
+
+    if (!_astVarDecl) { std::cout << "No variable declaration with given name" << std::endl; exit(-1); } // TODO
 
     new (_loadVar) byte_code::Byte_Code(
         BYTECODE_LOAD_VARIABLE,
@@ -385,11 +396,22 @@ utils::LinkedList <byte_code::Byte_Code*>*
 
 void parser_helper::getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration* _astFuncDecl, parser::Compiler_Control* _comCntrl) {
 
+    std::cout << "Func decl decl id -> " << _astFuncDecl->declId << std::endl;
+
     _comCntrl->code_blocks->add(
         parser::Compiler_Code_Block::generate(
             _comCntrl, (parser::Ast_Node_Code_Block*) _astFuncDecl->body
         )
     );
+
+
+    byte_code::Byte_Code* _paramsEnd = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_paramsEnd) byte_code::Byte_Code(
+        BYTECODE_PARAMS_END,
+        0
+    );
+    (*_comCntrl->code_blocks)[_comCntrl->code_blocks->count - 1]->byte_code->addFrst(_paramsEnd);
 
     // Add the parameters at first inverted
     for (int _ = 0; _ < _astFuncDecl->parameters->count; _++)
@@ -412,6 +434,8 @@ utils::LinkedList <byte_code::Byte_Code*>*
         parser::Ast_Node_Function_Declaration* _astFuncDecl = NULL;
         int _funcPos = 0;
 
+        std::cout << "Func call decl id -> " << _astFuncCall->declId << std::endl;
+
         for (; _funcPos < _comCntrl->funcDecl->count; _funcPos++)
 
             if (
@@ -428,15 +452,6 @@ utils::LinkedList <byte_code::Byte_Code*>*
             exit(-1);
 
         }
-
-        byte_code::Byte_Code* _cleanStack = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
-
-        new (_cleanStack) byte_code::Byte_Code(
-            BYTECODE_FUNCTION_CALL_START,
-            0
-        );
-        _rtr->add(_cleanStack);
-
 
         for (int _ = 0; _ < _astFuncCall->parameters->count; _++) {
 

@@ -34,9 +34,11 @@ namespace parser {
         // Ast Generation Only //
 
         utils::LinkedList <char*>* namesUsedInBlock;
+        utils::LinkedList <int>* declarationIdNames;
         Ast_Node_Code_Block* previousBlock;
+        int namesCount;
         
-        Ast_Node_Code_Block(int, utils::LinkedList <char*>*, Ast_Node_Code_Block*k);
+        Ast_Node_Code_Block(int, utils::LinkedList <char*>*, Ast_Node_Code_Block*, int);
 
         static utils::LinkedList <parser::Ast_Node*>* getNewNodes(Ast_Control*);
 
