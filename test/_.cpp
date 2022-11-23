@@ -7,6 +7,8 @@
 // #include "./../objects/phim_string.h"
 // #include "./../objects/phim_char.h"
 
+#include "./../parser/compiled_byte_code.h" // 
+
 #include "./../byteCode/byteCode.h" // Byte Code
 
 #include "./../parser/compiler.h" // Compiler
@@ -21,6 +23,7 @@
 
 #include "./../vm/vm_stdlib.h"
 #include "./../vm/memory.h"
+#include "./../vm/vm.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -56,48 +59,55 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 }
 
-parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node*>* _ast, parser::Storage* _storage) {
+parser::Compiled_Byte_Code* getCompilerControl(utils::LinkedList <parser::Ast_Node*>* _ast, parser::Storage* _storage) {
 
     parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_ast, _storage);
 
     _comCntrl->generateByteCode();
 
-    for (int _ = 0; _ < _comCntrl->code_blocks->count; _++) {
+    parser::Compiled_Byte_Code* _rtr = _comCntrl->getCompiledByteCode();
 
-        std::cout << "--> Code Block <--" << std::endl;
+    _rtr->print();
 
-        for (int __ = 0; __ < (*_comCntrl->code_blocks)[_]->byte_code->count; __++)
-
-            std::cout << "Byte code -> " << (int) (unsigned char) (*(*_comCntrl->code_blocks)[_]->byte_code)[__]->code << " " << (*(*_comCntrl->code_blocks)[_]->byte_code)[__]->argument << std::endl;
-
-        std::cout << "--> Code Block End <--" << std::endl;
-
-    }
-
-    std::cout << "-------------------" << std::endl;
-
-    return _comCntrl;
+    return _rtr;
 
 }
 
-void getByteCode(char* _code) {
+parser::Compiled_Byte_Code* getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
     parser::Ast_Control* _astCntrl = getAst(_tkCntrl->tokens);
 
-    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+    return getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+
+}
+
+void executeByteCode(parser::Compiled_Byte_Code* _toExe) {
+
+    vm::Vm* _vm = (vm::Vm*) malloc(sizeof(vm::Vm));
+
+    new (_vm) vm::Vm();
+
+    _vm->execute(
+        _toExe
+    );
 
 }
 
 int main() {
 
-    getByteCode(
-        "void jk(int l) { void k; }" \
+    "void jk(int l) { void k; }" \
+    "int kk() {} " \
+    "jk(kk());";
+
+    parser::Compiled_Byte_Code* _com = getByteCode(
+        "void jk() { void k; }" \
         "int kk() {} " \
-        "jk(kk());" \
-        "jk;"
+        "jk(kk());"
     );
+
+    // executeByteCode(_com);
 
     return 0;
 

@@ -7,6 +7,7 @@
 #include "./../parser/ast_nodes.h" // Ast Nodes
 #include "./../parser/token.h" // Tokens Id
 #include "./../parser/ast.h" // Ast Contrl | TypeInformation
+#include "./../parser/compiled_byte_code.h" // Compiler byte code
 
 #include <type_traits>
 #include <iostream>
@@ -196,6 +197,7 @@ template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
 template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
 template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
 template class utils::DataLL <parser::Compiler_Code_Block*>;
+template class utils::DataLL <parser::Byte_Code_Block*>;
 template class utils::DataLL <parser::Type_Information*>;
 template class utils::DataLL <byte_code::Byte_Code*>;
 // template class utils::DataLL <objects::Phim_Object*>;
@@ -208,6 +210,7 @@ template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
 template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
 template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
 template class utils::LinkedList <parser::Compiler_Code_Block*>;
+template class utils::LinkedList <parser::Byte_Code_Block*>;
 template class utils::LinkedList <parser::Type_Information*>;
 template class utils::LinkedList <byte_code::Byte_Code*>;
 // template class utils::LinkedList <objects::Phim_Object*>;

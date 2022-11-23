@@ -18,12 +18,6 @@ parser::Ast_Node::Ast_Node(int _id) : id(_id) {}
 parser::Ast_Node_Code_Block::Ast_Node_Code_Block(int _envId, utils::LinkedList <char*>* _namesDeclrs, Ast_Node_Code_Block* _previousBlock, int _namesCount) 
     : Ast_Node(AST_NODE_CODE_BLOCK), environment(_envId), namesUsedInBlock(_namesDeclrs), previousBlock(_previousBlock), namesCount(_namesCount) {
         if (!namesUsedInBlock) namesUsedInBlock = new utils::LinkedList <char*>();
-        declarationIdNames = new utils::LinkedList <int>();
-
-        for (int _ = 0; _ < namesUsedInBlock->count; _++) {
-            std::cout << "Names count -> -> -> hey" << namesCount << std::endl;
-            declarationIdNames->add(namesCount++);
-        }       
 }
 
 utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNewNodes(Ast_Control* _astCntrl) {
@@ -31,7 +25,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNewNodes(
     utils::LinkedList <Ast_Node*>* _rtr = (utils::LinkedList <Ast_Node*>*) malloc(sizeof(utils::LinkedList <Ast_Node*>));
     new (_rtr) utils::LinkedList <Ast_Node*>();
 
-    std::cout << "Get node ->" << (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos]->id << std::endl;
+    // std::cout << "Get node ->" << (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos]->id << std::endl;
 
     switch ((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos]->id)
     {
@@ -112,14 +106,13 @@ int parser::Ast_Node_Code_Block::getDeclarationId(char* _) {
     int _rtr;
     if ((_rtr = namesUsedInBlock->getObjectPosition(_, NULL)) == -1)
         if (previousBlock) return previousBlock->getDeclarationId(_);
-    return (*declarationIdNames)[_rtr];
+    std::cout << "Declaration id -> " << _rtr + namesCount << std::endl;
+    return _rtr + namesCount;
 }
 
 bool parser::Ast_Node_Code_Block::addNewName(char* _) {
     if (namesUsedInBlock->getObjectPosition(_, NULL) != -1) return false;
     namesUsedInBlock->add(_);
-    std::cout << "Names count -> -> ->" << namesCount << std::endl;
-    declarationIdNames->add(namesCount++);
     return true;
 }
 
@@ -127,10 +120,16 @@ parser::Ast_Node_Code_Block::Ast_Node_Code_Block(utils::LinkedList <Ast_Node*>* 
     : Ast_Node(AST_NODE_CODE_BLOCK), body(_body), environment(_envId) {}
 
 parser::Ast_Node_Code_Block* parser::Ast_Node_Code_Block::generate(Ast_Control* _astCntrl, int _envId, utils::LinkedList <char*>* _namesDeclrs) {
-    std::cout << "--> Ast Node Block Code <--" << std::endl;
+    // std::cout << "--> Ast Node Block Code <--" << std::endl;
+
+    int _off = 0;
+
+    if (_envId == AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL)
+
+        _off = _astCntrl->crrntBlock->namesCount + _astCntrl->crrntBlock->namesUsedInBlock->count;
 
     parser::Ast_Node_Code_Block* _ = (parser::Ast_Node_Code_Block*) malloc(sizeof(parser::Ast_Node_Code_Block));
-    new (_) parser::Ast_Node_Code_Block(_envId, _namesDeclrs, _astCntrl->crrntBlock, _astCntrl->crrntBlock ? _astCntrl->crrntBlock->namesCount : 0);
+    new (_) parser::Ast_Node_Code_Block(_envId, _namesDeclrs, _astCntrl->crrntBlock, _off);
 
     utils::LinkedList <parser::Ast_Node*>* _body = new utils::LinkedList <parser::Ast_Node*>();
 
@@ -148,7 +147,7 @@ parser::Ast_Node_Code_Block* parser::Ast_Node_Code_Block::generate(Ast_Control* 
 
     }
 
-    std::cout << "--> End of Ast Node Block Code <--" << std::endl;
+    // std::cout << "--> End of Ast Node Block Code <--" << std::endl;
 
     new (_) parser::Ast_Node_Code_Block(
         _body, _envId
@@ -158,7 +157,8 @@ parser::Ast_Node_Code_Block* parser::Ast_Node_Code_Block::generate(Ast_Control* 
 
     _astCntrl->code_blocks->add(_);
 
-    if (_->previousBlock) _->previousBlock->namesCount = _->namesCount;
+    if (_->previousBlock && _envId == AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL) 
+        _->previousBlock->namesCount += _->namesUsedInBlock->count;
 
     return _;
 
@@ -235,7 +235,7 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstNode(Ast_Control* _astCnt
 
     if (parser::isAssignment(_tk)) return parser::Ast_Node_Variable_Assignment::generate(_astCntrl);
 
-    std::cout << "Ast Node Expression get first -> Something went wrong" << std::endl;
+    // std::cout << "Ast Node Expression get first -> Something went wrong" << std::endl;
 
     exit(-1);
 
@@ -286,7 +286,7 @@ int parser::Ast_Node_Expression::getResultSize(utils::LinkedList <Ast_Node_Varia
 
 parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* _astCntrl) {
 
-    std::cout << "--> Ast Node Expression <--" << std::endl;
+    // std::cout << "--> Ast Node Expression <--" << std::endl;
 
     parser::Ast_Node_Expression* _ = (parser::Ast_Node_Expression*) malloc(sizeof(parser::Ast_Node_Expression));
     parser::Ast_Node* _frstValue, *_scndValue;
@@ -331,7 +331,7 @@ parser::Type_Information* parser::Ast_Node_Value::getType() {
 
 parser::Ast_Node_Value* parser::Ast_Node_Value::generate(Ast_Control* _astCntrl) {
 
-    std::cout << "--> Ast Node Value <--" << std::endl;
+    // std::cout << "--> Ast Node Value <--" << std::endl;
 
     parser::Ast_Node_Value* _ = (parser::Ast_Node_Value*) malloc(sizeof(parser::Ast_Node_Value));
 
@@ -365,7 +365,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
     int _typeInfoPos, _declId;
     while((*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->id != TOKEN_ENDINSTRUCTION) {
-        std::cout << "--> Ast Node Variable Declaration <--" << std::endl;
+        // std::cout << "--> Ast Node Variable Declaration <--" << std::endl;
 
         _typeInfoPos = _astCntrl->storage->addNewType(_type);
 
@@ -412,7 +412,7 @@ int parser::Ast_Node_Variable::getTypeSize(utils::LinkedList <Ast_Node_Variable_
 
         if ((*_varDeclTable)[_]->declId == declId) return (*_varDeclTable)[_]->getTypeSize(_typeTable);
 
-    std::cout << "Error get size variable <" << std::endl; exit(-1);
+    // std::cout << "Error get size variable <" << std::endl; exit(-1);
 
     return -1;
 
@@ -420,7 +420,7 @@ int parser::Ast_Node_Variable::getTypeSize(utils::LinkedList <Ast_Node_Variable_
 
 parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* _astCntrl) {
 
-    std::cout << "--> Ast Node Variable <--" << std::endl;
+    // std::cout << "--> Ast Node Variable <--" << std::endl;
     parser::Ast_Node_Variable* _ = (parser::Ast_Node_Variable*) malloc(sizeof(parser::Ast_Node_Variable));
     
     int _declId = _astCntrl->crrntBlock->getDeclarationId((*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)++]->phr);
@@ -458,7 +458,7 @@ parser::Ast_Node* parser::Ast_Node_Pointer_Operators::getNewNode(Ast_Control* _a
 
     if (parser::isImplicitValue(_tk)) return parser::Ast_Node_Value::generate(_astCntrl);
 
-    std::cout << "Ast Node Pointer Operators -> Something went wrong" << std::endl;
+    // std::cout << "Ast Node Pointer Operators -> Something went wrong" << std::endl;
 
     exit(-1);
 
@@ -474,7 +474,7 @@ int parser::Ast_Node_Pointer_Operators::getTypeSize() {
 
 parser::Ast_Node_Pointer_Operators* parser::Ast_Node_Pointer_Operators::generate(Ast_Control* _astCntrl, utils::LinkedList <int>* _operators) {
 
-    std::cout << "--> Ast Node Pointer Operators <--" << std::endl;
+    // std::cout << "--> Ast Node Pointer Operators <--" << std::endl;
 
     parser::Ast_Node* _value = getNewNode(_astCntrl);
 
@@ -528,7 +528,7 @@ parser::Ast_Node* parser::Ast_Node_Variable_Assignment::getValueBeforeAssign(Ast
     }
 
 
-    std::cout << "Ast Node Variable Assignment get value before assignment -> Something went wrong" << std::endl;
+    // std::cout << "Ast Node Variable Assignment get value before assignment -> Something went wrong" << std::endl;
 
     exit(-1);
 
@@ -542,7 +542,7 @@ parser::Ast_Node* parser::Ast_Node_Variable_Assignment::getValue(Ast_Control* _a
 
 parser::Ast_Node_Variable_Assignment* parser::Ast_Node_Variable_Assignment::generate(Ast_Control* _astCntrl) {
 
-    std::cout << "--> Variable Assignment <--" << std::endl;
+    // std::cout << "--> Variable Assignment <--" << std::endl;
     parser::Ast_Node_Variable_Assignment* _ = (parser::Ast_Node_Variable_Assignment*) malloc(sizeof(parser::Ast_Node_Variable_Assignment));
     parser::Ast_Node* _valBefAssign, *_value;
     bool _islft = false;
@@ -580,13 +580,13 @@ int parser::Ast_Node_Parenthesis::getTypeSize(utils::LinkedList <Ast_Node_Variab
 }
 
 parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control* _astCntrl) {
-    std::cout << "--> Generate Parenthesis <--" << std::endl;
+    // std::cout << "--> Generate Parenthesis <--" << std::endl;
     parser::Ast_Node_Parenthesis* _ = (parser::Ast_Node_Parenthesis*) malloc(sizeof(parser::Ast_Node_Parenthesis));
     (_astCntrl->crrntTkPos)++;
     new (_) parser::Ast_Node_Parenthesis(
         parser::Ast_Node_Expression::generate(_astCntrl)
     );
-    std::cout << "--> End Parenthesis <--" << std::endl;
+    // std::cout << "--> End Parenthesis <--" << std::endl;
     (_astCntrl->crrntTkPos)++;
     return _;
 
@@ -599,7 +599,7 @@ parser::Ast_Node_Function_Declaration::Ast_Node_Function_Declaration(int _typeRt
 
 utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::getParameters(Ast_Control* _astCntrl, utils::LinkedList <char*>* _namesDeclrs) {
 
-    std::cout << "--> Ast Node Function Parameters <--" << std::endl;
+    // std::cout << "--> Ast Node Function Parameters <--" << std::endl;
     utils::LinkedList <Ast_Node*>* _rtr = new utils::LinkedList <Ast_Node*>();
     parser::Ast_Node_Variable_Declaration* _varDecl;
     Type_Information* _typeInfo;
@@ -669,7 +669,7 @@ int parser::Ast_Node_Function_Declaration::getTypeSize(utils::LinkedList <Type_I
 
 parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* _astCntrl, Type_Information* _typeRtr) {
 
-    std::cout << "--> Node Function Declaration <--" << std::endl;
+    // std::cout << "--> Node Function Declaration <--" << std::endl;
     parser::Ast_Node_Function_Declaration* _ = (parser::Ast_Node_Function_Declaration*) malloc(sizeof(parser::Ast_Node_Function_Declaration));
     int _typeRtrPos = _astCntrl->storage->addNewType(_typeRtr), _declId;
     parser::Ast_Node* _body = NULL;
@@ -732,7 +732,7 @@ int parser::Ast_Node_Function_Call::getTypeSize(utils::LinkedList <Ast_Node_Func
 
         if ((*_funcDeclTable)[_]->declId == declId) return (*_funcDeclTable)[_]->getTypeSize(_typeTable);
 
-    std::cout << "Error get size function call <" << std::endl; exit(-1);
+    // std::cout << "Error get size function call <" << std::endl; exit(-1);
 
     return -1;
 
@@ -740,7 +740,7 @@ int parser::Ast_Node_Function_Call::getTypeSize(utils::LinkedList <Ast_Node_Func
 
 parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Control* _astCntrl) {
 
-    std::cout << "--> Ast Node Function Call <--" << std::endl;
+    // std::cout << "--> Ast Node Function Call <--" << std::endl;
 
     parser::Ast_Node_Function_Call* _ = (parser::Ast_Node_Function_Call*) malloc(sizeof(parser::Ast_Node_Function_Call));
 
@@ -765,7 +765,7 @@ parser::Ast_Node_Struct_Declaration::Ast_Node_Struct_Declaration(int _declId, bo
     : Ast_Node(AST_NODE_STRUCT_DECLARATION), declId(_declId), isContract(_isCntr), body(_body) {}
 
 parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::generate(Ast_Control* _astCntrl) { // TODO struct {} name;
-    std::cout << "--> Struct Declaration <--" << std::endl;
+    // std::cout << "--> Struct Declaration <--" << std::endl;
 
     parser::Ast_Node_Struct_Declaration* _ = (parser::Ast_Node_Struct_Declaration*) malloc(sizeof(parser::Ast_Node_Struct_Declaration));
     bool _isCntr = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos++]->id == TOKEN_CONTRACT;

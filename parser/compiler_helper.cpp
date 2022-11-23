@@ -13,7 +13,7 @@ bool parser_helper::confirmFunctionParameters(utils::LinkedList<parser::Ast_Node
     for (int _ = 0; _ < _f->count; _++) {
 
         if (
-            ((parser::Ast_Node_Variable_Declaration*) (*_f)[_])->getTypeSize(_comCntrl->ast_storage->types) != ((parser::Ast_Node_Expression*) (*_s)[_])->getResultSize(_comCntrl->varDecl, _comCntrl->funcDecl, _comCntrl->ast_storage->types)
+            ((parser::Ast_Node_Variable_Declaration*) (*_f)[_])->getTypeSize(_comCntrl->ast_storage->types) != ((parser::Ast_Node_Expression*) (*_s)[_])->getResultSize(_comCntrl->crrntCompileCodeBlock->compilerDeclarations->varDecl, _comCntrl->crrntCompileCodeBlock->compilerDeclarations->funcDecl, _comCntrl->ast_storage->types)
         ) return false;
 
     }

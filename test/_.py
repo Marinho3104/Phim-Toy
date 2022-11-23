@@ -1,8 +1,14 @@
 
 l = 122
 
-def ola(l, k):
+def ola():
 
+    k = 12
+    
     print(l)
 
-ola(12, 15 + l)
+def adeus():
+
+    k = 12
+
+    print(l)

@@ -3,9 +3,7 @@
 #ifndef VM_MEMORY_H
 #define VM_MEMORY_H
 
-#include <stdint.h>
-
-typedef uint16_t address_t;
+#include "./vm_definitions.h" // Vm Definitions
 
 namespace vm {
 
@@ -13,7 +11,7 @@ namespace vm {
     *
     *   Stack memory
     *   Heap memory
-    *   Pointer to current memory position (heap memory) 
+    * 
     */
     struct Memory {
 

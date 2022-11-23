@@ -34,7 +34,6 @@ namespace parser {
         // Ast Generation Only //
 
         utils::LinkedList <char*>* namesUsedInBlock;
-        utils::LinkedList <int>* declarationIdNames;
         Ast_Node_Code_Block* previousBlock;
         int namesCount;
         

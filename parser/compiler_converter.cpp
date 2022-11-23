@@ -212,11 +212,11 @@ utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVar
     parser::Ast_Node_Variable_Declaration* _astVarDecl = NULL;
     int _varPos = 0;
 
-    for (; _varPos < _comCntrl->varDecl->count; _varPos++)
+    for (; _varPos < _comCntrl->crrntCompileCodeBlock->compilerDeclarations->varDecl->count; _varPos++)
 
         if (
-            (*_comCntrl->varDecl)[_varPos]->declId == _astVariable->declId
-        ) { std::cout << "Var founded" << std::endl; _astVarDecl = (*_comCntrl->varDecl)[_varPos]; break; }
+            (*_comCntrl->crrntCompileCodeBlock->compilerDeclarations->varDecl)[_varPos]->declId == _astVariable->declId
+        ) { std::cout << "Var founded" << std::endl; _astVarDecl = (*_comCntrl->crrntCompileCodeBlock->compilerDeclarations->varDecl)[_varPos]; break; }
 
     if (!_astVarDecl) { std::cout << "No variable declaration with given name" << std::endl; exit(-1); } // TODO
 
@@ -305,7 +305,7 @@ utils::LinkedList <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNodeVar
         parser::Type_Information* _type = (*_comCntrl->ast_storage->types)[_astVarDecl->typePos];
         int _s = 0;
 
-        _comCntrl->varDecl->add(
+        _comCntrl->crrntCompileCodeBlock->compilerDeclarations->varDecl->add(
             _astVarDecl
         );
 
@@ -396,11 +396,9 @@ utils::LinkedList <byte_code::Byte_Code*>*
 
 void parser_helper::getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration* _astFuncDecl, parser::Compiler_Control* _comCntrl) {
 
-    std::cout << "Func decl decl id -> " << _astFuncDecl->declId << std::endl;
-
     _comCntrl->code_blocks->add(
         parser::Compiler_Code_Block::generate(
-            _comCntrl, (parser::Ast_Node_Code_Block*) _astFuncDecl->body
+            _comCntrl, (parser::Ast_Node_Code_Block*) _astFuncDecl->body, NULL
         )
     );
 
@@ -422,7 +420,7 @@ void parser_helper::getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Func
             )->frst->object
         );
 
-    _comCntrl->funcDecl->add(_astFuncDecl);
+    _comCntrl->crrntCompileCodeBlock->compilerDeclarations->funcDecl->add(_astFuncDecl);
 
 }
 
@@ -434,13 +432,11 @@ utils::LinkedList <byte_code::Byte_Code*>*
         parser::Ast_Node_Function_Declaration* _astFuncDecl = NULL;
         int _funcPos = 0;
 
-        std::cout << "Func call decl id -> " << _astFuncCall->declId << std::endl;
-
-        for (; _funcPos < _comCntrl->funcDecl->count; _funcPos++)
+        for (; _funcPos < _comCntrl->crrntCompileCodeBlock->compilerDeclarations->funcDecl->count; _funcPos++)
 
             if (
-                (*_comCntrl->funcDecl)[_funcPos]->declId == _astFuncCall->declId
-            ) { _astFuncDecl = (*_comCntrl->funcDecl)[_funcPos]; break; }
+                (*_comCntrl->crrntCompileCodeBlock->compilerDeclarations->funcDecl)[_funcPos]->declId == _astFuncCall->declId
+            ) { _astFuncDecl = (*_comCntrl->crrntCompileCodeBlock->compilerDeclarations->funcDecl)[_funcPos]; break; }
 
         if (!_astFuncDecl) { std::cout << "No function declaration with given name" << std::endl; exit(-1); } // TODO
 
