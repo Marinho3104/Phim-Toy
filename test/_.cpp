@@ -80,7 +80,7 @@ int main() {
     "jk(kk());";
 
     parser::Compiled_Byte_Code* _com = getByteCode(
-        "int j; **j;"
+        "struct ola { int j; };"
     );
 
     // executeByteCode(_com);

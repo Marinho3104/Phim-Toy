@@ -165,6 +165,101 @@ namespace parser {
 
     };
 
+    /* Represent a assign to a variable */
+    struct Ast_Node_Variable_Assignment : public Ast_Node {
+        bool operation_is_left; // Is operator in left side of variable 
+        int expression_id; // Expression Id
+        Ast_Node* value_before_assign; // Value Before Assign
+        Ast_Node_Expression *value; // Value assign to || NULL if is single assignment
+
+        /* destructor */
+        ~Ast_Node_Variable_Assignment();
+        /* constructor */
+        Ast_Node_Variable_Assignment(bool, Ast_Node*, int, Ast_Node_Expression*);
+
+        /* Generator */
+        static Ast_Node_Variable_Assignment* generate(Ast_Control*);
+
+        static Ast_Node* getValueBeforeAssign(Ast_Control*);
+        
+        static Ast_Node_Expression* getValue(Ast_Control*);
+
+    };
+
+    /* Represent any parenthesis */
+    struct Ast_Node_Parenthesis : public Ast_Node {
+        Ast_Node_Expression* value; // Value inside parenthesis
+        
+        /* Destructor */
+        ~Ast_Node_Parenthesis();
+        /* Constructor */
+        Ast_Node_Parenthesis(Ast_Node_Expression*);
+
+        /* Generator */
+        static Ast_Node_Parenthesis* generate(Ast_Control*);
+
+        int getByteSize();
+
+    };
+
+    /* Represent a function declaration */
+    struct Ast_Node_Function_Declaration : public Ast_Node {
+        
+        Type_Information* return_type; // Return type
+        int declaration_id; // Declaration id 
+        utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
+        Ast_Node_Code_Block* body; // Function body || NULL If is forward declaration
+
+        /* Destructor */
+        ~Ast_Node_Function_Declaration();         
+        /* Constructor */
+        Ast_Node_Function_Declaration(Type_Information*, int, utils::LinkedList <Ast_Node*>*, Ast_Node_Code_Block*);
+        /* Generator */
+        static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*);
+        
+        static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*, utils::LinkedList <char*>*);
+
+        int getByteSize();
+        
+    };
+
+    /* Represent a function call */
+    struct Ast_Node_Function_Call : public Ast_Node {
+        Ast_Node_Function_Declaration* function_declaration; // Function declaration
+        utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
+        int declaration_id; // Id
+        bool is_global_function; // Is function global
+        /* Constructor */
+        Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node*>*, bool);
+        
+        /* Generator */
+        static Ast_Node_Function_Call* generate(Ast_Control*);
+
+        static utils::LinkedList <Ast_Node*>* getFunctionCallParameters(Ast_Control*);
+
+        int getByteSize();
+
+    };
+
+    /* Represent a struct declaration */
+    struct Ast_Node_Struct_Declaration : public Ast_Node {
+        int declaration_id; // Struct Declaration id
+        bool is_contract; // Is contract
+        Ast_Node_Code_Block* body_info; // just to hold info of body
+        utils::LinkedList <Ast_Node*>* fields;
+        utils::LinkedList <Ast_Node_Function_Declaration*>* functions;
+
+        Ast_Node_Struct_Declaration(int, bool);
+        
+        /* Generator */
+        static Ast_Node_Struct_Declaration* generate(Ast_Control*);
+
+        void getFields(Ast_Control*);
+
+        void getFunctions(Ast_Control*); 
+
+    };
+
 }
 
 #endif

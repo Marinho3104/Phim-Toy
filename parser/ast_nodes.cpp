@@ -100,6 +100,16 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNewNodes(
 
         break;
 
+    case TOKEN_STRUCT: case TOKEN_CONTRACT:
+
+        _->add(
+            Ast_Node_Struct_Declaration::generate(
+                __astCntrl
+            )
+        );
+
+        break;
+
     default: goto cont;
 
     }
@@ -116,9 +126,17 @@ cont:
 
         Type_Information* _typeInformation = Type_Information::generate(__astCntrl);
 
-        switch (_tkNext->id)
+        switch ((*__astCntrl->tokens_collection)[__astCntrl->current_token_position + 1]->id)
         {
-        case TOKEN_OPENPARENTHESES: exit(-1); break;        
+        case TOKEN_OPENPARENTHESES: 
+        
+            _->add(
+                parser::Ast_Node_Function_Declaration::generate(
+                    __astCntrl, _typeInformation
+                )
+            );
+
+            break;        
         default: 
 
             delete _;
@@ -248,9 +266,7 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstNode(Ast_Control* __astCn
 
                 delete _operators;
             
-                // return parser::Ast_Node_Variable_Assignment::generate(_astCntrl);
-
-                exit(-1);
+                _ = parser::Ast_Node_Variable_Assignment::generate(__astCntrl);
 
                 break;
 
@@ -361,7 +377,17 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
         _tk = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position];
 
-        if (_tk->id == TOKEN_EQUAL) {exit(-1); /*TODO*/}
+        if (_tk->id == TOKEN_EQUAL) {
+
+            __astCntrl->current_token_position--;
+
+            _->add(
+                parser::Ast_Node_Variable_Assignment::generate(
+                    __astCntrl
+                )
+            );
+
+        }
         
         if (_tk->id == TOKEN_COMMA) {
 
@@ -457,3 +483,370 @@ parser::Ast_Node* parser::Ast_Node_Pointer_Operators::getValue(Ast_Control* __as
 int parser::Ast_Node_Pointer_Operators::getTypeSize() { return 0; // TODO
     
 }
+
+/*      Ast Node Variable assignment     */
+
+parser::Ast_Node_Variable_Assignment::~Ast_Node_Variable_Assignment() { 
+    if (value_before_assign) value_before_assign->~Ast_Node(); free(value_before_assign);
+    if (value) value->~Ast_Node_Expression(); free(value); 
+}
+
+parser::Ast_Node_Variable_Assignment::Ast_Node_Variable_Assignment(bool _isLft, Ast_Node* _valBef, int _expId, Ast_Node_Expression* _value) : 
+    Ast_Node(AST_NODE_VARIABLE_ASSIGNMENT), operation_is_left(_isLft), value_before_assign(_valBef), expression_id(_expId), value(_value) {}
+
+parser::Ast_Node_Variable_Assignment* parser::Ast_Node_Variable_Assignment::generate(Ast_Control* __astCntrl) {
+
+    __astCntrl->printDebugInfo("--> Variable Assignment <--");
+
+    parser::Ast_Node_Variable_Assignment* _ = (parser::Ast_Node_Variable_Assignment*) malloc(sizeof(parser::Ast_Node_Variable_Assignment));
+    parser::Ast_Node_Expression* _value;
+    parser::Ast_Node* _valBef;
+    bool _isLft = false;
+
+    parser::Token* _expTk = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position];
+
+    if (parser::isAssignment(_expTk)) {
+        if (!parser::isSingleAssignment(_expTk)) new Ast_Exception("Not single assignment not allowed before variable");
+        __astCntrl->current_token_position++;
+        _isLft = true;
+    }
+
+    _valBef = getValueBeforeAssign(__astCntrl);
+
+    if (!_isLft) { _expTk = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]; _value = getValue(__astCntrl); }
+    else _value = NULL;
+
+    new (_) parser::Ast_Node_Variable_Assignment(
+        _isLft, _valBef, _expTk->id, _value
+    );    
+
+    return _;
+
+}
+
+parser::Ast_Node* parser::Ast_Node_Variable_Assignment::getValueBeforeAssign(Ast_Control* __astCntrl) {
+
+    /* Supported Nodes:
+    *   Ast_Node_Variable 
+    *   Ast_Parenthesis //
+    *   Ast_Pointer_Operators 
+    */
+
+    parser::Token* _tk = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position];
+    parser::Ast_Node* _;
+
+    switch (_tk->id)
+    {
+    case TOKEN_IDENTIFIER: _ = parser::Ast_Node_Variable::generate(__astCntrl); break;
+    case TOKEN_POINTER: case TOKEN_ADDRESS: 
+        {
+
+            utils::LinkedList <int>* _operators = new utils::LinkedList <int>();
+
+            parser_helper::setPointerOperators(__astCntrl, _operators);
+
+            _ = parser::Ast_Node_Pointer_Operators::generate(
+                __astCntrl, _operators
+            );
+
+            delete _operators;
+
+            break;
+
+        }
+    // case TOKEN_OPENPARENTHESES: return parser::Ast_Node_Parenthesis::generate(__astCntrl);
+
+    default: goto exception;
+    }
+
+    return _;
+
+exception:
+
+    new Ast_Exception("Ast Node Variable Assignment get value before assignment -> Something went wrong");
+
+    return NULL;
+
+}
+
+parser::Ast_Node_Expression* parser::Ast_Node_Variable_Assignment::getValue(Ast_Control* __astCntrl) { return parser::Ast_Node_Expression::generate(__astCntrl); }
+
+/*      Ast Node Parenthesis     */
+
+parser::Ast_Node_Parenthesis::~Ast_Node_Parenthesis() { if (value) value->~Ast_Node_Expression(); free(value); }
+
+parser::Ast_Node_Parenthesis::Ast_Node_Parenthesis(Ast_Node_Expression* _value) : Ast_Node(AST_NODE_PARENTHESIS), value(_value) {}
+
+parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control* __astCntrl) {
+
+    __astCntrl->printDebugInfo("--> Generate Parenthesis <--");
+
+    parser::Ast_Node_Parenthesis* _ = (parser::Ast_Node_Parenthesis*) malloc(sizeof(parser::Ast_Node_Parenthesis));
+
+    __astCntrl->current_token_position++;
+
+    new (_) parser::Ast_Node_Parenthesis(
+        parser::Ast_Node_Expression::generate(__astCntrl)
+    );
+
+    __astCntrl->printDebugInfo("--> End Parenthesis <--");
+
+    __astCntrl->current_token_position++;
+
+    return _;
+
+}
+
+int parser::Ast_Node_Parenthesis::getByteSize() { return value->getByteSize(); }
+
+/*      Ast Node Function Declaration     */
+
+parser::Ast_Node_Function_Declaration::~Ast_Node_Function_Declaration() {
+    delete return_type;
+    delete parameters;
+    // if (body) body->~Ast_Node_Code_Block(); free(body); is in code_blocks field so no need to free here
+}       
+
+parser::Ast_Node_Function_Declaration::Ast_Node_Function_Declaration(
+    Type_Information* _rtrType, int _declId, utils::LinkedList <Ast_Node*>* _params, Ast_Node_Code_Block* _body) : Ast_Node(AST_NODE_FUNCTION_DECLARATION), return_type(_rtrType),
+        declaration_id(_declId), parameters(_params), body(_body) {}
+
+parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* __astCntrl, Type_Information* _rtrType) {
+
+    __astCntrl->printDebugInfo("--> Node Function Declaration <--");
+
+    parser::Ast_Node_Function_Declaration* _ = (parser::Ast_Node_Function_Declaration*) malloc(sizeof(parser::Ast_Node_Function_Declaration));
+    parser::Ast_Node_Code_Block* _body = NULL;
+    int _declId;
+
+    __astCntrl->current_block->addNewName(
+        (*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->phr, 1
+    );
+
+    bool _glb;
+    _declId = __astCntrl->current_block->getDeclarationId((*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->phr, _glb);
+
+    utils::LinkedList <char*>* _namesDeclrs = new utils::LinkedList <char*>();
+
+    utils::LinkedList <parser::Ast_Node*>* _params = getParameters(__astCntrl, _namesDeclrs);
+
+    if ((*__astCntrl->tokens_collection)[(__astCntrl->current_token_position)]->id == TOKEN_OPENCURLYBRACKET) {
+
+        __astCntrl->current_token_position++;
+        _body = parser::Ast_Node_Code_Block::generate(__astCntrl, AST_NODE_CODE_BLOCK_ENVIRONMEMT_FUNCTION, _namesDeclrs);
+
+    }
+
+    new (_) parser::Ast_Node_Function_Declaration(
+        _rtrType, _declId, _params, _body
+    );
+
+    return _;
+
+}
+
+utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::getParameters(Ast_Control* __astCntrl, utils::LinkedList <char*>* __nmsDecl) {
+
+    __astCntrl->printDebugInfo("--> Ast Node Function Parameters <--");
+    utils::LinkedList <Ast_Node*>* _ = new utils::LinkedList <Ast_Node*>();
+    parser::Ast_Node_Variable_Declaration* _varDecl;
+    Type_Information* _typeInfo;
+    int _declId;
+    char* _name;
+
+    __astCntrl->current_token_position++;
+
+    while((*__astCntrl->tokens_collection)[(__astCntrl->current_token_position)]->id != TOKEN_CLOSEPARENTHESES) {
+
+        __astCntrl->printDebugInfo("--> Ast Node Function Parameter Added <--");
+
+        _typeInfo = Type_Information::generate(__astCntrl);
+
+        switch ((*__astCntrl->tokens_collection)[(__astCntrl->current_token_position)]->id)
+        {
+        case TOKEN_COMMA:
+            __astCntrl->current_token_position++;
+        case TOKEN_CLOSEPARENTHESES:        
+            {
+                _varDecl = (parser::Ast_Node_Variable_Declaration*) malloc(sizeof(parser::Ast_Node_Variable_Declaration));
+                new (_varDecl) parser::Ast_Node_Variable_Declaration(
+                    _typeInfo, -1
+                );
+
+                _->add(_varDecl);
+
+                continue;
+            }
+ 
+        default: break;
+        }
+
+        if (
+            __nmsDecl->getObjectPosition(
+                (*__astCntrl->tokens_collection)[(__astCntrl->current_token_position)]->phr, NULL
+            ) != -1
+        ) new Ast_Exception("Redefinition of name in function scope");
+
+        _name = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->phr;
+
+        _name = utils::copyString(
+            _name, 
+            utils::getStringSize(_name)
+        );
+
+        _declId = __nmsDecl->add(
+            _name
+        );
+
+        _varDecl = (parser::Ast_Node_Variable_Declaration*) malloc(sizeof(parser::Ast_Node_Variable_Declaration));
+        new (_varDecl) parser::Ast_Node_Variable_Declaration(
+            _typeInfo, _declId
+        );
+
+        _->add(
+            _varDecl
+        );
+
+        if (
+            (*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->id == TOKEN_EQUAL
+        ) { new Ast_Exception("TODO get parameters function"); }
+
+        if (
+            (*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->id == TOKEN_COMMA
+        ) __astCntrl->current_token_position ++;
+
+    }
+
+    __astCntrl->current_token_position++;
+
+    return _;
+
+}
+
+int parser::Ast_Node_Function_Declaration::getByteSize() { return return_type->getByteSize(); }
+
+/*      Ast Node Function Call     */
+
+parser::Ast_Node_Function_Call::Ast_Node_Function_Call(int _declId, utils::LinkedList <Ast_Node*>* _params, bool _glb) :
+    Ast_Node(AST_NODE_FUNCTION_CALL), declaration_id(_declId), parameters(_params), is_global_function(_glb) {}
+
+parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Control* __astCntrl) {
+
+    __astCntrl->printDebugInfo("--> Ast Node Function Call <--");
+
+    parser::Ast_Node_Function_Call* _ = (parser::Ast_Node_Function_Call*) malloc(sizeof(parser::Ast_Node_Function_Call));
+
+    int _declId;
+    bool _glb;
+
+    if (
+        (_declId = __astCntrl->current_block->getDeclarationId((*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->phr, _glb))
+        == -1
+    ) new Ast_Exception("No declaration found with given name");
+
+    new (_) parser::Ast_Node_Function_Call(
+        _declId, getFunctionCallParameters(__astCntrl), _glb
+    );
+
+    return _;
+
+}
+
+utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Call::getFunctionCallParameters(Ast_Control* __astCntrl) {
+
+    __astCntrl->printDebugInfo("--> Ast Node Function Call Parameters <--");
+
+    utils::LinkedList <Ast_Node*>* _parameters = new utils::LinkedList <Ast_Node*>();
+
+    __astCntrl->current_token_position++;
+
+    while((*__astCntrl->tokens_collection)[(__astCntrl->current_token_position)]->id != TOKEN_CLOSEPARENTHESES) {
+
+        __astCntrl->printDebugInfo("--> Ast Node Function Call Parameter Added <--");
+
+        _parameters->add(
+            parser::Ast_Node_Expression::generate(
+                __astCntrl
+            )
+        );
+
+        if ((*__astCntrl->tokens_collection)[(__astCntrl->current_token_position)]->id == TOKEN_COMMA) (__astCntrl->current_token_position)++;
+
+    }
+
+    __astCntrl->current_token_position++;
+
+    return _parameters;
+
+
+}
+
+int parser::Ast_Node_Function_Call::getByteSize() { if (function_declaration) return function_declaration->getByteSize(); return -1; }
+
+/*      Ast Node Struct Declaration     */
+
+parser::Ast_Node_Struct_Declaration::Ast_Node_Struct_Declaration(
+    int _declId, bool _isCntrc) : Ast_Node(AST_NODE_STRUCT_DECLARATION), declaration_id(_declId), is_contract(_isCntrc) {
+        functions = new utils::LinkedList <Ast_Node_Function_Declaration*>();
+        fields = new utils::LinkedList <Ast_Node*>();
+        body_info = (Ast_Node_Code_Block*) malloc(sizeof(Ast_Node_Code_Block));
+}
+
+parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::generate(Ast_Control* __astCntrl) {
+
+    __astCntrl->printDebugInfo("--> Ast Node Struct Declaration <--");
+
+    parser::Ast_Node_Struct_Declaration* _ = (parser::Ast_Node_Struct_Declaration*) malloc(sizeof(parser::Ast_Node_Struct_Declaration));
+    bool _isCntr = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->id == TOKEN_CONTRACT;
+    int _declId;
+    bool _gbl;
+
+    parser::Token* _tk = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position];
+
+    switch (_tk->id)
+    {
+    case TOKEN_IDENTIFIER:
+
+        __astCntrl->current_block->addNewName(
+            _tk->phr, 1
+        );
+
+        _declId = __astCntrl->current_block->getDeclarationId(
+            _tk->phr, _gbl
+        );
+
+        __astCntrl->current_token_position++;
+
+        break;
+
+    case TOKEN_OPENCURLYBRACKET: new Ast_Exception("TODO struct no identifier at begining");
+    default: break;
+    }
+
+    new (_) parser::Ast_Node_Struct_Declaration(
+        _declId, _isCntr
+    );
+
+    new (_->body_info) Ast_Node_Code_Block(AST_NODE_CODE_BLOCK_ENVIRONMEMT_STRUCT, NULL, __astCntrl->current_block, 0);
+
+    __astCntrl->current_block = _->body_info;
+
+    _->getFields(__astCntrl);
+    _->getFunctions(__astCntrl);
+
+    __astCntrl->current_block = _->body_info->previous_block;
+
+    return _;
+
+}
+
+void parser::Ast_Node_Struct_Declaration::getFields(Ast_Control* __astCntrl) {
+
+    std::cout << "Fields" << std::endl;
+
+}
+
+void parser::Ast_Node_Struct_Declaration::getFunctions(Ast_Control* __astCntrl) {
+    std::cout << "Functions" << std::endl;
+
+} 
