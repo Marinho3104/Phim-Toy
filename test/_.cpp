@@ -7,11 +7,11 @@
 // #include "./../objects/phim_string.h"
 // #include "./../objects/phim_char.h"
 
-#include "./../parser/compiled_byte_code.h" // 
+// #include "./../parser/compiled_byte_code.h" // 
 
 #include "./../byteCode/byteCode.h" // Byte Code
 
-#include "./../parser/compiler.h" // Compiler
+// #include "./../parser/compiler.h" // Compiler
 
 #include "./../parser/tokenizer.h" // Tokenizer
 #include "./../parser/token.h" // Tokens
@@ -49,7 +49,7 @@ parser::Tokenizer_Control* getTokens(char* _code) {
 
 parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
-    parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl);
+    parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl, 1);
 
     _astCntrl->generateAst();
 
@@ -59,39 +59,17 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 }
 
-parser::Compiled_Byte_Code* getCompilerControl(utils::LinkedList <parser::Ast_Node*>* _ast, parser::Storage* _storage) {
-
-    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_ast, _storage);
-
-    _comCntrl->generateByteCode();
-
-    parser::Compiled_Byte_Code* _rtr = _comCntrl->getCompiledByteCode();
-
-    _rtr->print();
-
-    return _rtr;
-
-}
-
 parser::Compiled_Byte_Code* getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
     parser::Ast_Control* _astCntrl = getAst(_tkCntrl->tokens);
+    
+    delete _tkCntrl;
 
-    return getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+    delete _astCntrl;
 
-}
-
-void executeByteCode(parser::Compiled_Byte_Code* _toExe) {
-
-    vm::Vm* _vm = (vm::Vm*) malloc(sizeof(vm::Vm));
-
-    new (_vm) vm::Vm();
-
-    _vm->execute(
-        _toExe
-    );
+    // return getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
 
 }
 
@@ -102,9 +80,7 @@ int main() {
     "jk(kk());";
 
     parser::Compiled_Byte_Code* _com = getByteCode(
-        "void jk() { void k; }" \
-        "int kk() {} " \
-        "jk(kk());"
+        "int j; **j;"
     );
 
     // executeByteCode(_com);
@@ -132,3 +108,46 @@ int main() {
     std::cout << _memory->getAddress(0) << std::endl;
 
 }
+
+
+
+
+
+
+
+
+
+
+
+/*
+
+
+
+parser::Compiled_Byte_Code* getCompilerControl(utils::LinkedList <parser::Ast_Node*>* _ast, parser::Storage* _storage) {
+
+    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_ast, _storage);
+
+    _comCntrl->generateByteCode();
+
+    parser::Compiled_Byte_Code* _rtr = _comCntrl->getCompiledByteCode();
+
+    _rtr->print();
+
+    return _rtr;
+
+}
+
+void executeByteCode(parser::Compiled_Byte_Code* _toExe) {
+
+    vm::Vm* _vm = (vm::Vm*) malloc(sizeof(vm::Vm));
+
+    new (_vm) vm::Vm();
+
+    _vm->execute(
+        _toExe
+    );
+
+}
+
+
+*/

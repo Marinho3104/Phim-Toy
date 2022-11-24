@@ -9,10 +9,10 @@
 void parser_helper::setPointerOperators(parser::Ast_Control* _astCntrl, utils::LinkedList<int>* _operators) {
 
     while(
-        (*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->id == TOKEN_POINTER ||
-        (*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)]->id == TOKEN_ADDRESS
+        (*_astCntrl->tokens_collection)[(_astCntrl->current_token_position)]->id == TOKEN_POINTER ||
+        (*_astCntrl->tokens_collection)[(_astCntrl->current_token_position)]->id == TOKEN_ADDRESS
     ) _operators->add(
-        (*_astCntrl->tokensColl)[(_astCntrl->crrntTkPos)++]->id
+        (*_astCntrl->tokens_collection)[(_astCntrl->current_token_position)++]->id
     );
 
 }

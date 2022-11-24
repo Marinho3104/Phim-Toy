@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef AST_DEFINITIONS_H
-#define AST_DEFINITIONS_H
+#ifndef PARSER_DEFINITIONS_H
+#define PARSER_DEFINITIONS_H
 
 // Ast Id's //
 
@@ -17,7 +17,6 @@
 #define AST_NODE_FUNCTION_CALL 9
 #define AST_NODE_STRUCT_DECLARATION 10
 #define AST_NODE_END 11
-
 
 // Ast Id's //
 
@@ -37,7 +36,5 @@
 #define PRIMATIVES_TYPE_VOID_SIZE 0
 
 // Primatives Types Sizes //
-
-
 
 #endif

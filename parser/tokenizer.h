@@ -1,6 +1,5 @@
 #pragma once
 
-
 #ifndef PARSER_TOKENIZER_H
 #define PARSER_TOKENIZER_H
 
@@ -27,6 +26,16 @@ namespace parser {
 
         void addNewToken(parser::Token*);
 
+        void generateTokens();
+
+        bool handlePointerOperation(parser::Token*, int);
+
+        void handleString(parser::Token*, int);
+
+        void handleDoubleSlashComment();
+
+        char* getIdentifierData();
+
         bool setTokenSymbol();
 
         bool setTokenKeyWord();
@@ -35,11 +44,8 @@ namespace parser {
 
         void setNewToken();
 
-        void generateTokens();
-
     };
 
 }
 
 #endif
-

@@ -40,6 +40,26 @@ bool utils::isDouble(char*) {
 
 }
 
+int utils::getStringSize(char* __d) {
+
+    int _ = 0;
+
+    do _++;
+    while(*(__d++));
+
+    return _;
+
+}
+
+char* utils::copyString(char* __d, int __s) {
+
+    char* _ = (char*) malloc(__s);
+
+    for (int __ = 0; __ < __s; __++) _[__] = __d[__];
+
+    return _; 
+
+}
 
 
 

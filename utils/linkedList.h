@@ -20,6 +20,7 @@ namespace utils {
 
         type object;
         DataLL <type>* previous, *next;
+        bool destroy_content;
         using destructor_t = destructor<type>;
 
         ~DataLL();
@@ -32,9 +33,12 @@ namespace utils {
     struct LinkedList {
 
         DataLL <type>* frst, *last;
+        bool destroy_content;
         size_t count;
 
         ~LinkedList();
+
+        void destroyNoTouch();
 
         LinkedList();
 

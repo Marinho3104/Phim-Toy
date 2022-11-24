@@ -7,7 +7,7 @@ ownFile := ./
 
 outPutName := test
 
-all: ownFileObjectFile utilsObjectFile parserObjectFile byteCodeObjectFile objectsObjectFile vmObjectFile
+all: ownFileObjectFile utilsObjectFile parserObjectFile byteCodeObjectFile objectsObjectFile
 	g++ -o $(outPutName) ./*.o -g
 	$(MAKE) clean
 

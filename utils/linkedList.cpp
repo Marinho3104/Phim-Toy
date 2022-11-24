@@ -2,30 +2,43 @@
 
 // #include "./../objects/phim_object.h"
 
-#include "./../parser/compiler.h" // Compiler Code Block
+// #include "./../parser/compiler.h" // Compiler Code Block
 #include "./../byteCode/byteCode.h" // Byte Code
 #include "./../parser/ast_nodes.h" // Ast Nodes
 #include "./../parser/token.h" // Tokens Id
 #include "./../parser/ast.h" // Ast Contrl | TypeInformation
-#include "./../parser/compiled_byte_code.h" // Compiler byte code
+// #include "./../parser/compiled_byte_code.h" // Compiler byte code
 
 #include <type_traits>
 #include <iostream>
 #include <string.h>
 
 template <typename type>
-utils::DataLL<type>::~DataLL() { destructor_t()(object); if (next) delete next; }
+utils::DataLL<type>::~DataLL() { 
+    
+    if (destroy_content) destructor_t()(object); 
+    else {
+        
+        destroy_content = 1;
+    
+        if (next) next->destroy_content = 0;
+
+    }
+    
+    if (next) delete next; 
+
+}
 
 template <typename type>
-utils::DataLL<type>::DataLL(type _) : object(_), next(NULL), previous(NULL) {}
+utils::DataLL<type>::DataLL(type _) : object(_), next(NULL), previous(NULL), destroy_content(1) {}
 
 /* Separator */
 
 template <typename type>
-utils::LinkedList<type>::~LinkedList() { delete frst; }
+utils::LinkedList<type>::~LinkedList() { if (frst && !destroy_content) frst->destroy_content = 0;  delete frst; }
 
 template <typename type>
-utils::LinkedList<type>::LinkedList() : frst(NULL), last(NULL), count(0) {}
+utils::LinkedList<type>::LinkedList() : frst(NULL), last(NULL), count(0), destroy_content(1) {}
 
 template <typename type>
 int utils::LinkedList<type>::add(type _) {
@@ -33,6 +46,8 @@ int utils::LinkedList<type>::add(type _) {
     utils::DataLL<type>* _toAdd = new utils::DataLL(_);
 
     if (!frst) { frst = _toAdd; last = frst; }
+
+    else if (frst == last) { frst->next = _toAdd; _toAdd->previous = frst; last = _toAdd; }
 
     else { last->next = _toAdd; _toAdd->previous = last; last = _toAdd; }
 
@@ -99,11 +114,13 @@ utils::DataLL <type>* utils::LinkedList<type>::removeFrst() {
 
         if (frst == last) { frst = NULL; last = NULL; }
 
-        else frst = frst->next;
+        else { frst = frst->next; frst->previous = NULL; }
+    
+        --count;
 
     }
 
-    --count;
+    _->next = NULL;
 
     return _;
 
@@ -193,11 +210,12 @@ int utils::LinkedList<char*>::getObjectPosition(char* _toCmp, bool (*func) (char
 }
 
 
-template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
-template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
-template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
-template class utils::DataLL <parser::Compiler_Code_Block*>;
-template class utils::DataLL <parser::Byte_Code_Block*>;
+// template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
+// template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
+// template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
+// template class utils::DataLL <parser::Compiler_Code_Block*>;
+// template class utils::DataLL <parser::Byte_Code_Block*>;
+template class utils::DataLL <parser::Ast_Node_Code_Block*>;
 template class utils::DataLL <parser::Type_Information*>;
 template class utils::DataLL <byte_code::Byte_Code*>;
 // template class utils::DataLL <objects::Phim_Object*>;
@@ -206,11 +224,12 @@ template class utils::DataLL <parser::Token*>;
 template class utils::DataLL <char*>;
 template class utils::DataLL <int>;
 
-template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
-template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
-template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
-template class utils::LinkedList <parser::Compiler_Code_Block*>;
-template class utils::LinkedList <parser::Byte_Code_Block*>;
+// template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
+// template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
+// template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
+// template class utils::LinkedList <parser::Compiler_Code_Block*>;
+// template class utils::LinkedList <parser::Byte_Code_Block*>;
+template class utils::LinkedList <parser::Ast_Node_Code_Block*>;
 template class utils::LinkedList <parser::Type_Information*>;
 template class utils::LinkedList <byte_code::Byte_Code*>;
 // template class utils::LinkedList <objects::Phim_Object*>;

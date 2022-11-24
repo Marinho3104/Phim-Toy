@@ -1,61 +1,94 @@
 #include "./ast.h"
 
 #include "./../utils/linkedList.h" // Linked List
-#include "./parser_helper.h" // Parser helper 
-#include "./definitions.h" // Ast Definitions 
-#include "./ast_helper.h" // Ast Helper
-#include "./ast_nodes.h" // Ast Nodes
-#include "./token.h" // Token
+#include "./ast_nodes.h" // Ast nodes
+#include "./token.h" // Token | Token Ids
+#include "./parser_definitions.h" // Parser definitions
+#include "./parser_helper.h" // getSizePrimitiveType()
+#include "./ast_helper.h"
+#include "./ast.h"
+#include "./../utils/commonFunctions.h"
+
 #include <iostream>
 
+parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* _pntrOp) 
+    : token_id(__tkId), pointer_level(0), reference_level(0) {
 
+        if (!_pntrOp) return;
 
-/*      Type Information        */
+        for (int _ = 0; _ < _pntrOp->count; _++)
 
-parser::Type_Information::Type_Information(int _id, int _usrDefDeclId, utils::LinkedList <int>* _pntrOprns) 
-    : id(_id), usrDefDeclId(_usrDefDeclId), pntrOprns(_pntrOprns), pntrLvl(0), rfrnLvl(0) {
+            if ((*_pntrOp)[_] == TOKEN_POINTER) {
 
-        for (int _ = 0; _ < _pntrOprns->count; _++)
-
-            if ((*pntrOprns)[_] == TOKEN_POINTER) {
-
-                if (!rfrnLvl) {
-                    std::cout << "Pointer to reference not allowed" << std::endl; // TODO
-                    exit(-1);
+                if (!reference_level) {
+                    token_id = -1;
+                    return;
                 }
 
-                pntrLvl++;
+                pointer_level++;
 
             }        
 
             else {
 
-                rfrnLvl++;
+                reference_level++;
 
-                if (rfrnLvl > 2) {
-                    std::cout << "Reference to a reference not allowed " << std::endl; // TODO
-                    exit(-1);
+                if (reference_level > 2) {
+                    token_id = -1;
+                    return;
                 }
 
             }
 
 }
 
-bool parser::Type_Information::operator==(parser::Type_Information& _) {
+parser::Type_Information* parser::Type_Information::generateDifferentPointersOperations(Ast_Control* __astCntrl) {
 
-    return ( // Compare Operators TODO
-        id == _.id
+    parser::Type_Information* _; 
+    utils::LinkedList <int>* _operators = new utils::LinkedList <int>();
+
+    parser_helper::setPointerOperators(__astCntrl, _operators);
+
+    _ = new Type_Information(_->token_id, _operators);
+
+    delete _operators;
+
+    return _;
+    
+}
+
+parser::Type_Information* parser::Type_Information::generate(parser::Ast_Control* __astCntrl) {
+
+    int _id = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->id, _usrDefDeclId = 0;
+    utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
+
+    parser_helper::setPointerOperators(__astCntrl, _pntrOprts);
+
+    Type_Information* _ = new Type_Information(_id, _pntrOprts);
+
+    delete _pntrOprts;
+
+    return _;
+
+}
+
+bool parser::Type_Information::operator==(Type_Information&_) {
+
+    return (
+        token_id == _.token_id &&
+        pointer_level == _.pointer_level &&
+        reference_level == _.reference_level 
     );
 
 }
 
 int parser::Type_Information::getByteSize() {
 
-    if (!pntrLvl) {
+    if (!pointer_level) {
 
-        if (id == TOKEN_IDENTIFIER) { std::cout << "User defined get size not implemented " << std::endl; exit(-1); }
+        if (token_id == TOKEN_IDENTIFIER) { std::cout << "User defined get size not implemented " << std::endl; exit(-1); /* TODO */ }
 
-        return parser_helper::getSizePrimitiveType(id);
+        else return parser_helper::getSizePrimitiveType(token_id);
 
     }
 
@@ -63,58 +96,47 @@ int parser::Type_Information::getByteSize() {
 
 }
 
-parser::Type_Information* parser::Type_Information::generate(Ast_Control* _astCntrl) {
+parser::Storage::~Storage() { delete implicit_values; }
 
-    int _id = (*_astCntrl->tokensColl)[_astCntrl->crrntTkPos++]->id, _usrDefDeclId = 0;
-    utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
+parser::Storage::Storage() { implicit_values = new utils::LinkedList <char*>(); }
 
-    if (_id == TOKEN_IDENTIFIER) 
-        _usrDefDeclId = _astCntrl->crrntBlock->getDeclarationId((*_astCntrl->tokensColl)[_astCntrl->crrntTkPos - 1]->phr);
+int parser::Storage::addNewValue(char* __v, bool __cpy) {
+    if (__cpy) __v = utils::copyString(__v, utils::getStringSize(__v));
 
-    parser_helper::setPointerOperators(_astCntrl, _pntrOprts);
-
-    Type_Information* _ = (Type_Information*) malloc(sizeof(Type_Information));
-    new (_) Type_Information(_id, _usrDefDeclId, _pntrOprts);
-
-    return _;
-
-}
-
-/*      Storage        */
-
-parser::Storage::Storage() {
-    implicitValues = new utils::LinkedList <char*>(); 
-    types = new utils::LinkedList <Type_Information*>();
-}
-
-int parser::Storage::addNewValue(char* _) {
     int _rtr;
-    if ((_rtr = implicitValues->getObjectPosition(_, NULL)) == -1) 
-        _rtr = implicitValues->add(_);
+    if ((_rtr = implicit_values->getObjectPosition(__v, NULL)) == -1) _rtr = implicit_values->add(__v);
+    else free(__v);
     return _rtr; 
 }
 
-int parser::Storage::addNewType(Type_Information* _) {
-    int _rtr;
-    if ((_rtr = types->getObjectPosition(_, [](Type_Information* _f, Type_Information* _s) -> bool { return *_f == *_s; })) == -1) 
-        _rtr = types->add(_);
-    return _rtr;
+parser::Ast_Exception::Ast_Exception(const char* __dsc) : description(__dsc) {
+    std::cout << "Ast generation error: " << description << std::endl; exit(-1); // TODO
 }
 
-/*      Ast Control        */
+parser::Ast_Control::~Ast_Control() {
+    delete code_blocks;
+    delete storage;
+}
 
-parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* _tknsColl) : tokensColl(_tknsColl), crrntTkPos(0), crrntBlock(NULL) {
-    code_blocks = new utils::LinkedList <Ast_Node*>();
-    storage = new Storage();
+parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* __tksColl, bool __dbgInfo) 
+    : tokens_collection(__tksColl), debug_info(__dbgInfo), current_block(NULL), current_token_position(0) {
+        code_blocks = new utils::LinkedList <Ast_Node_Code_Block*>();
+        storage = new Storage();
+    }
+
+void parser::Ast_Control::printDebugInfo(const char* __i) {
+
+    if (debug_info) std::cout << __i << std::endl;
+
 }
 
 void parser::Ast_Control::generateAst() {
 
-    // Just initialize the "global block" than it will start recursing until end of code
     parser::Ast_Node_Code_Block::generate(
         this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL, NULL
     );
 
 }
+
 
 

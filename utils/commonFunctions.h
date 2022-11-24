@@ -15,6 +15,10 @@ namespace utils {
 
     bool isDouble(char*);
 
+    int getStringSize(char*);
+
+    char* copyString(char*, int);
+
 }  
 
 #endif

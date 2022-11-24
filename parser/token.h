@@ -145,6 +145,7 @@
 #define TOKEN_ELSE_IF 108
 #define TOKEN_END_CODE 109
 #define TOKEN_SINGLE_QUOTE 110
+#define TOKEN_STRING_SINGLE_QUOTE 111
 
 namespace parser {
 

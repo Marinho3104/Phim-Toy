@@ -1,7 +1,7 @@
 #include "./parser_helper.h"
 
-#include "./definitions.h" // Parser definitions
-#include "./token.h" // Token id
+#include "./parser_definitions.h" // Parser definitions
+#include "./token.h" // Token id s
 
 #include <iostream>
 

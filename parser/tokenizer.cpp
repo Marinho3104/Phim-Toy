@@ -6,9 +6,9 @@
 
 #include <iostream>
 
-parser::Tokenizer_Control_Exception::Tokenizer_Control_Exception(char* _description) : description(_description) {
+parser::Tokenizer_Control_Exception::Tokenizer_Control_Exception(char* __descr) : description(__descr) {
 
-    std::cout << "Exception: " << _description << std::endl;
+    std::cout << "Tokenizer error: " << description << std::endl;
 
     exit(-1);
 
@@ -20,201 +20,217 @@ parser::Tokenizer_Control::~Tokenizer_Control() {
     
 }
 
-parser::Tokenizer_Control::Tokenizer_Control(char* _srcCode) : srcCode(_srcCode) {
+parser::Tokenizer_Control::Tokenizer_Control(char* __srcCode) : srcCode(__srcCode) {
 
     tokens = new utils::LinkedList <parser::Token*>();
 
+    parser::Token* _tk = (parser::Token*) malloc(sizeof(parser::Token));
+    new (_tk) parser::Token(-1, NULL);
+ 
     tokens->add(
-        new parser::Token(-1, NULL)
+        _tk
     ); // Padding
 
 }
 
-void parser::Tokenizer_Control::addNewToken(parser::Token* _) {
+void parser::Tokenizer_Control::addNewToken(parser::Token* __tk) {
 
-    if (tokens->last != NULL && _->id != TOKEN_IDENTIFIER && 
+    if (!__tk) return;
+
+    if (tokens->last != NULL && __tk->id != TOKEN_IDENTIFIER && 
         (tokens->last->object->id == TOKEN_ACCESSINGVARIABLE || tokens->last->object->id == TOKEN_ACCESSINGVARIABLEPOINTER)
     ) new Tokenizer_Control_Exception("Expected identifier after trying to access field");
 
 
-    tokens->add(_);
-}
-
-bool parser::Tokenizer_Control::setTokenSymbol() {
-
-    char* _inWrd;
-    parser::Token* _tk = NULL;
-    int _tkId, _tkId1, _tkId2;
-
-    // Checks first char
-    if (_tkId = parser::getTokenSymbOneChar(*srcCode)) {
-
-        // Token is '"' collects all string until reach other '"'
-        if (_tkId == TOKEN_QUOTATIONMARK) {
-
-            bool _backSlash = 0;
-            srcCode++;
-            _inWrd = srcCode;
-
-            while(
-                *srcCode != '"' || _backSlash
-            ) { _backSlash = (*srcCode == '\\') ? 1 : 0; srcCode++; } /* Miss handle with \ in that case TODO :() */
-            
-            // Creates token
-            int _s = srcCode - _inWrd;
-            char* _phr = (char*) malloc(sizeof(char) * _s + 1);
-
-            for (int __ = 0; __ < _s;__++) 
-                _phr[__] = _inWrd[__];
-
-            _phr[_s] = 0;
-
-            srcCode++;
-
-            addNewToken(
-                new parser::Token(
-                    TOKEN_STRING, _phr
-                )
-            );
-
-            return 1;
-
-        }
-
-        else if (_tkId == TOKEN_SINGLE_QUOTE) {
-            //TODO
-        }
-
-    }
-
-    // Checks second char
-    if (_tkId1 = parser::getTokenSymbTwoChars(*srcCode, *(srcCode + 1))) {
-
-        // Token is '//' just ignore all line 
-        if (_tkId1 == TOKEN_COMMENT) {
-            do srcCode++; while(*srcCode != '\n'); srcCode++;
-            return 1;
-        } 
-
-    }
-
-    // Checks third char
-    if (_tkId2 = parser::getTokenSymbThreeChars(*srcCode, *(srcCode + 1), *(srcCode + 2))) 
-        
-        { srcCode+=3; _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(_tkId2, NULL); }  
-
-    else if (_tkId1) { srcCode+=2; _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(_tkId1, NULL); }
-
-    else if (_tkId) { srcCode++; _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(_tkId, NULL); }
-
-    if (_tk) { addNewToken(_tk); return 1; }
-
-    return 0;
-
-}
-
-bool parser::Tokenizer_Control::setTokenKeyWord() {
-
-    parser::Token* _tk = NULL;
-    int _tkId;
-
-    if (_tkId = parser::getTokenIdKeyWord(&srcCode)) { _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(_tkId, NULL); }
-
-    if (_tk) addNewToken(_tk);
-
-    return _tkId;
-
-}
-
-void parser::Tokenizer_Control::setTokenIdentifier() {
-
-    parser::Token* _tk, *_tkAdd = NULL;
-
-    _tk = (parser::Token*) malloc(sizeof(parser::Token));
-    char* _wrd = srcCode;
-    int _probAccess;
-
-    do { 
-        srcCode++; 
-        if (!*srcCode) new Tokenizer_Control_Exception("Unexpected token at the end.");
-
-        if (_probAccess = parser::getTokenSymbOneChar(*srcCode)) {
-
-            if (_probAccess == TOKEN_ACCESSINGVARIABLE) 
-                { _tkAdd = (parser::Token*) malloc(sizeof(parser::Token)); new(_tkAdd) parser::Token(_probAccess, NULL);}
-
-            else if (
-                _probAccess == TOKEN_SUBTRACTION &&
-                (_probAccess = parser::getTokenSymbTwoChars(*srcCode, *(srcCode + 1)))
-                == TOKEN_ACCESSINGVARIABLEPOINTER
-            ) { _tkAdd = (parser::Token*) malloc(sizeof(parser::Token)); new(_tkAdd) parser::Token(_probAccess, NULL); }
-
-            break;
-
-        }
-
-    } while(
-        *srcCode != ' '
-    );
-
-    int _s = srcCode - _wrd;
-
-    char* _str = (char*) malloc(sizeof(char) * _s + 1);
-
-    for (int _ = 0; _ < _s; _++) 
-
-        _str[_] = *(_wrd++);
-
-    _str[_s] = 0;
-    
-    new(_tk) Token(
-        parser::getTokenIdIdetifier(_str),
-        _str
-    );
-    
-    tokens->add(_tk);
-
-    if (_tkAdd) { addNewToken(_tkAdd); srcCode += (_tkAdd->id == TOKEN_ACCESSINGVARIABLE) ? 1 : 2; }
-
-}
-
-void parser::Tokenizer_Control::setNewToken() {
-
-    if (
-        setTokenSymbol()
-    ) {
-
-        if (tokens->last->object->id == TOKEN_ADDRESS && parser::isIdentifierType(tokens->last->previous->object)) tokens->last->object->id = TOKEN_BITWISEAND;
-        else if (tokens->last->object->id == TOKEN_POINTER && parser::isIdentifierType(tokens->last->previous->object)) tokens->last->object->id = TOKEN_MULTIPLICATION;
-        else if (tokens->last->object->id == TOKEN_AND && !parser::isIdentifierType(tokens->last->previous->object)) { 
-            tokens->last->object->id = TOKEN_ADDRESS; 
-            parser::Token* _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(TOKEN_ADDRESS, NULL);
-            tokens->add(_tk);
-        }
-
-    } else if (setTokenKeyWord());
-
-    else setTokenIdentifier();
+    tokens->add(__tk);
 
 }
 
 void parser::Tokenizer_Control::generateTokens() {
 
     while(*srcCode != 0) {
-        if (*srcCode == ' ') { 
+        if (*srcCode <= 32) { 
             if (tokens->last->object->id == TOKEN_ACCESSINGVARIABLE || tokens->last->object->id == TOKEN_ACCESSINGVARIABLEPOINTER)
                 new Tokenizer_Control_Exception("Expected identifier after trying to access field");
             srcCode++; continue; }
         setNewToken();
     }
 
-    if (parser::isIdentifierType(tokens->last->object)) new Tokenizer_Control_Exception("Expected ; token at the end"); 
+    if (
+        parser::isIdentifierType(tokens->last->object)
+    ) new Tokenizer_Control_Exception("Expected ';' token at the end"); 
 
     parser::Token* _fnl = (parser::Token*) malloc(sizeof(parser::Token));
     new (_fnl) parser::Token(TOKEN_END_CODE, NULL);
 
     tokens->add(_fnl);
 
-    tokens->removeFrst(); // Removing Padding
+    utils::DataLL <parser::Token*>* _padd = tokens->removeFrst(); // Remove padding
+
+    delete _padd;
 
 }
+
+bool parser::Tokenizer_Control::handlePointerOperation(parser::Token* __tk, int __id) {
+
+    bool _ = parser::isIdentifierType(tokens->last->object);
+    if (_) __id = __id == TOKEN_POINTER ? TOKEN_MULTIPLICATION : TOKEN_BITWISEAND; 
+
+    new (__tk) parser::Token(
+        __id, NULL
+    );
+
+    return !_;
+
+}
+
+void parser::Tokenizer_Control::handleString(parser::Token* __tk, int __id) {
+
+    bool _bckSlsh = 0;
+    char* _inWrd = srcCode;
+
+    do  { _bckSlsh = (*srcCode == '\\') ? 1 : 0; srcCode++; }
+    while(
+        (*srcCode != '"' && *srcCode != '\'') || _bckSlsh
+    );
+    srcCode++;
+
+    int _s = srcCode - _inWrd;
+    char* _str = (char*) malloc(_s + 1);
+
+    for (int __ = 0; __ < _s;__++) 
+        _str[__] = *(_inWrd++);
+
+    _str[_s] = '\0';
+
+    new (__tk) parser::Token(
+        __id == TOKEN_QUOTATIONMARK ? TOKEN_STRING : TOKEN_STRING_SINGLE_QUOTE,
+        _str
+    );
+
+}
+
+void parser::Tokenizer_Control::handleDoubleSlashComment() { do srcCode++; while(*srcCode != '\n'); srcCode++; }
+
+char* parser::Tokenizer_Control::getIdentifierData() {
+
+    char* _inWrd = srcCode;
+
+    do srcCode++;
+    while(
+        *srcCode > 32 && !parser::getTokenSymbOneChar(*srcCode)  /* Maybe need to confirm with 2 and 3 symbols TODO */
+    );
+
+    int _s = srcCode - _inWrd;
+
+    char* _str = (char*) malloc(_s + 1);
+
+    for (int _ = 0; _ < _s; _++) _str[_] = *(_inWrd++);
+
+    _str[_s] = '\0';
+
+    return _str;
+
+}
+
+bool parser::Tokenizer_Control::setTokenSymbol() {
+
+    parser::Token* _tk = NULL;
+    int _tkId = 0, _jmp = 0;
+
+    if (int _tkId_temp = parser::getTokenSymbOneChar(*srcCode)) {
+
+        _tk = (parser::Token*) malloc(sizeof(parser::Token));
+
+        _tkId = _tkId_temp;
+
+        _jmp = 1;
+
+        switch (_tkId)
+        {
+        case TOKEN_QUOTATIONMARK: case TOKEN_SINGLE_QUOTE: handleString(_tk, _tkId); goto rtr;      
+        case TOKEN_POINTER: case TOKEN_ADDRESS: if(handlePointerOperation(_tk, _tkId)) goto rtr_with_jump; break;
+        default: new (_tk) parser::Token(_tkId, NULL);
+        }
+
+    }
+
+    if (int _tkId_temp = parser::getTokenSymbTwoChars(*srcCode, *(srcCode + 1))) {
+
+        if (!_tkId) _tk = (parser::Token*) malloc(sizeof(parser::Token));
+
+        _tkId = _tkId_temp;
+
+        _jmp = 2;
+
+        if (_tkId == TOKEN_COMMENT) { handleDoubleSlashComment(); return 1; }
+
+        new (_tk) parser::Token(_tkId, NULL);
+
+    }
+
+    if (int _tkId_temp = parser::getTokenSymbThreeChars(*srcCode, *(srcCode + 1), *(srcCode + 2))) {
+
+        if (!_tkId) _tk = (parser::Token*) malloc(sizeof(parser::Token));
+
+        _tkId = _tkId_temp;
+
+        _jmp = 3;
+
+        new (_tk) parser::Token(_tkId, NULL);
+    }
+
+rtr_with_jump:
+
+    srcCode += _jmp;
+
+rtr:
+
+    addNewToken(_tk);
+
+    return _tk;
+
+}
+
+bool parser::Tokenizer_Control::setTokenKeyWord() {
+
+    parser::Token* _tk = NULL;
+
+    if (int _tkId = parser::getTokenIdKeyWord(&srcCode)) { _tk = (parser::Token*) malloc(sizeof(parser::Token)); new(_tk) parser::Token(_tkId, NULL); }
+
+    addNewToken(_tk);
+
+    return _tk;
+
+}
+
+void parser::Tokenizer_Control::setTokenIdentifier() {
+
+    parser::Token* _tk = (parser::Token*) malloc(sizeof(parser::Token));
+
+    char* _idData = getIdentifierData();
+
+    new (_tk) parser::Token(
+        parser::getTokenIdIdetifier(_idData),
+        _idData
+    );
+
+    addNewToken(_tk);
+
+}
+
+void parser::Tokenizer_Control::setNewToken() {
+
+    if (setTokenSymbol());
+
+    else if (setTokenKeyWord());
+
+    else setTokenIdentifier();
+
+}
+
+
+
+
+
+
