@@ -39,7 +39,7 @@ namespace parser {
     struct Compiler_Code_Block {
 
         utils::LinkedList <byte_code::Byte_Code*>* byte_code;
-        Compiler_Declarations* compiler_declarations;
+        Compiler_Declarations* compiler_declarations, *previous_compiler_declarations;
         int environment_id;
         /* Destructor */
         ~Compiler_Code_Block();

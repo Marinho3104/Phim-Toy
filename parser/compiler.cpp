@@ -60,10 +60,7 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Declarations::getStructDec
 
 parser::Compiler_Code_Block::~Compiler_Code_Block() { 
     // delete byte_code; 
-    if (
-        environment_id != AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL && 
-        environment_id != AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT
-    ) delete compiler_declarations; 
+    delete compiler_declarations; 
 }
 
 parser::Compiler_Code_Block::Compiler_Code_Block(utils::LinkedList <byte_code::Byte_Code*>* _byteCode) : byte_code(_byteCode) {}
@@ -75,13 +72,14 @@ void parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, Ast_Nod
     utils::LinkedList <byte_code::Byte_Code*>* _nodeByteCode;
 
     _->environment_id = __astNodeCodeBlock->environment_id;
+    _->compiler_declarations = new Compiler_Declarations();
     __comCntrl->current_compiler_code_block = _;
 
     switch (_->environment_id)
     {
     case AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL: case AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT:
-        _->compiler_declarations = _prev->compiler_declarations; break;
-    default: _->compiler_declarations = new Compiler_Declarations(); break;
+        _->previous_compiler_declarations = _prev->compiler_declarations; break;
+    default: _->previous_compiler_declarations = NULL; break;
     }
 
     for (int _ = 0; _ < __astNodeCodeBlock->body->count; _++) {
@@ -116,7 +114,7 @@ parser::Compiled_Code_Block::Compiled_Code_Block(utils::LinkedList <byte_code::B
 
 parser::Compiled_Output::~Compiled_Output() {
     delete compiled_code_blocks;
-    implicit_values->destroy_content = 0; delete implicit_values;
+    delete implicit_values;
 }
 
 parser::Compiled_Output::Compiled_Output(utils::LinkedList <Compiled_Code_Block*>* _comBlocks, utils::LinkedList <char*>* _implValues) : 

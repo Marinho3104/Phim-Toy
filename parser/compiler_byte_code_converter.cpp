@@ -157,9 +157,9 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNode(Ast_Node*
 
     case AST_NODE_CODE_BLOCK:
 
-        getByteCodeFromNodeCodeBlock(
+        _ = getByteCodeFromNodeCodeBlock(
             (Ast_Node_Code_Block*) __astNode, __comCntrl
-        ); _ = NULL; break;
+        ); break;
 
     default: new Compiler_Exception("Unexpected Node type");
     }
@@ -304,7 +304,9 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNodeVariable(p
     byte_code::Byte_Code* _loadVar = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
 
     parser::Ast_Node_Variable_Declaration* _astVarDecl = __comCntrl->current_compiler_code_block->compiler_declarations->getVariableDeclaration(__astVar->declaration_id);
-    if (!_astVarDecl) new Compiler_Exception("No variable in declared with given name");
+    parser::Ast_Node_Variable_Declaration* _astVarDeclPrev = 
+        __comCntrl->current_compiler_code_block->previous_compiler_declarations ? __comCntrl->current_compiler_code_block->previous_compiler_declarations->getVariableDeclaration(__astVar->declaration_id) : NULL;
+    if (!_astVarDecl && !_astVarDeclPrev) new Compiler_Exception("No variable in declared with given name");
 
     __astVar->variable_declaration = _astVarDecl;
 
@@ -379,7 +381,9 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNodeParenthesi
 
 }
 
-void parser::getByteCodeFromNodeCodeBlock(parser::Ast_Node_Code_Block* __astCodeBlock, parser::Compiler_Control* __comCntrl) {
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNodeCodeBlock(parser::Ast_Node_Code_Block* __astCodeBlock, parser::Compiler_Control* __comCntrl) {
+
+    utils::LinkedList <byte_code::Byte_Code*>* _ = new utils::LinkedList <byte_code::Byte_Code*>();
 
     __comCntrl->printDebugInfo("--> Byte Code for node code block <--");
 
@@ -387,7 +391,23 @@ void parser::getByteCodeFromNodeCodeBlock(parser::Ast_Node_Code_Block* __astCode
         __comCntrl, __astCodeBlock
     );
 
+    if (__astCodeBlock->environment_id == AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL) {
+
+        byte_code::Byte_Code* _bc = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+        new (_bc) byte_code::Byte_Code(
+            BYTECODE_CALL, __comCntrl->compiled_code_blocks->count - 1
+        );
+
+        _->add(
+            _bc
+        );
+
+    }
+
     __comCntrl->printDebugInfo("--> Byte Code for node code block end <--");
+
+    return _;
 
 }
 

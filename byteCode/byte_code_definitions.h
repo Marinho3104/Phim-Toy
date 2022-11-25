@@ -32,4 +32,6 @@
 
 #define BYTECODE_LOAD_VARIABLE 19
 
+#define BYTECODE_CALL 20
+
 #endif

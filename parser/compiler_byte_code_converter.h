@@ -41,7 +41,7 @@ namespace parser {
 
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeParenthesis(parser::Ast_Node_Parenthesis*, parser::Compiler_Control*);
 
-    void getByteCodeFromNodeCodeBlock(parser::Ast_Node_Code_Block*, parser::Compiler_Control*);
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeCodeBlock(parser::Ast_Node_Code_Block*, parser::Compiler_Control*);
 
 }
 

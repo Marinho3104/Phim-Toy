@@ -100,7 +100,7 @@ int main() {
     "jk(kk());";
 
     parser::Compiled_Output* _com = getByteCode(
-        "int j; {int k; int kl; } j += 12;"
+        "int j; {int k; int kl; } { int j; } j += 12;"
     );
 
     delete _com;
