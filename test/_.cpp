@@ -11,7 +11,7 @@
 
 #include "./../byteCode/byteCode.h" // Byte Code
 
-// #include "./../parser/compiler.h" // Compiler
+#include "./../parser/compiler.h" // Compiler
 
 #include "./../parser/tokenizer.h" // Tokenizer
 #include "./../parser/token.h" // Tokens
@@ -59,6 +59,16 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 }
 
+parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Code_Block*>* _codeBlocks, parser::Storage* _storage) {
+
+    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_codeBlocks, _storage);
+
+    _comCntrl->generateByteCodeBlocks();
+
+    return _comCntrl;
+
+}
+
 parser::Compiled_Byte_Code* getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
@@ -67,9 +77,11 @@ parser::Compiled_Byte_Code* getByteCode(char* _code) {
     
     delete _tkCntrl;
 
+    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+
     delete _astCntrl;
 
-    // return getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+    delete _comCntrl;
 
 }
 
@@ -80,7 +92,7 @@ int main() {
     "jk(kk());";
 
     parser::Compiled_Byte_Code* _com = getByteCode(
-        "struct ola { int j; };"
+        "int j() {} (j() + 12) * 12;"
     );
 
     // executeByteCode(_com);
