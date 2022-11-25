@@ -5,6 +5,7 @@
 #include "./ast_nodes.h" // Ast Nodes
 #include "./parser_definitions.h" // Parser definitions
 #include "./compiler_byte_code_converter.h"
+#include "./ast.h"
 
 #include <iostream>
 
@@ -57,7 +58,13 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Declarations::getStructDec
     return _astStrctDecl;
 }
 
-parser::Compiler_Code_Block::~Compiler_Code_Block() { delete byte_code; delete compiler_declarations; }
+parser::Compiler_Code_Block::~Compiler_Code_Block() { 
+    // delete byte_code; 
+    if (
+        environment_id != AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL && 
+        environment_id != AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT
+    ) delete compiler_declarations; 
+}
 
 parser::Compiler_Code_Block::Compiler_Code_Block(utils::LinkedList <byte_code::Byte_Code*>* _byteCode) : byte_code(_byteCode) {}
 
@@ -65,25 +72,37 @@ void parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, Ast_Nod
 
     utils::LinkedList <byte_code::Byte_Code*>* _byteCode = new utils::LinkedList <byte_code::Byte_Code*>();
     parser::Compiler_Code_Block* _ = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block)), *_prev = __comCntrl->current_compiler_code_block;
+    utils::LinkedList <byte_code::Byte_Code*>* _nodeByteCode;
 
-    switch (__astNodeCodeBlock->environment_id)
+    _->environment_id = __astNodeCodeBlock->environment_id;
+    __comCntrl->current_compiler_code_block = _;
+
+    switch (_->environment_id)
     {
     case AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL: case AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT:
         _->compiler_declarations = _prev->compiler_declarations; break;
     default: _->compiler_declarations = new Compiler_Declarations(); break;
     }
 
+    for (int _ = 0; _ < __astNodeCodeBlock->body->count; _++) {
+
+        _nodeByteCode = parser::getByteCodeFromNode((*__astNodeCodeBlock->body)[_], __comCntrl);
+
+        if (!_nodeByteCode) continue;
+
+        _byteCode->join(
+            _nodeByteCode
+        );
+
+        _nodeByteCode->destroy_content = 0;
+
+        delete _nodeByteCode;
+
+    }
+
     new (_) Compiler_Code_Block(
         _byteCode
     );
-
-    for (int _ = 0; _ < __astNodeCodeBlock->body->count; _++)
-
-        _byteCode->join(
-            parser::getByteCodeFromNode(
-                (*__astNodeCodeBlock->body)[_], __comCntrl
-            )
-        );
 
     __comCntrl->current_compiler_code_block = _prev;
 
@@ -91,15 +110,49 @@ void parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, Ast_Nod
 
 }
 
+parser::Compiled_Code_Block::~Compiled_Code_Block() { delete compiled_code_block; }
+
+parser::Compiled_Code_Block::Compiled_Code_Block(utils::LinkedList <byte_code::Byte_Code*>* _comByteCode) : compiled_code_block(_comByteCode) {}
+
+parser::Compiled_Output::~Compiled_Output() {
+    delete compiled_code_blocks;
+    implicit_values->destroy_content = 0; delete implicit_values;
+}
+
+parser::Compiled_Output::Compiled_Output(utils::LinkedList <Compiled_Code_Block*>* _comBlocks, utils::LinkedList <char*>* _implValues) : 
+    compiled_code_blocks(_comBlocks), implicit_values(_implValues) {}
+
+void parser::Compiled_Output::printByteCode() {
+
+    for (int _ = 0; _ < compiled_code_blocks->count; _++) {
+
+        std::cout << "Code Block: " << _ << "\n" << std::endl;
+
+        for (int __ = 0; __ < (*compiled_code_blocks)[_]->compiled_code_block->count; __++)
+
+            std::cout << "\tByte code -> " << (int) (unsigned char) (*(*compiled_code_blocks)[_]->compiled_code_block)[__]->code << " " << (*(*compiled_code_blocks)[_]->compiled_code_block)[__]->argument << std::endl;
+
+        std::cout << std::endl;
+
+    }
+
+}
+
 parser::Compiler_Exception::Compiler_Exception(const char* _desc) : description(_desc) {
     std::cout << "Compiler generation error: " << description << std::endl; exit(-1);
 } 
 
-parser::Compiler_Control::~Compiler_Control() { delete compiled_code_blocks; }
+parser::Compiler_Control::~Compiler_Control() { delete compiled_code_blocks; delete storage; }
 
-parser::Compiler_Control::Compiler_Control(utils::LinkedList <Ast_Node_Code_Block*>* __cd, Storage* __strg) 
-    : code_blocks(__cd), storage(__strg) {
+parser::Compiler_Control::Compiler_Control(utils::LinkedList <Ast_Node_Code_Block*>* __cd, Storage* __strg, bool __dbgInfo) 
+    : code_blocks(__cd), storage(__strg), debug_info(__dbgInfo) {
         compiled_code_blocks = new utils::LinkedList <Compiler_Code_Block*>();
+}
+
+void parser::Compiler_Control::printDebugInfo(const char* _) {
+
+    if (debug_info) std::cout << _ << std::endl;
+
 }
 
 void parser::Compiler_Control::generateByteCodeBlocks() {
@@ -109,4 +162,33 @@ void parser::Compiler_Control::generateByteCodeBlocks() {
     );
 
 }
+
+parser::Compiled_Output* parser::Compiler_Control::generateOutPut() {
+
+    parser::Compiled_Output* _rtr;
+    utils::LinkedList <Compiled_Code_Block*>* _blocks = new utils::LinkedList <Compiled_Code_Block*>();
+    Compiled_Code_Block*  _block;
+
+    for (int _ = 0; _ < compiled_code_blocks->count; _++) {
+
+        _block = (Compiled_Code_Block*) malloc(sizeof(Compiled_Code_Block));
+
+        new (_block) Compiled_Code_Block(
+            (*compiled_code_blocks)[_]->byte_code
+        );
+
+        _blocks->add(
+            _block
+        );
+    
+    }
+
+    _rtr = new Compiled_Output(
+        _blocks, storage->implicit_values
+    );
+
+    return _rtr;
+    
+} 
+
 

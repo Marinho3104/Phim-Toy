@@ -35,13 +35,11 @@ parser::Tokenizer_Control* getTokens(char* _code) {
 
     _tkCntrl->generateTokens();
 
-    std::cout << "--> Tokens <--" << std::endl;
+    std::cout << "\n --> Generate Tokens <--\n" << std::endl;
 
     for (int _ = 0; _ < _tkCntrl->tokens->count; _++)
 
         std::cout << "Token id -> " << (*_tkCntrl->tokens)[_]->id << std::endl;
-
-    std::cout << "-------------------" << std::endl;
 
     return _tkCntrl;
 
@@ -49,11 +47,11 @@ parser::Tokenizer_Control* getTokens(char* _code) {
 
 parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
+    std::cout << "\n --> Generate Ast <--\n" << std::endl;
+
     parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl, 1);
 
     _astCntrl->generateAst();
-
-    std::cout << "-------------------" << std::endl;
 
     return _astCntrl;
 
@@ -61,7 +59,9 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Code_Block*>* _codeBlocks, parser::Storage* _storage) {
 
-    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_codeBlocks, _storage);
+    std::cout << "\n --> Generate Compiler <--\n" << std::endl;
+
+    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_codeBlocks, _storage, 1);
 
     _comCntrl->generateByteCodeBlocks();
 
@@ -69,7 +69,7 @@ parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node
 
 }
 
-parser::Compiled_Byte_Code* getByteCode(char* _code) {
+parser::Compiled_Output* getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
@@ -81,7 +81,15 @@ parser::Compiled_Byte_Code* getByteCode(char* _code) {
 
     delete _astCntrl;
 
+    parser::Compiled_Output* _ = _comCntrl->generateOutPut();
+
     delete _comCntrl;
+
+    std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
+
+    _->printByteCode();
+
+    return _;
 
 }
 
@@ -91,9 +99,11 @@ int main() {
     "int kk() {} " \
     "jk(kk());";
 
-    parser::Compiled_Byte_Code* _com = getByteCode(
-        "int j() {} (j() + 12) * 12;"
+    parser::Compiled_Output* _com = getByteCode(
+        "int j; {int k; int kl; } j += 12;"
     );
+
+    delete _com;
 
     // executeByteCode(_com);
 

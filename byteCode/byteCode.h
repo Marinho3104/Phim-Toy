@@ -18,19 +18,6 @@ namespace byte_code {
 
     };
 
-    struct Block_Code {
-
-        utils::LinkedList <Byte_Code>* byteCode;
-        
-
-    };
-
-    struct Program_Out {
-
-        // utils::LinkedList <Byte_Code>* 
-
-    };
-
 }
 
 #endif

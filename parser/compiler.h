@@ -40,6 +40,7 @@ namespace parser {
 
         utils::LinkedList <byte_code::Byte_Code*>* byte_code;
         Compiler_Declarations* compiler_declarations;
+        int environment_id;
         /* Destructor */
         ~Compiler_Code_Block();
 
@@ -48,6 +49,25 @@ namespace parser {
 
         /* Generator */
         static void generate(Compiler_Control*, Ast_Node_Code_Block*);
+
+    };
+
+    struct Compiled_Code_Block {
+        utils::LinkedList <byte_code::Byte_Code*>* compiled_code_block;
+        ~Compiled_Code_Block();
+        Compiled_Code_Block(utils::LinkedList <byte_code::Byte_Code*>*);
+    };
+
+    struct Compiled_Output {
+
+        utils::LinkedList <Compiled_Code_Block*>* compiled_code_blocks;
+        utils::LinkedList <char*>* implicit_values;
+
+        ~Compiled_Output();
+
+        Compiled_Output(utils::LinkedList <Compiled_Code_Block*>*, utils::LinkedList <char*>*);
+
+        void printByteCode();
 
     };
 
@@ -64,12 +84,19 @@ namespace parser {
         utils::LinkedList <Ast_Node_Code_Block*>* code_blocks;
         Storage* storage;
 
+        bool debug_info;
+
         ~Compiler_Control();
 
-        Compiler_Control(utils::LinkedList <Ast_Node_Code_Block*>*, Storage*);
+        Compiler_Control(utils::LinkedList <Ast_Node_Code_Block*>*, Storage*, bool);
+
+        void printDebugInfo(const char*);
 
         /* Generator */
-        void generateByteCodeBlocks(); 
+        void generateByteCodeBlocks();
+
+        /* Generator output */
+        Compiled_Output* generateOutPut(); 
 
     };
 

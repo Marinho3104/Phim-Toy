@@ -96,7 +96,7 @@ int parser::Type_Information::getByteSize() {
 
 }
 
-parser::Storage::~Storage() { delete implicit_values; }
+parser::Storage::~Storage() {}
 
 parser::Storage::Storage() { implicit_values = new utils::LinkedList <char*>(); }
 
@@ -115,7 +115,6 @@ parser::Ast_Exception::Ast_Exception(const char* __dsc) : description(__dsc) {
 
 parser::Ast_Control::~Ast_Control() {
     delete code_blocks;
-    delete storage;
 }
 
 parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* __tksColl, bool __dbgInfo) 
