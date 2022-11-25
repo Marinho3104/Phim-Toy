@@ -49,7 +49,7 @@ parser::Type_Information* parser::Type_Information::generateDifferentPointersOpe
 
     parser_helper::setPointerOperators(__astCntrl, _operators);
 
-    _ = new Type_Information(_->token_id, _operators);
+    _ = new Type_Information(token_id, _operators);
 
     delete _operators;
 
@@ -133,7 +133,7 @@ void parser::Ast_Control::printDebugInfo(const char* __i) {
 void parser::Ast_Control::generateAst() {
 
     parser::Ast_Node_Code_Block::generate(
-        this, AST_NODE_CODE_BLOCK_ENVIRONMEMT_GLOBAL, NULL
+        this, AST_NODE_CODE_BLOCK_ENVIRONMENT_GLOBAL, NULL
     );
 
 }

@@ -229,6 +229,8 @@ namespace parser {
         utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
         int declaration_id; // Id
         bool is_global_function; // Is function global
+        /* Destructor */
+        ~Ast_Node_Function_Call();
         /* Constructor */
         Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node*>*, bool);
         
@@ -249,14 +251,20 @@ namespace parser {
         utils::LinkedList <Ast_Node*>* fields;
         utils::LinkedList <Ast_Node_Function_Declaration*>* functions;
 
+        ~Ast_Node_Struct_Declaration();
+
         Ast_Node_Struct_Declaration(int, bool);
         
         /* Generator */
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
 
+        void ignoreCodeBlock(Ast_Control*);
+
         void getFields(Ast_Control*);
 
         void getFunctions(Ast_Control*); 
+
+        int getByteSize();
 
     };
 

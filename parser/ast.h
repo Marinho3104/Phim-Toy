@@ -7,7 +7,6 @@
 
 namespace utils { template <typename> struct LinkedList; }
 
-
 namespace parser {
 
     // Forward
