@@ -98,9 +98,10 @@ int main() {
     "void jk(int l) { void k; }" \
     "int kk() {} " \
     "jk(kk());";
+    "int j; {int k; { int kl; j; } } { int j; int ll; } j += 12 + 12 * 5;";
 
     parser::Compiled_Output* _com = getByteCode(
-        "int j; {int k; int kl; } { int j; } j += 12;"
+        "void jk(int l) { int k; int j;} jk(12);" \
     );
 
     delete _com;

@@ -120,7 +120,7 @@ namespace parser {
         int getByteSize();
 
         /* Return size of variable type */
-        Type_Information* getType(utils::LinkedList <Type_Information*>*);
+        Type_Information* getType();
 
     };
 
@@ -139,6 +139,9 @@ namespace parser {
 
         /* Return Size of type */
         int getByteSize();
+
+        /* Return type */
+        Type_Information* getType();
 
     };
 
@@ -161,7 +164,7 @@ namespace parser {
         // Ast Generation Only //
 
         /**/
-        int getTypeSize(); 
+        int getByteSize(); 
 
     };
 
@@ -200,13 +203,15 @@ namespace parser {
 
         int getByteSize();
 
+        Type_Information* getType();
+
     };
 
     /* Represent a function declaration */
     struct Ast_Node_Function_Declaration : public Ast_Node {
         
         Type_Information* return_type; // Return type
-        int declaration_id; // Declaration id 
+        int declaration_id, body_pos; // Declaration id 
         utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
         Ast_Node_Code_Block* body; // Function body || NULL If is forward declaration
 
@@ -226,18 +231,18 @@ namespace parser {
     /* Represent a function call */
     struct Ast_Node_Function_Call : public Ast_Node {
         Ast_Node_Function_Declaration* function_declaration; // Function declaration
-        utils::LinkedList <Ast_Node*>* parameters; // Parameters of function
+        utils::LinkedList <Ast_Node_Expression*>* parameters; // Parameters of function
         int declaration_id; // Id
         bool is_global_function; // Is function global
         /* Destructor */
         ~Ast_Node_Function_Call();
         /* Constructor */
-        Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node*>*, bool);
+        Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node_Expression*>*, bool);
         
         /* Generator */
         static Ast_Node_Function_Call* generate(Ast_Control*);
 
-        static utils::LinkedList <Ast_Node*>* getFunctionCallParameters(Ast_Control*);
+        static utils::LinkedList <Ast_Node_Expression*>* getFunctionCallParameters(Ast_Control*);
 
         int getByteSize();
 

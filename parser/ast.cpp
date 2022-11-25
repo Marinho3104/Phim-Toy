@@ -20,10 +20,7 @@ parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* 
 
             if ((*_pntrOp)[_] == TOKEN_POINTER) {
 
-                if (!reference_level) {
-                    token_id = -1;
-                    return;
-                }
+                if (reference_level) new Ast_Exception("Error in type information");
 
                 pointer_level++;
 
@@ -33,10 +30,7 @@ parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* 
 
                 reference_level++;
 
-                if (reference_level > 2) {
-                    token_id = -1;
-                    return;
-                }
+                if (reference_level > 2) new Ast_Exception("Error in type information");
 
             }
 

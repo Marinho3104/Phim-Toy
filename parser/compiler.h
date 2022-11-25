@@ -14,6 +14,7 @@ namespace parser {
     struct Ast_Node_Struct_Declaration;
     struct Ast_Node_Code_Block;
     struct Compiler_Control;
+    struct Ast_Node;
     struct Storage;
 
     struct Compiler_Declarations {
@@ -39,7 +40,8 @@ namespace parser {
     struct Compiler_Code_Block {
 
         utils::LinkedList <byte_code::Byte_Code*>* byte_code;
-        Compiler_Declarations* compiler_declarations, *previous_compiler_declarations;
+        Compiler_Declarations* compiler_declarations;
+        Compiler_Code_Block* previous_block;
         int environment_id;
         /* Destructor */
         ~Compiler_Code_Block();
@@ -47,6 +49,15 @@ namespace parser {
         /* Constructor */
         Compiler_Code_Block(utils::LinkedList <byte_code::Byte_Code*>*);
 
+
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int);
+
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
+
+        void addParameters(Compiler_Control*, utils::LinkedList <Ast_Node*>*);
+        
         /* Generator */
         static void generate(Compiler_Control*, Ast_Node_Code_Block*);
 
@@ -79,6 +90,9 @@ namespace parser {
     struct Compiler_Control {
 
         utils::LinkedList <Compiler_Code_Block*>* compiled_code_blocks;
+        utils::LinkedList <byte_code::Byte_Code*>* forward_declarations_byte_code;
+        utils::LinkedList <Ast_Node*>* forward_declarations_declaration;
+
         Compiler_Code_Block* current_compiler_code_block;
 
         utils::LinkedList <Ast_Node_Code_Block*>* code_blocks;
@@ -91,6 +105,9 @@ namespace parser {
         Compiler_Control(utils::LinkedList <Ast_Node_Code_Block*>*, Storage*, bool);
 
         void printDebugInfo(const char*);
+
+        /* Review forward declarations */
+        void reviewForwardDeclarations();
 
         /* Generator */
         void generateByteCodeBlocks();

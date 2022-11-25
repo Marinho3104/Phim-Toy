@@ -58,12 +58,57 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Declarations::getStructDec
     return _astStrctDecl;
 }
 
-parser::Compiler_Code_Block::~Compiler_Code_Block() { 
-    // delete byte_code; 
-    delete compiler_declarations; 
-}
+parser::Compiler_Code_Block::~Compiler_Code_Block() { delete compiler_declarations; }
 
 parser::Compiler_Code_Block::Compiler_Code_Block(utils::LinkedList <byte_code::Byte_Code*>* _byteCode) : byte_code(_byteCode) {}
+
+parser::Ast_Node_Variable_Declaration* parser::Compiler_Code_Block::getVariableDeclaration(int __d) {
+
+    parser::Ast_Node_Variable_Declaration* _ = compiler_declarations->getVariableDeclaration(__d);
+
+    return (_ || !previous_block) ? _ : previous_block->getVariableDeclaration(__d);
+
+}
+
+parser::Ast_Node_Function_Declaration* parser::Compiler_Code_Block::getFunctionDeclaration(int __d) {
+
+    parser::Ast_Node_Function_Declaration* _ = compiler_declarations->getFunctionDeclaration(__d);
+
+    return (_ || !previous_block) ? _ : previous_block->getFunctionDeclaration(__d);
+
+}
+
+parser::Ast_Node_Struct_Declaration* parser::Compiler_Code_Block::getStructDeclaration(int __d) {
+
+    parser::Ast_Node_Struct_Declaration* _ = compiler_declarations->getStructDeclaration(__d);
+
+    return (_ || !previous_block) ? _ : previous_block->getStructDeclaration(__d);
+
+}
+
+void parser::Compiler_Code_Block::addParameters(Compiler_Control* __comCntrl, utils::LinkedList <Ast_Node*>* _toAdd) {
+
+    parser::Compiler_Code_Block* _prev = __comCntrl->current_compiler_code_block;
+    __comCntrl->current_compiler_code_block = this;
+    utils::LinkedList <byte_code::Byte_Code*>* _t;
+
+    for (int _ = 0; _ < _toAdd->count; _++) {
+
+        _t = parser::getByteCodeFromNode(
+            (*_toAdd)[_], __comCntrl
+        );
+
+        byte_code->addFrst(
+            _t->frst->object
+        );
+
+        _t->destroy_content = 0; delete _t;
+
+    }
+
+    __comCntrl->current_compiler_code_block = _prev;
+
+}
 
 void parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, Ast_Node_Code_Block* __astNodeCodeBlock) {
 
@@ -78,13 +123,13 @@ void parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, Ast_Nod
     switch (_->environment_id)
     {
     case AST_NODE_CODE_BLOCK_ENVIRONMENT_NORMAL: case AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT:
-        _->previous_compiler_declarations = _prev->compiler_declarations; break;
-    default: _->previous_compiler_declarations = NULL; break;
+        _->previous_block = _prev; break;
+    default: _->previous_block = NULL; break;
     }
 
-    for (int _ = 0; _ < __astNodeCodeBlock->body->count; _++) {
+    for (int _i = 0; _i < __astNodeCodeBlock->body->count; _i++) {
 
-        _nodeByteCode = parser::getByteCodeFromNode((*__astNodeCodeBlock->body)[_], __comCntrl);
+        _nodeByteCode = parser::getByteCodeFromNode((*__astNodeCodeBlock->body)[_i], __comCntrl);
 
         if (!_nodeByteCode) continue;
 
@@ -140,11 +185,13 @@ parser::Compiler_Exception::Compiler_Exception(const char* _desc) : description(
     std::cout << "Compiler generation error: " << description << std::endl; exit(-1);
 } 
 
-parser::Compiler_Control::~Compiler_Control() { delete compiled_code_blocks; delete storage; }
+parser::Compiler_Control::~Compiler_Control() { delete compiled_code_blocks; delete storage; forward_declarations_byte_code->destroy_content = 0; forward_declarations_declaration->destroy_content = 0; delete forward_declarations_byte_code; delete forward_declarations_declaration; }
 
 parser::Compiler_Control::Compiler_Control(utils::LinkedList <Ast_Node_Code_Block*>* __cd, Storage* __strg, bool __dbgInfo) 
-    : code_blocks(__cd), storage(__strg), debug_info(__dbgInfo) {
+    : code_blocks(__cd), storage(__strg), debug_info(__dbgInfo), current_compiler_code_block(NULL) {
         compiled_code_blocks = new utils::LinkedList <Compiler_Code_Block*>();
+        forward_declarations_byte_code = new utils::LinkedList <byte_code::Byte_Code*>();
+        forward_declarations_declaration = new utils::LinkedList <Ast_Node*>();
 }
 
 void parser::Compiler_Control::printDebugInfo(const char* _) {
@@ -153,11 +200,38 @@ void parser::Compiler_Control::printDebugInfo(const char* _) {
 
 }
 
+void parser::Compiler_Control::reviewForwardDeclarations() {
+
+    parser::Ast_Node_Function_Declaration* _funcDecl;
+
+    for (int _ = 0; _ < forward_declarations_declaration->count; _++) {
+
+        switch ((*forward_declarations_declaration)[_]->node_id)
+        {
+        case AST_NODE_FUNCTION_DECLARATION:
+
+            _funcDecl = (Ast_Node_Function_Declaration*) (*forward_declarations_declaration)[_];
+            
+            if (!_funcDecl->body) new Compiler_Exception("Function body undefined");
+
+            (*forward_declarations_byte_code)[_]->argument = _funcDecl->body_pos;
+
+            break;
+        
+        default: new Compiler_Exception("Unexpected Node type in forward delcaration");
+        }
+
+    }
+
+}
+
 void parser::Compiler_Control::generateByteCodeBlocks() {
 
     parser::Compiler_Code_Block::generate(
         this, (*code_blocks)[code_blocks->count - 1] // Global block
     );
+
+    reviewForwardDeclarations();
 
 }
 

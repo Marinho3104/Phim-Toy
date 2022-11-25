@@ -23,6 +23,7 @@ namespace parser {
         int pointer_level; // Pointer level of type 
         int reference_level; // Reference level of type
         ~Type_Information() = default;
+        Type_Information() = default;
         /* Constructor - If something went wrong token_id is set to -1
         *   @param __tkId Token id
         *   @param __usrDecl User struct declaration TODO

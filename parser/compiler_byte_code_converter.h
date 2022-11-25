@@ -4,6 +4,7 @@
 #define PARSER_COMPILER_BYTE_CODE_CONVERTER_H
 
 #include "./ast_nodes.h"
+#include "./ast.h"
 
 namespace utils { template <typename> struct LinkedList; }
 namespace byte_code { struct Byte_Code; }
@@ -12,6 +13,8 @@ namespace parser {
 
     // Forward
     struct Compiler_Control;
+
+    Type_Information getTypeOfNode(Ast_Node*);
 
     /* Return value by expression value
     *   --> return table <--
@@ -42,6 +45,12 @@ namespace parser {
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeParenthesis(parser::Ast_Node_Parenthesis*, parser::Compiler_Control*);
 
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeCodeBlock(parser::Ast_Node_Code_Block*, parser::Compiler_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodePointerOperators(parser::Ast_Node_Pointer_Operators*, parser::Compiler_Control*);
+
+    void getByteCodeFromNodeFunctionDeclaration(parser::Ast_Node_Function_Declaration*, parser::Compiler_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeFunctionCall(parser::Ast_Node_Function_Call*, parser::Compiler_Control*);
 
 }
 
