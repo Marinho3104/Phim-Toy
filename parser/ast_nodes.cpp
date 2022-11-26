@@ -359,7 +359,7 @@ parser::Type_Information* parser::Ast_Node_Value::getType() {
 
     new (_) parser::Type_Information(
         parser_helper::getTokenIdTypeFromTokenIdImplicitValue(token_id),
-        NULL
+        0, NULL
     );
 
     return _;

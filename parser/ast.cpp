@@ -11,8 +11,8 @@
 
 #include <iostream>
 
-parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* _pntrOp) 
-    : token_id(__tkId), pointer_level(0), reference_level(0) {
+parser::Type_Information::Type_Information(int __tkId, int __strcDeclId, utils::LinkedList <int>* _pntrOp) 
+    : token_id(__tkId), user_defined_declaration_id(__strcDeclId), pointer_level(0), reference_level(0) {
 
         if (!_pntrOp) return;
 
@@ -43,7 +43,7 @@ parser::Type_Information* parser::Type_Information::generateDifferentPointersOpe
 
     parser_helper::setPointerOperators(__astCntrl, _operators);
 
-    _ = new Type_Information(token_id, _operators);
+    _ = new Type_Information(token_id, user_defined_declaration_id, _operators);
 
     delete _operators;
 
@@ -53,12 +53,20 @@ parser::Type_Information* parser::Type_Information::generateDifferentPointersOpe
 
 parser::Type_Information* parser::Type_Information::generate(parser::Ast_Control* __astCntrl) {
 
-    int _id = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->id, _usrDefDeclId = 0;
+    int _id = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->id, _usrDefDeclId = 0;
     utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
+    bool _gbl;
+
+    switch (_id)
+    {
+    case TOKEN_IDENTIFIER: 
+        _usrDefDeclId = __astCntrl->current_block->getDeclarationId((*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->phr, _gbl);
+    default: __astCntrl->current_token_position++;
+    }
 
     parser_helper::setPointerOperators(__astCntrl, _pntrOprts);
 
-    Type_Information* _ = new Type_Information(_id, _pntrOprts);
+    Type_Information* _ = new Type_Information(_id, _usrDefDeclId, _pntrOprts);
 
     delete _pntrOprts;
 

@@ -10,6 +10,7 @@ namespace utils { template <typename> struct LinkedList; }
 namespace parser {
 
     // Forward
+    struct Ast_Node_Struct_Declaration;
     struct Ast_Node_Code_Block;
     struct Ast_Control;
     struct Ast_Node;
@@ -17,8 +18,8 @@ namespace parser {
 
     /* Type information */
     struct Type_Information {
-        int token_id; // Token id of type
-        //int user_defined_declaration_id; // If is token_id is identifier then this is struct declaration
+        Ast_Node_Struct_Declaration* user_defined_declaration; // If is token_id is identifier then this is struct declaration
+        int token_id, user_defined_declaration_id; // Token id of type
         /* Can be declarated alone cause it can exist a pointer to reference so its always read the pontrLvl first and then reference lvl */
         int pointer_level; // Pointer level of type 
         int reference_level; // Reference level of type
@@ -30,7 +31,7 @@ namespace parser {
         *   @param __pntrOp Pointer operations (pointer or reference)
         *   
         */
-        Type_Information(int, utils::LinkedList <int>*);
+        Type_Information(int, int, utils::LinkedList <int>*);
         /**/
         Type_Information* generateDifferentPointersOperations(Ast_Control*);
         /* Generator */

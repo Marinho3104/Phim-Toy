@@ -52,6 +52,8 @@ namespace parser {
 
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNodeFunctionCall(parser::Ast_Node_Function_Call*, parser::Compiler_Control*);
 
+    void getByteCodeFromNodeStructDeclaration(parser::Ast_Node_Struct_Declaration*, parser::Compiler_Control*);
+
 }
 
 #endif
