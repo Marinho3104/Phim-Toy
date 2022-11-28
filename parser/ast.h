@@ -1,5 +1,3 @@
-/* Main goal of ast is to check if every instruction sentence makes sence */
-
 #pragma once
 
 #ifndef PARSER_AST_H
@@ -10,86 +8,106 @@ namespace utils { template <typename> struct LinkedList; }
 namespace parser {
 
     // Forward
-    struct Ast_Node_Struct_Declaration;
-    struct Ast_Node_Code_Block;
+    struct Ast_Node_Name_Space;
+    struct Name_Space_Control;
     struct Ast_Control;
-    struct Ast_Node;
     struct Token;
 
-    /* Type information */
+    /* Keeps track of names declaration accors code */
+    struct Name_Tracker {
+
+        utils::LinkedList <char*>* names_declared;
+
+        ~Name_Tracker(); Name_Tracker();
+
+        /* Return the declaration id of given name or -1 if name is not declared */
+        int getDeclarationId(char*);
+
+        /* Adds a new name into the declaration list if is not declared 
+        *   Returns true if name was declared or false if name was already declared
+        */
+        bool addNewName(char*, bool);
+
+    };
+
+    /* Represent a type */
     struct Type_Information {
-        Ast_Node_Struct_Declaration* user_defined_declaration; // If is token_id is identifier then this is struct declaration
-        int token_id, user_defined_declaration_id; // Token id of type
-        /* Can be declarated alone cause it can exist a pointer to reference so its always read the pontrLvl first and then reference lvl */
-        int pointer_level; // Pointer level of type 
-        int reference_level; // Reference level of type
-        ~Type_Information() = default;
-        Type_Information() = default;
-        /* Constructor - If something went wrong token_id is set to -1
-        *   @param __tkId Token id
-        *   @param __usrDecl User struct declaration TODO
-        *   @param __pntrOp Pointer operations (pointer or reference)
-        *   
-        */
-        Type_Information(int, int, utils::LinkedList <int>*);
-        /**/
-        Type_Information* generateDifferentPointersOperations(Ast_Control*);
-        /* Generator */
+        int token_id; // Token id representing the type | if token_id == identifier means is a user defined type (a.k.a struct)
+        int pointer_level, reference_level; // Pointer ans reference level of type
+
+        ~Type_Information(); Type_Information();
+
+        Type_Information(int, utils::LinkedList <int>*);
+
         static Type_Information* generate(Ast_Control*);
-        /* Comparates 2 types */
+
+        static Type_Information* generate(Ast_Control*, Type_Information*);
+
         bool operator==(Type_Information&);
-        /* Return byte size of type holded */
+
         int getByteSize();
-    };
-
-    /* Storage - Holds every type and implicit value used in code */
-    struct Storage {
-
-        utils::LinkedList <char*>* implicit_values; // Implicit values used
-
-        /* Destructor */
-        ~Storage();
-        /* Constructor */
-        Storage();
-        /* Add new value into Linked List
-        *   If value already exists dont add
-        *   @return Pos of value given in Linked List 
-        */
-        int addNewValue(char*, bool);
 
     };
 
-    /* Ast exception */
-    struct Ast_Exception {
-        const char* description; // Exception description
-        Ast_Exception(const char*);
-    };  
+    /* Keeps track of every declaration occur in a name space */
+    struct Name_Space {
 
-    /* Ast generation control */
+        Name_Space_Control* name_space_control;
+        utils::LinkedList <char*>* name_space_scope;
+        Name_Tracker* name_tracker;
+        int off_count;
+
+        ~Name_Space(); Name_Space(Name_Space_Control*, utils::LinkedList <char*>*);
+
+        void offCountSet();
+
+        bool addNewName(char*);
+
+        int getDeclarationId(char*);
+
+        static Name_Space* getNameSpace(Ast_Control*, bool);
+
+        static Name_Space* getNameSpace(Ast_Control*);
+
+    };
+
+    /* Keeps track of every name space created in code
+    *   Name space with 0 names in scope is global one
+    */
+    struct Name_Space_Control {
+
+        utils::LinkedList <Name_Space*>* name_space_declarations;
+        Name_Space* global_name_space;
+
+        ~Name_Space_Control(); Name_Space_Control();
+
+        Name_Space* getNameSpaceDefinition(utils::LinkedList <char*>*);
+
+        Name_Space* getPreviousNameSpace(Name_Space*);
+
+        Name_Space* getNameSpace(utils::LinkedList <char*>*);
+
+    };
+
+    struct Ast_Execption { const char* description; Ast_Execption(const char*); };
+
     struct Ast_Control {
 
-        utils::LinkedList <Ast_Node_Code_Block*>* code_blocks; // code blocks
-        utils::LinkedList <parser::Token*>* tokens_collection; // tokens collection
-        Ast_Node_Code_Block* current_block;
-        int current_token_position; // Keeps track of current token
-        Storage* storage; // Storage
+        utils::LinkedList <Ast_Node_Name_Space*>* name_spaces; // all code is here
+        utils::LinkedList <Token*>* tokens_collection;
+        Name_Space* current_name_space; // Currnet name space in use
+        Name_Space_Control* name_space_control;
+        int current_token_position; // Keeps track of current token position
 
         bool debug_info;
 
-        /* Destructor */
-        ~Ast_Control();
+        ~Ast_Control(); Ast_Control(utils::LinkedList <Token*>*, bool);
 
-        /* Constructor 
-        *   @param __tksColl Tokens collection
-        *   @param __dbgInfo Debug info set
-        */
-        Ast_Control(utils::LinkedList <parser::Token*>*, bool);
-
-        /* Print debug info */
         void printDebugInfo(const char*);
 
-        /* Generate Ast Nodes from the given tokens collection */
-        void generateAst();
+        parser::Token* getToken(int);
+
+        void generate();
 
     };
 

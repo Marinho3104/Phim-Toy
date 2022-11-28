@@ -602,7 +602,28 @@ void parser::getByteCodeFromNodeStructDeclaration(parser::Ast_Node_Struct_Declar
 
     } else __comCntrl->current_compiler_code_block->compiler_declarations->structs_declaration->add(__astStrctDecl);
 
-    //TODO cont
+    /* TODO
+    
+    if (__comCntrl->current_compiler_code_block->compiler_declarations->isDeclared(__astStrctDecl->declaration_id)) {
+
+        parser::Ast_Node_Struct_Declaration* _ = __comCntrl->current_compiler_code_block->getStructDeclaration(__astStrctDecl->declaration_id);
+
+        if (!_) new Compiler_Exception("Redeclaration of name");
+
+        if (_->functions || _->fields) new Compiler_Exception("Redefenition of struct body");
+
+        utils::LinkedList <Ast_Node_Function_Declaration*>* _cpyFuncDecl = _->functions;
+        utils::LinkedList <Ast_Node*>* _cpyFields = _->fields;
+
+        __astStrctDecl = _;
+
+        __astStrctDecl->functions = _cpyFuncDecl;
+        __astStrctDecl->fields = _cpyFields;
+
+    } else __comCntrl->current_compiler_code_block->compiler_declarations->structs_declaration->add(__astStrctDecl);
+
+    if (!__astStrctDecl->functions || !__astStrctDecl->fields) { __astStrctDecl->body_pos = -1; return; }
+    */
 
 }
 

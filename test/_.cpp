@@ -11,12 +11,12 @@
 
 #include "./../byteCode/byteCode.h" // Byte Code
 
-#include "./../parser/compiler.h" // Compiler
+// #include "./../parser/compiler.h" // Compiler
 
 #include "./../parser/tokenizer.h" // Tokenizer
 #include "./../parser/token.h" // Tokens
 
-#include "./../parser/ast_nodes.h" // Ast Nodes
+// #include "./../parser/ast_nodes.h" // Ast Nodes
 #include "./../parser/ast.h" // Ast control 
 
 #include "./../utils/linkedList.h" // Linked list
@@ -28,6 +28,8 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+
+
 
 parser::Tokenizer_Control* getTokens(char* _code) {
 
@@ -51,25 +53,35 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
     parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl, 1);
 
-    _astCntrl->generateAst();
+    _astCntrl->generate();
 
     return _astCntrl;
 
 }
 
-parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Code_Block*>* _codeBlocks, parser::Storage* _storage) {
+// parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Code_Block*>* _codeBlocks, parser::Storage* _storage) {
 
-    std::cout << "\n --> Generate Compiler <--\n" << std::endl;
+//     std::cout << "\n --> Generate Compiler <--\n" << std::endl;
 
-    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_codeBlocks, _storage, 1);
+//     parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_codeBlocks, _storage, 1);
 
-    _comCntrl->generateByteCodeBlocks();
+//     _comCntrl->generateByteCodeBlocks();
 
-    return _comCntrl;
+//     return _comCntrl;
+
+// }
+
+namespace ola {
+    
+    int jj() {
+
+
+
+    }
 
 }
 
-parser::Compiled_Output* getByteCode(char* _code) {
+void getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
@@ -77,20 +89,42 @@ parser::Compiled_Output* getByteCode(char* _code) {
     
     delete _tkCntrl;
 
-    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+    // parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
 
     delete _astCntrl;
 
-    parser::Compiled_Output* _ = _comCntrl->generateOutPut();
+    // parser::Compiled_Output* _ = _comCntrl->generateOutPut();
 
-    delete _comCntrl;
+    // delete _comCntrl;
 
-    std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
+    // std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
 
-    _->printByteCode();
+    // _->printByteCode();
 
-    return _;
+    // return _;
 
+}
+
+
+namespace ola {
+
+    int ola__;
+
+    namespace adeus {
+
+        void gg(int);
+
+    }
+}
+
+int jj;
+
+namespace ola {
+
+}
+
+void ola::adeus::gg(int) {
+    ola__;
 }
 
 int main() {
@@ -99,12 +133,14 @@ int main() {
     "int kk() {} " \
     "jk(kk());";
     "int j; {int k; { int kl; j; } } { int j; int ll; } j += 12 + 12 * 5;";
+    "namespace ola {} :: ola ::";
+    "namespace ola { void gg(); } ola::gg() {}";
 
-    parser::Compiled_Output* _com = getByteCode(
-        "void jk(int l) { int k; int j;} jk(12);" \
+    getByteCode(
+        " int j; namespace ola { int jkk, jj; } int l;"
     );
 
-    delete _com;
+    // delete _com;
 
     // executeByteCode(_com);
 

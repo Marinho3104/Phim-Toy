@@ -2,7 +2,7 @@
 
 // #include "./../objects/phim_object.h"
 
-#include "./../parser/compiler.h" // Compiler Code Block
+// #include "./../parser/compiler.h" // Compiler Code Block
 #include "./../byteCode/byteCode.h" // Byte Code
 #include "./../parser/ast_nodes.h" // Ast Nodes
 #include "./../parser/token.h" // Tokens Id
@@ -210,31 +210,39 @@ int utils::LinkedList<char*>::getObjectPosition(char* _toCmp, bool (*func) (char
 }
 
 
-template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
-template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
-template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
-template class utils::DataLL <parser::Compiled_Code_Block*>;
-template class utils::DataLL <parser::Compiler_Code_Block*>;
-template class utils::DataLL <parser::Ast_Node_Code_Block*>;
-template class utils::DataLL <parser::Ast_Node_Expression*>;
-template class utils::DataLL <parser::Type_Information*>;
-template class utils::DataLL <byte_code::Byte_Code*>;
+// template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
+// template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
+// template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
+// template class utils::DataLL <parser::Compiled_Code_Block*>;
+// template class utils::DataLL <parser::Compiler_Code_Block*>;
+// template class utils::DataLL <parser::Ast_Node_Code_Block*>;
+// template class utils::DataLL <parser::Type_Information*>;
+
+
 // template class utils::DataLL <objects::Phim_Object*>;
+
+// template class utils::DataLL <parser::Ast_Node_Expression*>;
+template class utils::DataLL <parser::Ast_Node_Name_Space*>;
+template class utils::DataLL <byte_code::Byte_Code*>;
+template class utils::DataLL <parser::Name_Space*>;
 template class utils::DataLL <parser::Ast_Node*>;
 template class utils::DataLL <parser::Token*>;
 template class utils::DataLL <char*>;
 template class utils::DataLL <int>;
 
-template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
-template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
-template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
-template class utils::LinkedList <parser::Compiled_Code_Block*>;
-template class utils::LinkedList <parser::Compiler_Code_Block*>;
-template class utils::LinkedList <parser::Ast_Node_Code_Block*>;
-template class utils::LinkedList <parser::Ast_Node_Expression*>;
-template class utils::LinkedList <parser::Type_Information*>;
-template class utils::LinkedList <byte_code::Byte_Code*>;
+// template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
+// template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
+// template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
+// template class utils::LinkedList <parser::Compiled_Code_Block*>;
+// template class utils::LinkedList <parser::Compiler_Code_Block*>;
+// template class utils::LinkedList <parser::Ast_Node_Code_Block*>;
+// template class utils::LinkedList <parser::Type_Information*>;
 // template class utils::LinkedList <objects::Phim_Object*>;
+
+// template class utils::LinkedList <parser::Ast_Node_Expression*>;
+template class utils::LinkedList <parser::Ast_Node_Name_Space*>;
+template class utils::LinkedList <byte_code::Byte_Code*>;
+template class utils::LinkedList <parser::Name_Space*>;
 template class utils::LinkedList <parser::Ast_Node*>;
 template class utils::LinkedList <parser::Token*>;
 template class utils::LinkedList <char*>;

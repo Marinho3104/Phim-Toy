@@ -20,7 +20,7 @@ parser::Tokenizer_Control::~Tokenizer_Control() {
     
 }
 
-parser::Tokenizer_Control::Tokenizer_Control(char* __srcCode) : srcCode(__srcCode) {
+parser::Tokenizer_Control::Tokenizer_Control(char* __srcCode) : srcCode(__srcCode), is_token_last_special_character(true) {
 
     tokens = new utils::LinkedList <parser::Token*>();
 
@@ -50,10 +50,13 @@ void parser::Tokenizer_Control::generateTokens() {
 
     while(*srcCode != 0) {
         if (*srcCode <= 32) { 
-            if (tokens->last->object->id == TOKEN_ACCESSINGVARIABLE || tokens->last->object->id == TOKEN_ACCESSINGVARIABLEPOINTER)
+            if (tokens->last->object->id == TOKEN_ACCESSINGVARIABLE || tokens->last->object->id == TOKEN_ACCESSINGVARIABLEPOINTER) 
                 new Tokenizer_Control_Exception("Expected identifier after trying to access field");
-            srcCode++; continue; }
+            is_token_last_special_character = 1;
+            srcCode++; continue; 
+        }
         setNewToken();
+        is_token_last_special_character = 0;
     }
 
     if (
@@ -148,7 +151,7 @@ bool parser::Tokenizer_Control::setTokenSymbol() {
 
         switch (_tkId)
         {
-        case TOKEN_QUOTATIONMARK: case TOKEN_SINGLE_QUOTE: handleString(_tk, _tkId); goto rtr;      
+        case TOKEN_QUOTATIONMARK: case TOKEN_SINGLE_QUOTE: handleString(_tk, _tkId); goto rtr_add_token;      
         case TOKEN_POINTER: case TOKEN_ADDRESS: if(handlePointerOperation(_tk, _tkId)) goto rtr_with_jump; break;
         default: new (_tk) parser::Token(_tkId, NULL);
         }
@@ -163,7 +166,11 @@ bool parser::Tokenizer_Control::setTokenSymbol() {
 
         _jmp = 2;
 
-        if (_tkId == TOKEN_COMMENT) { handleDoubleSlashComment(); return 1; }
+        switch (_tkId)
+        {
+        case TOKEN_COMMENT: handleDoubleSlashComment(); return 1;
+        default: break;
+        }
 
         new (_tk) parser::Token(_tkId, NULL);
 
@@ -184,7 +191,7 @@ rtr_with_jump:
 
     srcCode += _jmp;
 
-rtr:
+rtr_add_token:
 
     addNewToken(_tk);
 

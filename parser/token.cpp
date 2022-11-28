@@ -57,7 +57,7 @@ int parser::getTokenSymbTwoChars(int _f, int _s) {
         case ':':
             switch (_s)
             {
-            case ':': return TOKEN_SCOPE_RESOLUTION;
+            case ':': return TOKEN_NAMESPACE_OPERATOR;
             
             default: return 0;
             }
@@ -182,6 +182,8 @@ int parser::getTokenIdKeyWord(char** _) {
     /* Others */
     if (!strncmp( (const char*) *_, "struct", 6)) { *_+= 6; return TOKEN_STRUCT; }
     if (!strncmp( (const char*) *_, "contract", 8)) { *_+= 8; return TOKEN_CONTRACT; }
+    if (!strncmp( (const char*) *_, "namespace", 9)) { *_+= 9; return TOKEN_NAMESPACE; }
+
 
     /* Control Structures */
     if (!strncmp( (const char*) *_, "if", 2)) { *_+=2; return TOKEN_IF; }

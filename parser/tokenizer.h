@@ -18,6 +18,7 @@ namespace parser {
     struct Tokenizer_Control {
 
         utils::LinkedList <parser::Token*>* tokens;
+        bool is_token_last_special_character;
         char* srcCode;
 
         ~Tokenizer_Control();

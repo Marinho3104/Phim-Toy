@@ -1,72 +1,68 @@
 #include "./ast.h"
 
-#include "./../utils/linkedList.h" // Linked List
-#include "./ast_nodes.h" // Ast nodes
-#include "./token.h" // Token | Token Ids
-#include "./parser_definitions.h" // Parser definitions
-#include "./parser_helper.h" // getSizePrimitiveType()
-#include "./ast_helper.h"
-#include "./ast.h"
 #include "./../utils/commonFunctions.h"
+#include "./../utils/linkedList.h"
+#include "./parser_definitions.h"
+#include "./parser_helper.h"
+#include "./ast_helper.h"
+#include "./ast_nodes.h"
+#include "./token.h"
 
 #include <iostream>
+#include <string.h>
 
-parser::Type_Information::Type_Information(int __tkId, int __strcDeclId, utils::LinkedList <int>* _pntrOp) 
-    : token_id(__tkId), user_defined_declaration_id(__strcDeclId), pointer_level(0), reference_level(0) {
+parser::Name_Tracker::~Name_Tracker() { delete names_declared; }
 
-        if (!_pntrOp) return;
+parser::Name_Tracker::Name_Tracker() { names_declared = new utils::LinkedList <char*>(); }
 
-        for (int _ = 0; _ < _pntrOp->count; _++)
+int parser::Name_Tracker::getDeclarationId(char* __n) { return __n ? names_declared->getObjectPosition(__n, NULL) : -1; }
 
-            if ((*_pntrOp)[_] == TOKEN_POINTER) {
+bool parser::Name_Tracker::addNewName(char* __n, bool __cpy) {
+    if (__cpy) __n = utils::copyString(__n, utils::getStringSize(__n));
+    if (getDeclarationId(__n) != -1) { if (__cpy) free(__n); return 0; }
+    names_declared->add(__n);
+    return 1;
+}
 
-                if (reference_level) new Ast_Exception("Error in type information");
 
-                pointer_level++;
+parser::Type_Information::~Type_Information() {}
 
-            }        
+parser::Type_Information::Type_Information() {}
 
-            else {
+parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* __oprs) : token_id(__tkId), pointer_level(0), reference_level(0) {
 
-                reference_level++;
+    if (!__oprs) return;
 
-                if (reference_level > 2) new Ast_Exception("Error in type information");
+    for (int _ = 0; _ < __oprs->count; _++)
 
-            }
+        if ((*__oprs)[_] == TOKEN_POINTER) {
+
+            if (reference_level) new Ast_Execption("Pointer of reference not allowed");
+
+            pointer_level++;
+
+        }
+
+        else {
+
+            reference_level++;
+
+            if (reference_level > 2) new Ast_Execption("Reference of double reference not allowed");
+
+        }
 
 }
 
-parser::Type_Information* parser::Type_Information::generateDifferentPointersOperations(Ast_Control* __astCntrl) {
+parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astCntrl) {
 
-    parser::Type_Information* _; 
-    utils::LinkedList <int>* _operators = new utils::LinkedList <int>();
-
-    parser_helper::setPointerOperators(__astCntrl, _operators);
-
-    _ = new Type_Information(token_id, user_defined_declaration_id, _operators);
-
-    delete _operators;
-
-    return _;
-    
-}
-
-parser::Type_Information* parser::Type_Information::generate(parser::Ast_Control* __astCntrl) {
-
-    int _id = (*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->id, _usrDefDeclId = 0;
     utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
-    bool _gbl;
+    int _id = __astCntrl->getToken(0)->id;
 
-    switch (_id)
-    {
-    case TOKEN_IDENTIFIER: 
-        _usrDefDeclId = __astCntrl->current_block->getDeclarationId((*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->phr, _gbl);
-    default: __astCntrl->current_token_position++;
-    }
+    __astCntrl->current_token_position++;
 
     parser_helper::setPointerOperators(__astCntrl, _pntrOprts);
 
-    Type_Information* _ = new Type_Information(_id, _usrDefDeclId, _pntrOprts);
+    Type_Information* _ = new Type_Information(_id, _pntrOprts);
 
     delete _pntrOprts;
 
@@ -74,18 +70,32 @@ parser::Type_Information* parser::Type_Information::generate(parser::Ast_Control
 
 }
 
-bool parser::Type_Information::operator==(Type_Information&_) {
+parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astCntrl, Type_Information* __tpIf) {
+
+    parser::Type_Information* _; 
+    utils::LinkedList <int>* _operators = new utils::LinkedList <int>();
+
+    parser_helper::setPointerOperators(__astCntrl, _operators);
+
+    _ = new Type_Information(__tpIf->token_id, _operators);
+
+    delete _operators;
+
+    return _;
+
+}
+
+bool parser::Type_Information::operator==(Type_Information& _) {
 
     return (
         token_id == _.token_id &&
         pointer_level == _.pointer_level &&
         reference_level == _.reference_level 
     );
-
 }
 
 int parser::Type_Information::getByteSize() {
-
+    
     if (!pointer_level) {
 
         if (token_id == TOKEN_IDENTIFIER) { std::cout << "User defined get size not implemented " << std::endl; exit(-1); /* TODO */ }
@@ -95,49 +105,233 @@ int parser::Type_Information::getByteSize() {
     }
 
     return PRIMITIVES_TYPE_POINTER_SIZE;
+}
+
+
+parser::Name_Space::~Name_Space() { delete name_space_scope; delete name_tracker; }
+
+parser::Name_Space::Name_Space(Name_Space_Control* _cntrl, utils::LinkedList <char*>* __scp) 
+    : name_space_control(_cntrl), name_space_scope(__scp), off_count(0) {
+        if (!name_space_scope) name_space_scope = new utils::LinkedList <char*>();
+        name_tracker = new Name_Tracker();
+        offCountSet();
+    }
+
+void parser::Name_Space::offCountSet() {
+
+    parser::Name_Space* _prevNameSpace = name_space_control->getPreviousNameSpace(this);
+
+    if (this == _prevNameSpace) return;
+
+    for (int _ = 0; _ < name_space_scope->count; _--) {
+
+        off_count += _prevNameSpace->name_tracker->names_declared->count;
+
+        _prevNameSpace = name_space_control->getPreviousNameSpace(_prevNameSpace);
+
+    }
 
 }
 
-parser::Storage::~Storage() {}
+bool parser::Name_Space::addNewName(char* __n) { return name_tracker->addNewName(__n, 1); }
 
-parser::Storage::Storage() { implicit_values = new utils::LinkedList <char*>(); }
+int parser::Name_Space::getDeclarationId(char* __n) {
 
-int parser::Storage::addNewValue(char* __v, bool __cpy) {
-    if (__cpy) __v = utils::copyString(__v, utils::getStringSize(__v));
+    parser::Name_Space* _prevNameSpace;
+    int _;
 
-    int _rtr;
-    if ((_rtr = implicit_values->getObjectPosition(__v, NULL)) == -1) _rtr = implicit_values->add(__v);
-    else free(__v);
-    return _rtr; 
+    if (
+        (_ = name_tracker->getDeclarationId(__n)) == -1
+    ) {
+
+        _prevNameSpace = name_space_control->getPreviousNameSpace(this);
+
+        return _prevNameSpace ? _prevNameSpace->getDeclarationId(__n) : _;
+
+    }
+
+    return _ + off_count;
+
 }
 
-parser::Ast_Exception::Ast_Exception(const char* __dsc) : description(__dsc) {
-    std::cout << "Ast generation error: " << description << std::endl; exit(-1); // TODO
+parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bool __glb) {
+
+    utils::LinkedList <char*>* _scope = new utils::LinkedList <char*>();
+
+    if (!__glb)
+
+        for (int _ = 0; _ < __astCntrl->current_name_space->name_space_scope->count; _++)
+
+            _scope->add(
+                utils::copyString(
+                    (*__astCntrl->current_name_space->name_space_scope)[_],
+                    utils::getStringSize((*__astCntrl->current_name_space->name_space_scope)[_])
+                )
+            );
+
+    while (
+        __astCntrl->getToken(0)->id == TOKEN_IDENTIFIER && __astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR
+    ) {
+
+        _scope->add(
+            utils::copyString(
+                __astCntrl->getToken(0)->phr,
+                utils::getStringSize(__astCntrl->getToken(0)->phr)
+            )
+        );
+
+        __astCntrl->current_token_position += 2;
+
+    }
+
+    Name_Space* _ = __astCntrl->name_space_control->getNameSpace(
+        _scope
+    );
+
+    delete _scope;
+
+    return _;
+
 }
 
-parser::Ast_Control::~Ast_Control() {
-    delete code_blocks;
+parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl) {
+
+    utils::LinkedList <char*>* _scope = new utils::LinkedList <char*>();
+    
+    while (
+        __astCntrl->getToken(0)->id != TOKEN_OPENCURLYBRACKET
+    ) {
+
+        if (__astCntrl->getToken(0)->id != TOKEN_NAMESPACE_OPERATOR) 
+
+            _scope->add(
+                utils::copyString(
+                    __astCntrl->getToken(0)->phr,
+                    utils::getStringSize(__astCntrl->getToken(0)->phr)
+                )
+            );
+
+        __astCntrl->current_token_position ++;
+
+    }
+    
+    Name_Space* _ = __astCntrl->name_space_control->getNameSpace(
+        _scope
+    );
+
+    delete _scope;
+
+    return _;
+
 }
 
-parser::Ast_Control::Ast_Control(utils::LinkedList <parser::Token*>* __tksColl, bool __dbgInfo) 
-    : tokens_collection(__tksColl), debug_info(__dbgInfo), current_block(NULL), current_token_position(0) {
-        code_blocks = new utils::LinkedList <Ast_Node_Code_Block*>();
-        storage = new Storage();
+
+
+parser::Name_Space_Control::~Name_Space_Control() { delete name_space_declarations; delete global_name_space; }
+
+parser::Name_Space_Control::Name_Space_Control() {
+    name_space_declarations = new utils::LinkedList <Name_Space*>();
+    global_name_space = new Name_Space(this, NULL);
+}
+
+parser::Name_Space* parser::Name_Space_Control::getNameSpaceDefinition(utils::LinkedList <char*>* __scp) {
+
+    parser::Name_Space* _name_space = NULL;
+    bool _rslt;
+
+    if (!__scp || !__scp->count) return global_name_space;
+
+    for (int _ = 0; _ < name_space_declarations->count; _++) {
+
+        _rslt = 1;
+
+        if (
+            (*name_space_declarations)[_]->name_space_scope->count != __scp->count
+        ) continue;
+
+        for (int __ = 0; __ < __scp->count && _rslt; __++)
+
+            if (
+                strcmp((*(*name_space_declarations)[_]->name_space_scope)[__], (*__scp)[__])
+            ) _rslt = 0;
+
+        if (_rslt) {  _name_space = (*name_space_declarations)[_]; break; }
+
+    }
+
+    return _name_space;
+
+}
+
+parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(Name_Space* __nmSpc) {
+
+    utils::LinkedList <char*>* _prevScope = new utils::LinkedList <char*>();
+    Name_Space* _name_space;
+
+    if (!__nmSpc->name_space_scope->count) { delete _prevScope; return _name_space; }
+
+    for (int _ = 0; _ < __nmSpc->name_space_scope->count - 1; _++) _prevScope->add((*__nmSpc->name_space_scope)[_]);
+    
+    _name_space = getNameSpaceDefinition(_prevScope);
+
+    _prevScope->destroy_content = 0; delete _prevScope;
+
+    return _name_space;
+
+}
+
+parser::Name_Space* parser::Name_Space_Control::getNameSpace(utils::LinkedList <char*>* __scp) {
+
+    utils::LinkedList <char*>* _crrntScope;
+    parser::Name_Space* _crrntNameSpace = getNameSpaceDefinition(__scp);
+
+    if (_crrntNameSpace) return _crrntNameSpace;
+
+    for (int _ = 1; _ < __scp->count + 1; _++) {
+
+        _crrntScope = new utils::LinkedList <char*>();
+
+        for (int __  = 0; __ < _; __++) _crrntScope->add(
+            utils::copyString(
+                (*__scp)[__], utils::getStringSize((*__scp)[__])
+            )
+        );
+
+        _crrntNameSpace = (parser::Name_Space*) malloc(sizeof(parser::Name_Space));
+
+        new (_crrntNameSpace) parser::Name_Space(
+            this, _crrntScope
+        );
+
+        name_space_declarations->add(_crrntNameSpace);
+
+    }
+
+    return _crrntNameSpace;
+
+}
+
+
+parser::Ast_Execption::Ast_Execption(const char* __dscr) : description(__dscr) { std::cout << description << std::endl; exit(1); }
+
+
+parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces; }
+
+parser::Ast_Control::Ast_Control(utils::LinkedList <Token*>* __tksColl, bool __dbg) 
+    : tokens_collection(__tksColl), debug_info(__dbg), current_token_position(0), current_name_space(NULL) {
+        name_spaces = new utils::LinkedList <Ast_Node_Name_Space*>();
+        name_space_control = new Name_Space_Control();
     }
 
 void parser::Ast_Control::printDebugInfo(const char* __i) {
 
-    if (debug_info) std::cout << __i << std::endl;
+    if (debug_info) std::cout << "Ast Control - Debug Info: " << __i << std::endl;
 
 }
 
-void parser::Ast_Control::generateAst() {
+parser::Token* parser::Ast_Control::getToken(int __off) { return (*tokens_collection)[current_token_position + __off]; }
 
-    parser::Ast_Node_Code_Block::generate(
-        this, AST_NODE_CODE_BLOCK_ENVIRONMENT_GLOBAL, NULL
-    );
-
-}
+void parser::Ast_Control::generate() { Ast_Node_Name_Space::generate(this, name_space_control->getNameSpace(NULL)); }
 
 
 
