@@ -151,6 +151,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNewNodes(
 cont:
 
     if (parser::isPrimativeType(_tk)) {
+        
         Type_Information* _typeInformation = Type_Information::generate(__astCntrl);
 
         if ((*__astCntrl->tokens_collection)[__astCntrl->current_token_position]->id != TOKEN_IDENTIFIER) 

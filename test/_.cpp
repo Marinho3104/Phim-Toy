@@ -105,6 +105,23 @@ void getByteCode(char* _code) {
 
 }
 
+namespace ola {
+
+    int j;
+
+    void gg();
+
+}
+
+void ola::gg() {
+    j;
+}
+
+namespace adeus {
+
+
+}
+
 
 
 int main() {
@@ -117,7 +134,8 @@ int main() {
     "namespace ola { void gg(); } ola::gg() {}";
 
     getByteCode(
-        "int j; namespace ola { int j; int g(int ola, int adeus) { int k; 12 + k + j; } } int h; "
+        "int l; namespace adeus {  struct test { int j; }; int oo = 12; int mario = oo; } namespace ola { int marinho; void mormormor(int l = 12) { *::adeus::mario = (::adeus::oo); }  } int o; "
+        "void main() { adeus::test* l; } "
     );
 
     // delete _com;

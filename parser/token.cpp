@@ -221,3 +221,9 @@ bool parser::isAssignment(parser::Token* _) { return _->id >= TOKEN_EQUAL && _->
 
 bool parser::isSingleAssignment(parser::Token*_) { return _->id == TOKEN_INCREMENT || _->id == TOKEN_DECREMENT; }
 
+bool parser::isExpressionOperator(parser::Token* _) { // Miss things
+
+    return _->id >= TOKEN_ADDITION && _->id <= TOKEN_MODULUS;
+
+}
+

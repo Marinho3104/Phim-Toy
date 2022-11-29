@@ -11,7 +11,9 @@ namespace parser {
     struct Ast_Node_Code_Block;
     struct Ast_Node_Name_Space;
     struct Name_Space_Control;
+    struct Type_Information;
     struct Ast_Control;
+    struct Name_Space;
     struct Token;
 
     /* Keeps track of names declaration accors code */
@@ -35,12 +37,13 @@ namespace parser {
     struct Type_Information {
         int token_id; // Token id representing the type | if token_id == identifier means is a user defined type (a.k.a struct)
         int pointer_level, reference_level; // Pointer ans reference level of type
+        Name_Space* name_space; // if null is current name space
 
         ~Type_Information(); Type_Information();
 
-        Type_Information(int, utils::LinkedList <int>*);
+        Type_Information(int, utils::LinkedList <int>*, Name_Space*);
 
-        static Type_Information* generate(Ast_Control*);
+        static Type_Information* generate(Ast_Control*, Name_Space*);
 
         static Type_Information* generate(Ast_Control*, Type_Information*);
 
@@ -65,6 +68,8 @@ namespace parser {
         bool addNewName(char*);
 
         int getDeclarationId(char*);
+
+        static Name_Space* checkIfNameSpace(Ast_Control*);
 
         static Name_Space* getNameSpace(Ast_Control*, bool);
 
@@ -119,11 +124,18 @@ namespace parser {
 
         bool debug_info;
 
+        Name_Space* current_name_space_saved;
+        Ast_Node_Code_Block* current_code_block_saved;
+
         ~Ast_Control(); Ast_Control(utils::LinkedList <Token*>*, bool);
 
         void printDebugInfo(const char*);
 
         parser::Token* getToken(int);
+
+        void saveState();
+
+        void setPreviousSavedState();
 
         void generate();
 

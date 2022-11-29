@@ -29,7 +29,7 @@ parser::Type_Information::~Type_Information() {}
 
 parser::Type_Information::Type_Information() {}
 
-parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* __oprs) : token_id(__tkId), pointer_level(0), reference_level(0) {
+parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* __oprs, Name_Space* _nmSpc) : token_id(__tkId), pointer_level(0), reference_level(0), name_space(_nmSpc) {
 
     if (!__oprs) return;
 
@@ -53,16 +53,16 @@ parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* 
 
 }
 
-parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astCntrl) {
+parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astCntrl, Name_Space* _nmSpc) {
 
     utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
     int _id = __astCntrl->getToken(0)->id;
 
     __astCntrl->current_token_position++;
 
-    parser_helper::setPointerOperators(__astCntrl, _pntrOprts);
+    parser_helper::setPointerOperators(__astCntrl, _pntrOprts, _id == TOKEN_IDENTIFIER);
 
-    Type_Information* _ = new Type_Information(_id, _pntrOprts);
+    Type_Information* _ = new Type_Information(_id, _pntrOprts, _nmSpc);
 
     delete _pntrOprts;
 
@@ -75,9 +75,9 @@ parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astC
     parser::Type_Information* _; 
     utils::LinkedList <int>* _operators = new utils::LinkedList <int>();
 
-    parser_helper::setPointerOperators(__astCntrl, _operators);
+    parser_helper::setPointerOperators(__astCntrl, _operators, __tpIf->token_id == TOKEN_IDENTIFIER);
 
-    _ = new Type_Information(__tpIf->token_id, _operators);
+    _ = new Type_Information(__tpIf->token_id, _operators, __tpIf->name_space);
 
     delete _operators;
 
@@ -154,6 +154,24 @@ int parser::Name_Space::getDeclarationId(char* __n) {
 
 }
 
+parser::Name_Space* parser::Name_Space::checkIfNameSpace(Ast_Control* __astCntrl) {
+
+    Name_Space* _nameSpace = NULL;
+
+    if (__astCntrl->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR || __astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR) {
+
+        if (__astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR && __astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) return _nameSpace;
+
+        _nameSpace = Name_Space::getNameSpace(
+            __astCntrl, __astCntrl->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR
+        );
+
+    }
+
+    return _nameSpace;
+
+}
+
 parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bool __glb) {
 
     utils::LinkedList <char*>* _scope = new utils::LinkedList <char*>();
@@ -168,6 +186,8 @@ parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bo
                     utils::getStringSize((*__astCntrl->current_name_space->name_space_scope)[_])
                 )
             );
+
+    else __astCntrl->current_token_position++;
 
     while (
         __astCntrl->getToken(0)->id == TOKEN_IDENTIFIER && __astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR
@@ -184,9 +204,11 @@ parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bo
 
     }
 
-    Name_Space* _ = __astCntrl->name_space_control->getNameSpace(
+    Name_Space* _ = __astCntrl->name_space_control->getNameSpaceDefinition(
         _scope
     );
+
+    if (!_) new Ast_Execption("Name space not defined");
 
     delete _scope;
 
@@ -354,7 +376,13 @@ void parser::Ast_Control::printDebugInfo(const char* __i) {
 
 }
 
-parser::Token* parser::Ast_Control::getToken(int __off) { return (*tokens_collection)[current_token_position + __off]; }
+parser::Token* parser::Ast_Control::getToken(int __off) { 
+    return (*tokens_collection)[current_token_position + __off < tokens_collection->count ? current_token_position + __off : current_token_position];
+}
+
+void parser::Ast_Control::saveState() { current_code_block_saved = current_code_block; current_name_space_saved = current_name_space; }
+
+void parser::Ast_Control::setPreviousSavedState() { current_code_block = current_code_block_saved; current_name_space = current_name_space_saved;}
 
 void parser::Ast_Control::generate() { Ast_Node_Name_Space::generate(this, name_space_control->getNameSpace(NULL)); }
 

@@ -28,9 +28,11 @@ namespace parser {
 
         static void generate(Ast_Control*, Name_Space*);
 
+        static Ast_Node_Name_Space* generateByOperator(Ast_Control*, Name_Space*);
+
         static utils::LinkedList <Ast_Node*>* getDeclarations(Ast_Control*);
 
-        static utils::LinkedList <Ast_Node*>* getDeclarationsSingle(Ast_Control*);
+        static utils::LinkedList <Ast_Node*>* getDeclarationsSingle(Ast_Control*, Name_Space*);
         
 
     };
@@ -44,8 +46,6 @@ namespace parser {
         Name_Tracker* name_tracker;
         Name_Space* name_space;
 
-        bool last_is_global;
-
         ~Ast_Node_Code_Block(); Ast_Node_Code_Block(utils::LinkedList <Ast_Node*>*); Ast_Node_Code_Block(Ast_Node_Code_Block*, Name_Space*, int);
 
         static void generate(Ast_Control*);
@@ -54,7 +54,7 @@ namespace parser {
 
         void generateBody(Ast_Control*);
 
-        utils::LinkedList <Ast_Node*>* getNewNodes(Ast_Control*);
+        utils::LinkedList <Ast_Node*>* getNewNodes(Ast_Control*, Name_Space*);
 
         int getCountOffBefore();
 
@@ -84,6 +84,7 @@ namespace parser {
     struct Ast_Node_Function_Declaration : public Ast_Node {
         
         utils::LinkedList <Ast_Node*>* parameters;
+        Name_Space* name_space; // if null means is current name space
         Ast_Node_Code_Block* function_body; // NULL if is forward declaration
         Type_Information* return_type;
         int declaration_id;
@@ -92,11 +93,35 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*);
 
-        static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*);
+        static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*, Name_Space*);
+
+        static int addToCorrectNameTracker(Ast_Control*);
 
         // static 
 
         
+    };
+
+    /* Represent a struct declaration */
+    struct Ast_Node_Struct_Declaration : public Ast_Node {
+        int declaration_id; // Struct Declaration id
+        bool is_contract; // Is contract
+        Ast_Node_Code_Block* body_info;
+        utils::LinkedList <Ast_Node*>* fields;
+        utils::LinkedList <Ast_Node_Function_Declaration*>* functions;
+
+        ~Ast_Node_Struct_Declaration(); 
+        
+        Ast_Node_Struct_Declaration(int, bool, Ast_Node_Code_Block*, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
+        
+        static Ast_Node_Struct_Declaration* generate(Ast_Control*);
+
+        static void ignoreCodeBlock(Ast_Control*);
+
+        static utils::LinkedList <Ast_Node*>* getFields(Ast_Control*);
+
+        static utils::LinkedList <Ast_Node_Function_Declaration*>* getFunctions(Ast_Control*); 
+
     };
 
     /* Node Expression represents any kinda of expression */
@@ -110,7 +135,7 @@ namespace parser {
 
         static Ast_Node_Expression* generate(Ast_Control*);
 
-        static Ast_Node* getFirstNode(Ast_Control*);
+        static Ast_Node* getFirstNode(Ast_Control*, Name_Space*);
 
         static Ast_Node_Expression* getSecondNode(Ast_Control*);
 
@@ -131,12 +156,72 @@ namespace parser {
     /* Node Variable represent the use of value of a variable name */
     struct Ast_Node_Variable : public Ast_Node {
 
+        Name_Space* name_space; // if null means is current name space
         int declaration_id;
         bool is_global;
 
-        ~Ast_Node_Variable(); Ast_Node_Variable(int, bool);
+        ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
-        static Ast_Node_Variable* generate(Ast_Control*);
+        static Ast_Node_Variable* generate(Ast_Control*, Name_Space*);
+
+    };
+
+    /* Represent a assign to a variable */
+    struct Ast_Node_Variable_Assignment : public Ast_Node {
+
+        Ast_Node* value_before_assign;
+        Ast_Node_Expression* value;
+        bool operation_is_left;
+        int expression_id;
+
+        ~Ast_Node_Variable_Assignment(); Ast_Node_Variable_Assignment(Ast_Node*, Ast_Node_Expression*, bool, int);
+
+        static Ast_Node_Variable_Assignment* generate(Ast_Control*);
+
+        static Ast_Node_Variable_Assignment* generate(Ast_Control*, Ast_Node*);
+
+        static Ast_Node* getValueBeforeAssign(Ast_Control*);
+        
+        static Ast_Node_Expression* getValue(Ast_Control*);
+
+    };
+
+    /* Represent any pointer operation at node */
+    struct Ast_Node_Pointer_Operators : public Ast_Node {
+
+        Ast_Node* value;
+        int pointer_level;
+
+        ~Ast_Node_Pointer_Operators(); Ast_Node_Pointer_Operators(utils::LinkedList <int>*, Ast_Node*);
+
+        static Ast_Node_Pointer_Operators* generate(Ast_Control*, utils::LinkedList <int>*);
+
+        static Ast_Node* getValue(Ast_Control*);
+
+    };
+
+    /* Represent any parenthesis */
+    struct Ast_Node_Parenthesis : public Ast_Node {
+        
+        Ast_Node_Expression* value; // Value inside parenthesis
+        
+        ~Ast_Node_Parenthesis(); Ast_Node_Parenthesis(Ast_Node_Expression*);
+
+        static Ast_Node_Parenthesis* generate(Ast_Control*);
+
+    };
+
+    /* Represent a function call */
+    struct Ast_Node_Function_Call : public Ast_Node {
+        utils::LinkedList <Ast_Node_Expression*>* parameters; // Parameters of function
+        int declaration_id; // Id
+        Name_Space* name_space; // if null read before
+
+        ~Ast_Node_Function_Call(); Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node_Expression*>*, Name_Space*);
+        
+        static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*);
+
+        static utils::LinkedList <Ast_Node_Expression*>* getFunctionCallParameters(Ast_Control*);
 
     };
 

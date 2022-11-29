@@ -169,6 +169,7 @@ namespace parser {
     bool isPrimativeType(parser::Token*);
     bool isAssignment(parser::Token*);
     bool isSingleAssignment(parser::Token*);
+    bool isExpressionOperator(parser::Token*);
 
 }
 

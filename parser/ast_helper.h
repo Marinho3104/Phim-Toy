@@ -9,7 +9,7 @@ namespace parser { struct Ast_Control; }
 
 namespace parser_helper {
 
-    void setPointerOperators(parser::Ast_Control*, utils::LinkedList<int>*);
+    void setPointerOperators(parser::Ast_Control*, utils::LinkedList<int>*, bool);
 
 }
 
