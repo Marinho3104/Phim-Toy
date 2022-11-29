@@ -106,26 +106,6 @@ void getByteCode(char* _code) {
 }
 
 
-namespace ola {
-
-    int ola__;
-
-    namespace adeus {
-
-        void gg(int);
-
-    }
-}
-
-int jj;
-
-namespace ola {
-
-}
-
-void ola::adeus::gg(int) {
-    ola__;
-}
 
 int main() {
 
@@ -137,7 +117,7 @@ int main() {
     "namespace ola { void gg(); } ola::gg() {}";
 
     getByteCode(
-        " int j; namespace ola { int jkk, jj; } int l;"
+        "int j; namespace ola { int j; int g(int ola, int adeus) { int k; 12 + k + j; } } int h; "
     );
 
     // delete _com;

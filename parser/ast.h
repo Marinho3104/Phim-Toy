@@ -8,6 +8,7 @@ namespace utils { template <typename> struct LinkedList; }
 namespace parser {
 
     // Forward
+    struct Ast_Node_Code_Block;
     struct Ast_Node_Name_Space;
     struct Name_Space_Control;
     struct Ast_Control;
@@ -89,6 +90,21 @@ namespace parser {
 
     };
 
+    /* Store every implicit value */
+    struct Storage {
+
+        utils::LinkedList <char*>* implicit_values;
+
+        ~Storage(); Storage();
+
+        /* Add new value into Linked List
+        *   If value already exists dont add
+        *   @return Pos of value given in Linked List 
+        */
+        int addNewValue(char*, bool);
+
+    };
+
     struct Ast_Execption { const char* description; Ast_Execption(const char*); };
 
     struct Ast_Control {
@@ -97,7 +113,9 @@ namespace parser {
         utils::LinkedList <Token*>* tokens_collection;
         Name_Space* current_name_space; // Currnet name space in use
         Name_Space_Control* name_space_control;
+        Ast_Node_Code_Block* current_code_block; // Current code block in use
         int current_token_position; // Keeps track of current token position
+        Storage* storage;
 
         bool debug_info;
 

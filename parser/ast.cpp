@@ -123,7 +123,7 @@ void parser::Name_Space::offCountSet() {
 
     if (this == _prevNameSpace) return;
 
-    for (int _ = 0; _ < name_space_scope->count; _--) {
+    for (int _ = 0; _ < name_space_scope->count; _++) {
 
         off_count += _prevNameSpace->name_tracker->names_declared->count;
 
@@ -197,6 +197,17 @@ parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bo
 parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl) {
 
     utils::LinkedList <char*>* _scope = new utils::LinkedList <char*>();
+
+    for (int _ = 0; _ < __astCntrl->current_name_space->name_space_scope->count; _++) {
+
+        _scope->add(
+            utils::copyString(
+                (*__astCntrl->current_name_space->name_space_scope)[_],
+                utils::getStringSize((*__astCntrl->current_name_space->name_space_scope)[_])
+            )
+        );
+
+    }
     
     while (
         __astCntrl->getToken(0)->id != TOKEN_OPENCURLYBRACKET
@@ -266,7 +277,7 @@ parser::Name_Space* parser::Name_Space_Control::getNameSpaceDefinition(utils::Li
 parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(Name_Space* __nmSpc) {
 
     utils::LinkedList <char*>* _prevScope = new utils::LinkedList <char*>();
-    Name_Space* _name_space;
+    Name_Space* _name_space = NULL;
 
     if (!__nmSpc->name_space_scope->count) { delete _prevScope; return _name_space; }
 
@@ -312,15 +323,29 @@ parser::Name_Space* parser::Name_Space_Control::getNameSpace(utils::LinkedList <
 }
 
 
+parser::Storage::~Storage() { delete implicit_values; }
+
+parser::Storage::Storage() { implicit_values = new utils::LinkedList <char*>(); }
+
+int parser::Storage::addNewValue(char* __v, bool __cpy) {
+    if (__cpy) __v = utils::copyString(__v, utils::getStringSize(__v));
+    int _rtr;
+    if ((_rtr = implicit_values->getObjectPosition(__v, NULL)) == -1) _rtr = implicit_values->add(__v);
+    else free(__v);
+    return _rtr; 
+}
+
+
 parser::Ast_Execption::Ast_Execption(const char* __dscr) : description(__dscr) { std::cout << description << std::endl; exit(1); }
 
 
-parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces; }
+parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces; delete storage; }
 
 parser::Ast_Control::Ast_Control(utils::LinkedList <Token*>* __tksColl, bool __dbg) 
-    : tokens_collection(__tksColl), debug_info(__dbg), current_token_position(0), current_name_space(NULL) {
+    : tokens_collection(__tksColl), debug_info(__dbg), current_token_position(0), current_name_space(NULL), current_code_block(NULL) {
         name_spaces = new utils::LinkedList <Ast_Node_Name_Space*>();
         name_space_control = new Name_Space_Control();
+        storage = new Storage();
     }
 
 void parser::Ast_Control::printDebugInfo(const char* __i) {
