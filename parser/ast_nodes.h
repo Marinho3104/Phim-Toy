@@ -85,7 +85,7 @@ namespace parser {
         Name_Space* name_space; // if null means is current name space
         Ast_Node_Code_Block* function_body; // NULL if is forward declaration
         Type_Information* return_type;
-        int declaration_id;
+        int declaration_id, body_pos;
 
         ~Ast_Node_Function_Declaration(); Ast_Node_Function_Declaration(utils::LinkedList <Ast_Node*>*, Ast_Node_Code_Block*, Type_Information*, int);
 
@@ -224,6 +224,13 @@ namespace parser {
         static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*);
 
         static utils::LinkedList <Ast_Node_Expression*>* getFunctionCallParameters(Ast_Control*);
+
+    };
+
+    /* Represent a accessing variable in struct variable declaration */
+    struct Ast_Node_Accessing : public Ast_Node {
+
+        // TODO
 
     };
 

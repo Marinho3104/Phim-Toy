@@ -117,7 +117,7 @@ parser::Type_Information::~Type_Information() {}
 
 parser::Type_Information::Type_Information() {}
 
-parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* __oprs, Name_Space* _nmSpc) : token_id(__tkId), pointer_level(0), reference_level(0), name_space(_nmSpc) {
+parser::Type_Information::Type_Information(int __tkId, int __usrDeclId, utils::LinkedList <int>* __oprs, Name_Space* _nmSpc) : token_id(__tkId), user_defined_declaration_id(__usrDeclId), pointer_level(0), reference_level(0), name_space(_nmSpc) {
 
     if (!__oprs) return;
 
@@ -144,13 +144,25 @@ parser::Type_Information::Type_Information(int __tkId, utils::LinkedList <int>* 
 parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astCntrl, Name_Space* _nmSpc) {
 
     utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
-    int _id = __astCntrl->getToken(0)->id;
+    int _id = __astCntrl->getToken(0)->id, _usrDeclId = -1;
+
+    if (_id == TOKEN_IDENTIFIER) {
+
+        if (_nmSpc) _usrDeclId = _nmSpc->getDeclarationId(__astCntrl->getToken(0)->phr);
+
+        else _usrDeclId = Name_Tracker::getDeclarationId(__astCntrl, __astCntrl->getToken(0)->phr);
+
+        if (_usrDeclId == -1) new Ast_Execption("Unknow type for declaration");
+
+    }
 
     __astCntrl->current_token_position++;
 
     parser_helper::setPointerOperators(__astCntrl, _pntrOprts, _id == TOKEN_IDENTIFIER);
 
-    Type_Information* _ = new Type_Information(_id, _pntrOprts, _nmSpc);
+    Type_Information* _ = new Type_Information(_id, _usrDeclId, _pntrOprts, _nmSpc);
+
+    std::cout << "Variable type user defined id -> " << _usrDeclId << std::endl;
 
     delete _pntrOprts;
 
@@ -165,7 +177,7 @@ parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astC
 
     parser_helper::setPointerOperators(__astCntrl, _operators, __tpIf->token_id == TOKEN_IDENTIFIER);
 
-    _ = new Type_Information(__tpIf->token_id, _operators, __tpIf->name_space);
+    _ = new Type_Information(__tpIf->token_id, __tpIf->user_defined_declaration_id, _operators, __tpIf->name_space);
 
     delete _operators;
 
@@ -177,6 +189,7 @@ bool parser::Type_Information::operator==(Type_Information& _) {
 
     return (
         token_id == _.token_id &&
+        user_defined_declaration_id == _.user_defined_declaration_id &&
         pointer_level == _.pointer_level &&
         reference_level == _.reference_level 
     );
@@ -282,21 +295,7 @@ parser::Name_Space* parser::Name_Space::getNameSpaceFromStruct(Ast_Control* __as
 
     delete _structDecl;
 
-    for (int _ = 0; _ < __astCntrl->name_spaces->count; _++) {
-
-        if ((*__astCntrl->name_spaces)[_]->name_space == _name_space)
-
-            for (int __ = 0; __ < (*__astCntrl->name_spaces)[_]->declarations->count; __++)
-
-                if ((*(*__astCntrl->name_spaces)[_]->declarations)[__]->node_id == AST_NODE_STRUCT_DECLARATION)
-
-                    if (((Ast_Node_Struct_Declaration*)(*(*__astCntrl->name_spaces)[_]->declarations)[__])->declaration_id == _strctDeclId)
-
-                        return ((Ast_Node_Struct_Declaration*)(*(*__astCntrl->name_spaces)[_]->declarations)[__])->own_name_space;
-    
-    }
-
-    return NULL;
+    return parser_helper::getNameSpaceOfStructByDeclarationId(__astCntrl, _name_space, _strctDeclId);
 
 }
 
@@ -531,9 +530,9 @@ parser::Token* parser::Ast_Control::getToken(int __off) {
     return (*tokens_collection)[current_token_position + __off < tokens_collection->count ? current_token_position + __off : current_token_position];
 }
 
-void parser::Ast_Control::saveState() { current_code_block_saved = current_code_block; current_name_space_saved = current_name_space; }
+void parser::Ast_Control::saveState() { current_code_block_saved = current_code_block; current_name_space_saved = current_name_space; struct_name_space_saved = struct_name_space; }
 
-void parser::Ast_Control::setPreviousSavedState() { current_code_block = current_code_block_saved; current_name_space = current_name_space_saved;}
+void parser::Ast_Control::setPreviousSavedState() { current_code_block = current_code_block_saved; current_name_space = current_name_space_saved; struct_name_space = struct_name_space_saved; }
 
 void parser::Ast_Control::generate() { Ast_Node_Name_Space::generate(this, name_space_control->getNameSpace(NULL)); }
 

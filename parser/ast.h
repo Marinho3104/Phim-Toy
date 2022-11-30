@@ -41,13 +41,13 @@ namespace parser {
 
     /* Represent a type */
     struct Type_Information {
-        int token_id; // Token id representing the type | if token_id == identifier means is a user defined type (a.k.a struct)
+        int token_id, user_defined_declaration_id; // Token id representing the type | if token_id == identifier means is a user defined type (a.k.a struct)
         int pointer_level, reference_level; // Pointer ans reference level of type
         Name_Space* name_space; // if null is current name space
 
         ~Type_Information(); Type_Information();
 
-        Type_Information(int, utils::LinkedList <int>*, Name_Space*);
+        Type_Information(int, int, utils::LinkedList <int>*, Name_Space*);
 
         static Type_Information* generate(Ast_Control*, Name_Space*);
 
@@ -136,7 +136,7 @@ namespace parser {
 
         bool debug_info;
 
-        Name_Space* current_name_space_saved;
+        Name_Space* current_name_space_saved, *struct_name_space_saved;
         Ast_Node_Code_Block* current_code_block_saved;
 
         ~Ast_Control(); Ast_Control(utils::LinkedList <Token*>*, bool);

@@ -11,12 +11,12 @@
 
 #include "./../byteCode/byteCode.h" // Byte Code
 
-// #include "./../parser/compiler.h" // Compiler
+#include "./../parser/compiler.h" // Compiler
 
 #include "./../parser/tokenizer.h" // Tokenizer
 #include "./../parser/token.h" // Tokens
 
-// #include "./../parser/ast_nodes.h" // Ast Nodes
+#include "./../parser/ast_nodes.h" // Ast Nodes
 #include "./../parser/ast.h" // Ast control 
 
 #include "./../utils/linkedList.h" // Linked list
@@ -59,17 +59,17 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 }
 
-// parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Code_Block*>* _codeBlocks, parser::Storage* _storage) {
+parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Name_Space*>* _name_spaces, parser::Storage* _storage) {
 
-//     std::cout << "\n --> Generate Compiler <--\n" << std::endl;
+    std::cout << "\n --> Generate Compiler <--\n" << std::endl;
 
-//     parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_codeBlocks, _storage, 1);
+    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_name_spaces, _storage->implicit_values, 1);
 
-//     _comCntrl->generateByteCodeBlocks();
+    _comCntrl->generate();
 
-//     return _comCntrl;
+    return _comCntrl;
 
-// }
+}
 
 
 void getByteCode(char* _code) {
@@ -80,13 +80,13 @@ void getByteCode(char* _code) {
     
     delete _tkCntrl;
 
-    // parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->code_blocks, _astCntrl->storage);
+    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->name_spaces, _astCntrl->storage);
 
     delete _astCntrl;
 
     // parser::Compiled_Output* _ = _comCntrl->generateOutPut();
 
-    // delete _comCntrl;
+    delete _comCntrl;
 
     // std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
 
@@ -108,10 +108,12 @@ int main() {
     "namespace ola { void gg(); } ola::gg() {}";
     "int l; namespace adeus {  struct test { int j; }; int oo = 12; int mario = oo; } namespace ola { int marinho; void mormormor(int l = 12) { *::adeus::mario = (::adeus::oo); }  } int o; " \
     "void main() { adeus::test* l; } void ::ola::test::jk(int j, int k) {} ";
+    "int k; namespace ola {  int mamamia; struct test { int k; int oll = k; void jk(int j, int k); }; } " \
+    "int main() { ola::test* var; }";
 
     getByteCode(
-        "int k; namespace ola {  int mamamia; struct test { int k; int oll = k; void jk(int j, int k); }; } " \
-        "int main() { ola::test::jk(12, 12); }"
+        "struct ola { void olak(); }; int test;" \
+        "void main() { test; } "
     );
 
     // delete _com;

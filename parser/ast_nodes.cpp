@@ -518,7 +518,7 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
 
         utils::LinkedList <int>* _oprs = new utils::LinkedList <int>(); _oprs->add(TOKEN_POINTER);
 
-        Type_Information* _thisType = new Type_Information(_structDeclId, _oprs, NULL); // Should be pointer TODO
+        Type_Information* _thisType = new Type_Information(TOKEN_IDENTIFIER, _structDeclId, _oprs, NULL); // Should be pointer TODO
 
         delete _oprs;
 
@@ -624,6 +624,7 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
 
     std::cout << "Struct fields count -> " << _fields->count << std::endl;
     std::cout << "Struct functions count -> " << _functions->count << std::endl;
+    std::cout << "Struct id -> " << _declId << std::endl;
 
     return _strctDecl;
 
@@ -790,8 +791,13 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstNode(Ast_Control* __astCn
 
                     _ = parser::Ast_Node_Variable::generate(__astCntrl, __nmSpc);
 
-                    if (__astCntrl->getToken(0)->id == TOKEN_EQUAL) 
-                        _ = Ast_Node_Variable_Assignment::generate(__astCntrl, _);
+                    switch (__astCntrl->getToken(0)->id)
+                    {
+                    case TOKEN_EQUAL: _ = Ast_Node_Variable_Assignment::generate(__astCntrl, _); break;
+                    // case TOKEN_ACCESSINGVARIABLE: case TOKEN_ACCESSINGVARIABLEPOINTER:
+                    //     _ = Ast_Node_Accessing::generate(__astCntrl, _); break;
+                    default: break;
+                    }
 
                 }
 
