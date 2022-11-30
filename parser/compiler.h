@@ -43,6 +43,8 @@ namespace parser {
 
         static int generate(Compiler_Control*, parser::Ast_Node_Code_Block*, Compiler_Code_Block*);
 
+        static int generate(Compiler_Control*, parser::Ast_Node_Struct_Declaration*, Compiler_Code_Block*);
+
         Ast_Node_Variable_Declaration* getVariableDeclaration(int);
         
         Ast_Node_Function_Declaration* getFunctionDeclaration(int);

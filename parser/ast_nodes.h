@@ -100,7 +100,7 @@ namespace parser {
 
     /* Represent a struct declaration */
     struct Ast_Node_Struct_Declaration : public Ast_Node {
-        int declaration_id; // Struct Declaration id
+        int declaration_id, body_pos; // Struct Declaration id
         bool is_contract; // Is contract
         Name_Space* own_name_space;
         utils::LinkedList <Ast_Node*>* fields;

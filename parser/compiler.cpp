@@ -91,7 +91,7 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
     new (_rtr) parser::Compiler_Code_Block();
 
 
-    if (__node->body) {
+    if (__node->body) { // TODO support null
 
         for (int _ = 0; _ < __node->body->count; _++) {
 
@@ -101,10 +101,41 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
         }
 
+    } else return -1;
 
-        __comCntrl->compiled_blocks->add(_rtr);
+    __comCntrl->compiled_blocks->add(_rtr);
+    
+    return __comCntrl->compiled_blocks->count - 1;
 
-    } else -1;
+}
+
+int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::Ast_Node_Struct_Declaration* __strcDecl, Compiler_Code_Block* __prev) {
+
+    parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
+    utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
+    new (_rtr) parser::Compiler_Code_Block();
+
+    if (__strcDecl->fields->count || __strcDecl->functions->count) {
+
+        for (int _ = 0; _ < __strcDecl->fields->count; _++) {
+
+            _byte_code = parser::getByteCodeFromNode((*__strcDecl->fields)[_], _rtr, __comCntrl);
+
+            delete _byte_code;
+
+        }
+
+        for (int _ = 0; _ < __strcDecl->functions->count; _++) {
+
+            _byte_code = parser::getByteCodeFromNode((*__strcDecl->functions)[_], _rtr, __comCntrl);
+
+            delete _byte_code;
+
+        }
+
+    } else return -1;
+
+    __comCntrl->compiled_blocks->add(_rtr);
 
     return __comCntrl->compiled_blocks->count - 1;
 

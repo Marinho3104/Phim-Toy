@@ -5,5 +5,8 @@
 
 #define BYTECODE_MEM_STACK_LOAD 0
 
+#define BYTECODE_ADDITION 1
+#define BYTECODE_SUBTRACTION 2
+
 
 #endif

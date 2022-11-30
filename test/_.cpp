@@ -112,7 +112,7 @@ int main() {
     "int main() { ola::test* var; }";
 
     getByteCode(
-        "struct ola { void olak(); }; int test;" \
+        "struct ola { void olak() {} }; int test;" \
         "void main() { test; } "
     );
 
