@@ -31,6 +31,12 @@ namespace parser {
         */
         bool addNewName(char*, bool);
 
+        static int addToCorrectNameTracker(Ast_Control*);
+
+        static int getDeclarationId(Ast_Control*, char*);
+
+        static int isDeclarationIdGlobal(Ast_Control*, char*);
+
     };
 
     /* Represent a type */
@@ -69,11 +75,15 @@ namespace parser {
 
         int getDeclarationId(char*);
 
-        static Name_Space* checkIfNameSpace(Ast_Control*);
+        static Name_Space* checkIfNameSpace(Ast_Control*, int*);
 
-        static Name_Space* getNameSpace(Ast_Control*, bool);
+        static Name_Space* getNameSpaceFromStruct(Ast_Control*, utils::LinkedList <char*>*, int*);
+
+        static Name_Space* getNameSpace(Ast_Control*, bool, int*);
 
         static Name_Space* getNameSpace(Ast_Control*);
+
+        void print();
 
     };
 
@@ -92,6 +102,8 @@ namespace parser {
         Name_Space* getPreviousNameSpace(Name_Space*);
 
         Name_Space* getNameSpace(utils::LinkedList <char*>*);
+
+        Name_Space* getNameSpaceStruct();
 
     };
 
@@ -116,7 +128,7 @@ namespace parser {
 
         utils::LinkedList <Ast_Node_Name_Space*>* name_spaces; // all code is here
         utils::LinkedList <Token*>* tokens_collection;
-        Name_Space* current_name_space; // Currnet name space in use
+        Name_Space* current_name_space, *struct_name_space; // Currnet name space in use
         Name_Space_Control* name_space_control;
         Ast_Node_Code_Block* current_code_block; // Current code block in use
         int current_token_position; // Keeps track of current token position

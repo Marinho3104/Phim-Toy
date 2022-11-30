@@ -79,11 +79,11 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Name_Space::getDeclarati
     parser::Token* _tkNext = __astCntrl->getToken(1);
     Name_Space* _name_space;
 
-    std::cout << "Token 1 -> " << _tk->id << std::endl;
-    std::cout << "Token 2 -> " << _tkNext->id << std::endl;
+    // std::cout << "Token 1 -> " << _tk->id << std::endl;
+    // std::cout << "Token 2 -> " << _tkNext->id << std::endl;
 
     if(
-        (_name_space = Name_Space::checkIfNameSpace(__astCntrl))
+        (_name_space = Name_Space::checkIfNameSpace(__astCntrl, NULL))
     ) { delete _; return getDeclarationsSingle(__astCntrl, _name_space); }
 
     switch (_tk->id)
@@ -131,9 +131,12 @@ cont:
 
         Type_Information* _typeInformation = Type_Information::generate(__astCntrl, __nmSpc);
 
-        if (__astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) new Ast_Execption("Declaration not allowed");
+        if (__astCntrl->getToken(0)->id != TOKEN_IDENTIFIER && __astCntrl->getToken(0)->id != TOKEN_NAMESPACE_OPERATOR) 
+            new Ast_Execption("Declaration not allowed - Name Space Space - Idententifier");
 
-        __nmSpc = Name_Space::checkIfNameSpace(__astCntrl);
+        int _strctDecl = -1;
+
+        __nmSpc = Name_Space::checkIfNameSpace(__astCntrl, &_strctDecl);
 
         switch (__astCntrl->getToken(1)->id)
         {
@@ -141,7 +144,7 @@ cont:
         
             _->add(
                 parser::Ast_Node_Function_Declaration::generate(
-                    __astCntrl, _typeInformation, __nmSpc
+                    __astCntrl, _typeInformation, __nmSpc, _strctDecl 
                 )
             );
 
@@ -159,7 +162,7 @@ cont:
 
     } 
     
-    else new Ast_Execption("Declaration not allowed");
+    else new Ast_Execption("Declaration not allowed - Name Space Space");
 
     return _;
 
@@ -232,7 +235,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNewNodes(
     Name_Space* _name_space;
 
     if(
-        (_name_space = Name_Space::checkIfNameSpace(__astCntrl))
+        (_name_space = Name_Space::checkIfNameSpace(__astCntrl, NULL))
     ) { delete _; return getNewNodes(__astCntrl, _name_space); }
 
     switch (__astCntrl->getToken(0)->id)
@@ -250,9 +253,9 @@ cont:
 
         Type_Information* _typeInformation = Type_Information::generate(__astCntrl, __nmSpc);
 
-        if (__astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) new Ast_Execption("Declaration not allowed");
+        if (__astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) { delete _typeInformation; __astCntrl->current_token_position--; goto expressionGen;}
 
-        __nmSpc = Name_Space::checkIfNameSpace(__astCntrl);
+        __nmSpc = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
         switch (__astCntrl->getToken(1)->id)
         {
@@ -260,7 +263,7 @@ cont:
         
             _->add(
                 parser::Ast_Node_Function_Declaration::generate(
-                    __astCntrl, _typeInformation, __nmSpc
+                    __astCntrl, _typeInformation, __nmSpc, -1
                 )
             );
 
@@ -283,7 +286,7 @@ cont:
     expressionGen:
         _->add(
             Ast_Node_Expression::generate(
-                __astCntrl
+                __astCntrl, __nmSpc
             )
         );
 
@@ -293,7 +296,8 @@ cont:
 
 }
 
-int parser::Ast_Node_Code_Block::getCountOffBefore() { 
+int parser::Ast_Node_Code_Block::getCountOffBefore() {
+    if (declaration_type == AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT) return 0;
     return name_tracker->names_declared->count + 
     (previous_block ? 
     previous_block->getCountOffBefore() 
@@ -307,7 +311,7 @@ int parser::Ast_Node_Code_Block::getDeclarationId(char* __n) {
         (_ = name_tracker->getDeclarationId(__n)) == -1
     )
 
-        if (previous_block) _ = previous_block->getDeclarationId(__n);
+        if (previous_block && previous_block->declaration_type != AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT) _ = previous_block->getDeclarationId(__n);
 
         else return name_space->getDeclarationId(__n);
 
@@ -321,14 +325,13 @@ bool parser::Ast_Node_Code_Block::isDeclarationIdGlobal(char* __n) {
         name_tracker->getDeclarationId(__n) == -1
     )
 
-        if (previous_block) return previous_block->isDeclarationIdGlobal(__n);
+        if (previous_block  && previous_block->declaration_type != AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT) return previous_block->isDeclarationIdGlobal(__n);
 
         else return true;
 
     return false;
 
 }
-
 
 
 parser::Ast_Node_Variable_Declaration::~Ast_Node_Variable_Declaration() { delete variable_type; }
@@ -348,7 +351,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
         __astCntrl->printDebugInfo("--> Ast Node Variable Declaration <--");
 
-        _declId =  addToCorrectNameTracker(__astCntrl);
+        _declId =  Name_Tracker::addToCorrectNameTracker(__astCntrl);
 
         __astCntrl->current_token_position++;
 
@@ -365,7 +368,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
             _->add(
                 Ast_Node_Expression::generate(
-                    __astCntrl
+                    __astCntrl, NULL
                 )
             );
 
@@ -391,7 +394,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
     Type_Information* _type;
     int _declId;
 
-    Name_Space* _name_space = Name_Space::checkIfNameSpace(__astCntrl);
+    Name_Space* _name_space = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
     _type = Type_Information::generate(__astCntrl, _name_space);
         
@@ -434,43 +437,13 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
         _->add(
             Ast_Node_Expression::generate(
-                __astCntrl
+                __astCntrl, NULL
             )
         );
 
     }
 
     return _;
-
-}
-
-int parser::Ast_Node_Variable_Declaration::addToCorrectNameTracker(Ast_Control* __astCntrl) {
-
-    int _declId;
-
-    if (__astCntrl->current_code_block) {
-
-        __astCntrl->current_code_block->name_tracker->addNewName(
-            __astCntrl->getToken(0)->phr, 1
-        );
-
-        _declId =__astCntrl->current_code_block->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
-
-    } else {
-
-        __astCntrl->current_name_space->addNewName(
-            __astCntrl->getToken(0)->phr
-        );
-
-        _declId =__astCntrl->current_name_space->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
-
-    }
-
-    return _declId;
 
 }
 
@@ -507,9 +480,9 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::ge
 
 }
 
-parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* __astCntrl, Type_Information* __rtrTp, Name_Space* __nmSpc) {
+parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* __astCntrl, Type_Information* __rtrTp, Name_Space* __nmSpc, int _structDeclId) {
 
-    __astCntrl->printDebugInfo("--> Node Function Declaration <--");
+    __astCntrl->printDebugInfo("--> Node Function Declaration <--\n");
 
     if (__nmSpc) {
 
@@ -524,9 +497,7 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
     Ast_Node_Code_Block* function_body;
     int _declId;
 
-    _declId = addToCorrectNameTracker(__astCntrl);
-
-    std::cout << "Function declaration id - >" << _declId << std::endl;
+    _declId = Name_Tracker::addToCorrectNameTracker(__astCntrl);
 
     __astCntrl->current_token_position++;
 
@@ -535,7 +506,40 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
 
     __astCntrl->current_token_position++;
 
-    utils::LinkedList <parser::Ast_Node*>* _params = getParameters(__astCntrl);
+    utils::LinkedList <parser::Ast_Node*>* _params = new utils::LinkedList <parser::Ast_Node*>();
+
+    if (_structDeclId != -1) {
+
+        __astCntrl->current_code_block->name_tracker->addNewName(
+            (char*) "this", 1
+        );
+
+        int _thisDeclId = __astCntrl->current_code_block->getDeclarationId("this");
+
+        utils::LinkedList <int>* _oprs = new utils::LinkedList <int>(); _oprs->add(TOKEN_POINTER);
+
+        Type_Information* _thisType = new Type_Information(_structDeclId, _oprs, NULL); // Should be pointer TODO
+
+        delete _oprs;
+
+        parser::Ast_Node_Variable_Declaration* _varDecl = (parser::Ast_Node_Variable_Declaration*) malloc(sizeof(parser::Ast_Node_Variable_Declaration));
+        new (_varDecl) parser::Ast_Node_Variable_Declaration(
+            _thisType, _thisDeclId
+        );
+
+        _params->add(_varDecl);
+
+        std::cout << "This declaration id -> " << _thisDeclId << std::endl;
+
+    }
+
+    utils::LinkedList <parser::Ast_Node*>* __t = getParameters(__astCntrl);
+
+    _params->join(
+        __t
+    );
+
+    __t->destroy_content = 0; delete __t;
 
     if (__astCntrl->getToken(0)->id == TOKEN_ENDINSTRUCTION) {
 
@@ -549,80 +553,48 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
         _params, function_body, __rtrTp, _declId
     );
 
-    if (__nmSpc) __astCntrl->setPreviousSavedState();
+    // __astCntrl->current_code_block = __astCntrl->current_code_block->previous_block;
+
+    std::cout << "Function declaration id - >" << _declId << std::endl;
+    // std::cout << "Function parameters count - >" << _params->count << std::endl;
+
+    __astCntrl->printDebugInfo("--> Node Function Declaration End <--\n");
 
     return _funcDecl;
 
 }
 
-int parser::Ast_Node_Function_Declaration::addToCorrectNameTracker(Ast_Control* __astCntrl) {
 
-    int _declId;
-
-    if (!__astCntrl->current_code_block) {
-
-        __astCntrl->current_name_space->addNewName(
-            __astCntrl->getToken(0)->phr
-        );
-
-        _declId = __astCntrl->current_name_space->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
-
-    } else {
-
-        if (__astCntrl->current_code_block->declaration_type != AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT)
-            new Ast_Execption("Declaration not allow");
-
-        __astCntrl->current_code_block->name_tracker->addNewName(
-            __astCntrl->getToken(0)->phr, 1
-        );
-
-        _declId = __astCntrl->current_code_block->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
-
-    }
-
-    return _declId;
-
-}
-
-
-parser::Ast_Node_Struct_Declaration::~Ast_Node_Struct_Declaration() { if (body_info) body_info->~Ast_Node_Code_Block(); free(body_info); delete fields; delete functions; }
+parser::Ast_Node_Struct_Declaration::~Ast_Node_Struct_Declaration() { if (own_name_space) own_name_space->~Name_Space(); free(own_name_space); delete fields; delete functions; }
 
 parser::Ast_Node_Struct_Declaration::Ast_Node_Struct_Declaration(
-    int __declId, bool __cntr, Ast_Node_Code_Block* _bodyInfo, utils::LinkedList <Ast_Node*>* __fields, utils::LinkedList <Ast_Node_Function_Declaration*>* __funcs) 
-        : Ast_Node(AST_NODE_STRUCT_DECLARATION), declaration_id(__declId), is_contract(__cntr), body_info(_bodyInfo), fields(__fields), functions(__funcs) {}
+    int __declId, bool __cntr, Name_Space* _ownNameSpace, utils::LinkedList <Ast_Node*>* __fields, utils::LinkedList <Ast_Node_Function_Declaration*>* __funcs) 
+        : Ast_Node(AST_NODE_STRUCT_DECLARATION), declaration_id(__declId), is_contract(__cntr), own_name_space(_ownNameSpace), fields(__fields), functions(__funcs) {}
 
 parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::generate(Ast_Control* __astCntrl) {
 
     __astCntrl->printDebugInfo("--> Ast Node Struct Declaration <--");
-
     utils::LinkedList <parser::Ast_Node_Function_Declaration*>* _functions = NULL;
     bool _isCntr = __astCntrl->getToken(0)->id == TOKEN_CONTRACT;
     utils::LinkedList <parser::Ast_Node*>* _fields = NULL;
+    Name_Space* _struct_name_space;
     int _declId, _inicial_position;
-
-    Ast_Node_Code_Block::setUp(__astCntrl, AST_NODE_CODE_BLOCK_ENVIRONMENT_STRUCT);
 
     __astCntrl->current_token_position++;
 
     if (__astCntrl->getToken(0)->id == TOKEN_IDENTIFIER) {
 
-        __astCntrl->current_code_block->name_tracker->addNewName(
-            __astCntrl->getToken(0)->phr, 1
-        );
-
-        _declId = __astCntrl->current_code_block->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
+        _declId = Name_Tracker::addToCorrectNameTracker(__astCntrl);
 
         __astCntrl->current_token_position++;
 
     } else if (__astCntrl->getToken(0)->id == TOKEN_OPENCURLYBRACKET) {
         new Ast_Execption("TODO struct no identifier at begining");
     } else new Ast_Execption("Unexpected token");
+
+    _struct_name_space = __astCntrl->name_space_control->getNameSpaceStruct();
+
+    __astCntrl->struct_name_space = _struct_name_space;
 
     if (__astCntrl->getToken(0)->id == TOKEN_OPENCURLYBRACKET) {
 
@@ -632,7 +604,7 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
 
         __astCntrl->current_token_position = _inicial_position;
 
-        _functions = getFunctions(__astCntrl);
+        _functions = getFunctions(__astCntrl, _declId);
 
         __astCntrl->current_token_position += 2;
 
@@ -645,12 +617,13 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
     parser::Ast_Node_Struct_Declaration* _strctDecl = (parser::Ast_Node_Struct_Declaration*) malloc(sizeof(parser::Ast_Node_Struct_Declaration));
 
     new (_strctDecl) parser::Ast_Node_Struct_Declaration(
-        _declId, _isCntr, __astCntrl->current_code_block, _fields, _functions
+        _declId, _isCntr, _struct_name_space, _fields, _functions
     );
 
-    __astCntrl->current_code_block = __astCntrl->current_code_block->previous_block;  
+    __astCntrl->struct_name_space = NULL;
 
-    __astCntrl->printDebugInfo("--> Ast Node Struct Declaration End <--");
+    std::cout << "Struct fields count -> " << _fields->count << std::endl;
+    std::cout << "Struct functions count -> " << _functions->count << std::endl;
 
     return _strctDecl;
 
@@ -672,7 +645,7 @@ void parser::Ast_Node_Struct_Declaration::ignoreCodeBlock(Ast_Control* __astCntr
 
 utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Struct_Declaration::getFields(Ast_Control* __astCntrl) {
 
-    __astCntrl->printDebugInfo("--> Ast Node Struct Fields <--");
+    __astCntrl->printDebugInfo("--> Ast Node Struct Fields <--\n");
 
     utils::LinkedList <parser::Ast_Node*>* _fields = new utils::LinkedList <parser::Ast_Node*>(), *_varDecl;
     Type_Information* _type;
@@ -682,7 +655,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Struct_Declaration::getF
 
     while(__astCntrl->getToken(0)->id != TOKEN_CLOSECURLYBRACKET) {
 
-        _name_space = Name_Space::checkIfNameSpace(__astCntrl);
+        _name_space = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
         _type = Type_Information::generate(__astCntrl, _name_space);
 
@@ -720,9 +693,9 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Struct_Declaration::getF
 
 }
 
-utils::LinkedList <parser::Ast_Node_Function_Declaration*>* parser::Ast_Node_Struct_Declaration::getFunctions(Ast_Control* __astCntrl) {
+utils::LinkedList <parser::Ast_Node_Function_Declaration*>* parser::Ast_Node_Struct_Declaration::getFunctions(Ast_Control* __astCntrl, int _declId) {
 
-    __astCntrl->printDebugInfo("--> Ast Node Struct Functions <--");
+    __astCntrl->printDebugInfo("--> Ast Node Struct Functions <--\n");
 
     utils::LinkedList <parser::Ast_Node_Function_Declaration*>* _functions = new utils::LinkedList <parser::Ast_Node_Function_Declaration*>();
     Type_Information* _type;
@@ -732,7 +705,7 @@ utils::LinkedList <parser::Ast_Node_Function_Declaration*>* parser::Ast_Node_Str
 
     while(__astCntrl->getToken(0)->id != TOKEN_CLOSECURLYBRACKET) {
 
-        _name_space = Name_Space::checkIfNameSpace(__astCntrl);
+        _name_space = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
         _type = Type_Information::generate(__astCntrl, _name_space);
 
@@ -749,7 +722,7 @@ utils::LinkedList <parser::Ast_Node_Function_Declaration*>* parser::Ast_Node_Str
 
         _functions->add(
             parser::Ast_Node_Function_Declaration::generate(
-                __astCntrl, _type, NULL
+                __astCntrl, _type, NULL, _declId
             )
         );
 
@@ -767,7 +740,7 @@ parser::Ast_Node_Expression::~Ast_Node_Expression() { if (first) first->~Ast_Nod
 parser::Ast_Node_Expression::Ast_Node_Expression(int _expId, Ast_Node* _frst, Ast_Node_Expression* _scnd) 
     : Ast_Node(AST_NODE_EXPRESSION), expression_id(_expId), first(_frst), second(_scnd) {}
 
-parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* __astCntrl) {
+parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* __astCntrl, Name_Space* __nmSpc) {
 
     __astCntrl->printDebugInfo("--> Ast Node Expression <--");
 
@@ -777,7 +750,7 @@ parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* 
     parser::Token* _expTk;
 
 
-    _frstValue = getFirstNode(__astCntrl, NULL);
+    _frstValue = getFirstNode(__astCntrl, __nmSpc);
     _expTk = __astCntrl->getToken(0);
 
     
@@ -805,7 +778,7 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstNode(Ast_Control* __astCn
 
     parser::Ast_Node* _;
 
-    if (!__nmSpc) __nmSpc = Name_Space::checkIfNameSpace(__astCntrl);
+    if (!__nmSpc) __nmSpc = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
     switch (__astCntrl->getToken(0)->id)
     {
@@ -872,7 +845,7 @@ rtr:
 
 }
 
-parser::Ast_Node_Expression* parser::Ast_Node_Expression::getSecondNode(Ast_Control* __astCntrl) { return parser::Ast_Node_Expression::generate(__astCntrl); }
+parser::Ast_Node_Expression* parser::Ast_Node_Expression::getSecondNode(Ast_Control* __astCntrl) { return parser::Ast_Node_Expression::generate(__astCntrl, NULL); }
 
 
 parser::Ast_Node_Value::~Ast_Node_Value() {} 
@@ -918,17 +891,8 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __as
     
     parser::Ast_Node_Variable* _ = (parser::Ast_Node_Variable*) malloc(sizeof(parser::Ast_Node_Variable));
     
-    int _declId;
+    int _declId = Name_Tracker::getDeclarationId(__astCntrl, __astCntrl->getToken(0)->phr);
     
-    if (__astCntrl->current_code_block)
-        _declId = __astCntrl->current_code_block->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
-    else 
-        _declId = __astCntrl->current_name_space->getDeclarationId(
-            __astCntrl->getToken(0)->phr
-        );
-
     if (_declId == -1) new Ast_Execption("No name declared with given name");
 
     bool _isGbl = __astCntrl->current_code_block ? __astCntrl->current_code_block->isDeclarationIdGlobal(__astCntrl->getToken(0)->phr) : true;
@@ -1008,7 +972,7 @@ parser::Ast_Node* parser::Ast_Node_Variable_Assignment::getValueBeforeAssign(Ast
     parser::Token* _tk = __astCntrl->getToken(0);
     parser::Ast_Node* _;
 
-    Name_Space* __nmSpc = Name_Space::checkIfNameSpace(__astCntrl);
+    Name_Space* __nmSpc = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
     switch (_tk->id)
     {
@@ -1055,7 +1019,7 @@ rtr:
 
 }
 
-parser::Ast_Node_Expression* parser::Ast_Node_Variable_Assignment::getValue(Ast_Control* __astCntrl) { return parser::Ast_Node_Expression::generate(__astCntrl); }
+parser::Ast_Node_Expression* parser::Ast_Node_Variable_Assignment::getValue(Ast_Control* __astCntrl) { return parser::Ast_Node_Expression::generate(__astCntrl, NULL); }
 
 
 parser::Ast_Node_Pointer_Operators::~Ast_Node_Pointer_Operators() { if (value) value->~Ast_Node(); free(value); }
@@ -1093,7 +1057,7 @@ parser::Ast_Node* parser::Ast_Node_Pointer_Operators::getValue(Ast_Control* __as
     *   Ast_Parenthesis //
     */
 
-    Name_Space* _nmSpc = Name_Space::checkIfNameSpace(__astCntrl);
+    Name_Space* _nmSpc = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
     if (__astCntrl->getToken(0)->id == TOKEN_OPENPARENTHESES) return parser::Ast_Node_Parenthesis::generate(__astCntrl);
 
@@ -1125,7 +1089,7 @@ parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control
     __astCntrl->current_token_position++;
 
     new (_) parser::Ast_Node_Parenthesis(
-        parser::Ast_Node_Expression::generate(__astCntrl)
+        parser::Ast_Node_Expression::generate(__astCntrl, NULL)
     );
 
     __astCntrl->printDebugInfo("--> End Parenthesis <--");
@@ -1157,20 +1121,11 @@ parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Con
         __astCntrl->current_name_space = __nmSpc;
     }
 
-    if (__astCntrl->current_code_block) {
+    _declId = Name_Tracker::getDeclarationId(__astCntrl, __astCntrl->getToken(0)->phr);
 
-        if (
-            (_declId = __astCntrl->current_code_block->getDeclarationId((*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->phr))
-            == -1
-        ) new Ast_Execption("No declaration found with given name");
-    }
-    else {
+    __astCntrl->current_token_position++;
 
-        if (
-            (_declId = __astCntrl->current_name_space->getDeclarationId((*__astCntrl->tokens_collection)[__astCntrl->current_token_position++]->phr))
-            == -1
-        ) new Ast_Execption("No declaration found with given name");
-    }
+    if (_declId == -1) new Ast_Execption("No declaration found with given name");
 
     if (__nmSpc) __astCntrl->setPreviousSavedState();
 
@@ -1196,7 +1151,7 @@ utils::LinkedList <parser::Ast_Node_Expression*>* parser::Ast_Node_Function_Call
 
         _parameters->add(
             parser::Ast_Node_Expression::generate(
-                __astCntrl
+                __astCntrl, NULL
             )
         );
 

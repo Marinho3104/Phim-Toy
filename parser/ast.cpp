@@ -24,6 +24,94 @@ bool parser::Name_Tracker::addNewName(char* __n, bool __cpy) {
     return 1;
 }
 
+int parser::Name_Tracker::addToCorrectNameTracker(Ast_Control* __astCntrl) {
+
+    int _declId;
+
+    if (__astCntrl->current_code_block) {
+
+        __astCntrl->current_code_block->name_tracker->addNewName(
+            __astCntrl->getToken(0)->phr, 1
+        );
+
+        _declId = __astCntrl->current_code_block->getDeclarationId(
+            __astCntrl->getToken(0)->phr
+        );
+
+    }
+
+    else if (__astCntrl->struct_name_space) {
+
+        __astCntrl->struct_name_space->addNewName(
+            __astCntrl->getToken(0)->phr
+        );
+
+        _declId = __astCntrl->struct_name_space->getDeclarationId(
+            __astCntrl->getToken(0)->phr
+        );
+
+    }
+
+    else {
+
+        __astCntrl->current_name_space->addNewName(
+            __astCntrl->getToken(0)->phr
+        );
+
+        _declId = __astCntrl->current_name_space->getDeclarationId(
+            __astCntrl->getToken(0)->phr
+        );
+
+    }
+
+    return _declId;
+
+}
+
+int parser::Name_Tracker::getDeclarationId(Ast_Control* __astCntrl, char* __n) {
+
+    int _declId;
+
+    if (__astCntrl->current_code_block) 
+        _declId = __astCntrl->current_code_block->getDeclarationId(
+            __astCntrl->getToken(0)->phr
+        );
+
+    else if (__astCntrl->struct_name_space)  {
+
+        _declId = __astCntrl->struct_name_space->getDeclarationId(
+            __astCntrl->getToken(0)->phr
+        );
+
+        if (_declId == -1) goto current_name_space_constrain;
+
+    }
+
+    else {
+
+    current_name_space_constrain:
+        _declId = __astCntrl->current_name_space->getDeclarationId(
+            __astCntrl->getToken(0)->phr
+        );
+    }
+
+    return _declId;
+
+}
+
+int parser::Name_Tracker::isDeclarationIdGlobal(Ast_Control* __astCntrl, char* __n) {
+
+    bool _isGbl = 1;
+
+    if (__astCntrl->current_code_block) 
+        _isGbl = __astCntrl->current_code_block->isDeclarationIdGlobal(
+            __astCntrl->getToken(0)->phr
+        );
+
+    return _isGbl;
+
+}
+
 
 parser::Type_Information::~Type_Information() {}
 
@@ -154,16 +242,16 @@ int parser::Name_Space::getDeclarationId(char* __n) {
 
 }
 
-parser::Name_Space* parser::Name_Space::checkIfNameSpace(Ast_Control* __astCntrl) {
+parser::Name_Space* parser::Name_Space::checkIfNameSpace(Ast_Control* __astCntrl, int* __strctDecl) {
 
     Name_Space* _nameSpace = NULL;
 
     if (__astCntrl->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR || __astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR) {
 
-        if (__astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR && __astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) return _nameSpace;
+        // if (__astCntrl->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR && __astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) return _nameSpace;
 
         _nameSpace = Name_Space::getNameSpace(
-            __astCntrl, __astCntrl->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR
+            __astCntrl, __astCntrl->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR, __strctDecl
         );
 
     }
@@ -172,7 +260,48 @@ parser::Name_Space* parser::Name_Space::checkIfNameSpace(Ast_Control* __astCntrl
 
 }
 
-parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bool __glb) {
+parser::Name_Space* parser::Name_Space::getNameSpaceFromStruct(Ast_Control* __astCntrl, utils::LinkedList <char*>* __scope, int* __strctDecl) { // TODOD not correct
+
+    // Need to remove last 2 
+    utils::DataLL <char*>* _structDecl = __scope->last;
+    __scope->remove(_structDecl);
+
+    Name_Space* _name_space = __astCntrl->name_space_control->getNameSpaceDefinition(
+        __scope
+    );
+
+    if (!_name_space) return NULL;
+
+    _name_space->print();
+
+    int _strctDeclId = _name_space->getDeclarationId(_structDecl->object);
+
+    if (_strctDeclId == -1) return NULL;
+    
+    if (__strctDecl) *__strctDecl = _strctDeclId;
+
+    delete _structDecl;
+
+    for (int _ = 0; _ < __astCntrl->name_spaces->count; _++) {
+
+        if ((*__astCntrl->name_spaces)[_]->name_space == _name_space)
+
+            for (int __ = 0; __ < (*__astCntrl->name_spaces)[_]->declarations->count; __++)
+
+                if ((*(*__astCntrl->name_spaces)[_]->declarations)[__]->node_id == AST_NODE_STRUCT_DECLARATION)
+
+                    if (((Ast_Node_Struct_Declaration*)(*(*__astCntrl->name_spaces)[_]->declarations)[__])->declaration_id == _strctDeclId)
+
+                        return ((Ast_Node_Struct_Declaration*)(*(*__astCntrl->name_spaces)[_]->declarations)[__])->own_name_space;
+    
+    }
+
+    return NULL;
+
+}
+
+
+parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bool __glb, int* __strctDecl) {
 
     utils::LinkedList <char*>* _scope = new utils::LinkedList <char*>();
 
@@ -208,7 +337,7 @@ parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl, bo
         _scope
     );
 
-    if (!_) new Ast_Execption("Name space not defined");
+    if (!_ && !(_ = Name_Space::getNameSpaceFromStruct(__astCntrl, _scope, __strctDecl))) new Ast_Execption("Name space not defined");
 
     delete _scope;
 
@@ -256,6 +385,18 @@ parser::Name_Space* parser::Name_Space::getNameSpace(Ast_Control* __astCntrl) {
 
     return _;
 
+}
+
+void parser::Name_Space::print() {
+
+    std::cout << "Name space scope -> ";
+
+    for (int _ = 0; _ < name_space_scope->count; _++)
+
+        std::cout << (*name_space_scope)[_] << "::";
+
+    std::cout << std::endl;
+ 
 }
 
 
@@ -344,6 +485,16 @@ parser::Name_Space* parser::Name_Space_Control::getNameSpace(utils::LinkedList <
 
 }
 
+parser::Name_Space* parser::Name_Space_Control::getNameSpaceStruct() {
+
+    parser::Name_Space* _name_space_struct = (parser::Name_Space*) malloc(sizeof(parser::Name_Space));
+
+    new (_name_space_struct) Name_Space(this, NULL);
+
+    return _name_space_struct;
+
+}
+
 
 parser::Storage::~Storage() { delete implicit_values; }
 
@@ -364,7 +515,7 @@ parser::Ast_Execption::Ast_Execption(const char* __dscr) : description(__dscr) {
 parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces; delete storage; }
 
 parser::Ast_Control::Ast_Control(utils::LinkedList <Token*>* __tksColl, bool __dbg) 
-    : tokens_collection(__tksColl), debug_info(__dbg), current_token_position(0), current_name_space(NULL), current_code_block(NULL) {
+    : tokens_collection(__tksColl), debug_info(__dbg), current_token_position(0), current_name_space(NULL), current_code_block(NULL), struct_name_space(NULL) {
         name_spaces = new utils::LinkedList <Ast_Node_Name_Space*>();
         name_space_control = new Name_Space_Control();
         storage = new Storage();

@@ -76,8 +76,6 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node*>* generateFunctionParameter(Ast_Control*);
 
-        static int addToCorrectNameTracker(Ast_Control*);
-
     };
 
     /* Represent a function declaration */
@@ -93,9 +91,7 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*);
 
-        static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*, Name_Space*);
-
-        static int addToCorrectNameTracker(Ast_Control*);
+        static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*, Name_Space*, int);
 
         // static 
 
@@ -106,21 +102,27 @@ namespace parser {
     struct Ast_Node_Struct_Declaration : public Ast_Node {
         int declaration_id; // Struct Declaration id
         bool is_contract; // Is contract
-        Ast_Node_Code_Block* body_info;
+        Name_Space* own_name_space;
         utils::LinkedList <Ast_Node*>* fields;
         utils::LinkedList <Ast_Node_Function_Declaration*>* functions;
 
         ~Ast_Node_Struct_Declaration(); 
         
-        Ast_Node_Struct_Declaration(int, bool, Ast_Node_Code_Block*, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
+        Ast_Node_Struct_Declaration(int, bool, Name_Space*, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
         
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
+
+        static Name_Space* createNameSpace(Ast_Control*);
+
+
+
+
 
         static void ignoreCodeBlock(Ast_Control*);
 
         static utils::LinkedList <Ast_Node*>* getFields(Ast_Control*);
 
-        static utils::LinkedList <Ast_Node_Function_Declaration*>* getFunctions(Ast_Control*); 
+        static utils::LinkedList <Ast_Node_Function_Declaration*>* getFunctions(Ast_Control*, int); 
 
     };
 
@@ -133,7 +135,7 @@ namespace parser {
 
         ~Ast_Node_Expression(); Ast_Node_Expression(int, Ast_Node*, Ast_Node_Expression*);
 
-        static Ast_Node_Expression* generate(Ast_Control*);
+        static Ast_Node_Expression* generate(Ast_Control*, Name_Space*);
 
         static Ast_Node* getFirstNode(Ast_Control*, Name_Space*);
 

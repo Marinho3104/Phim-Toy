@@ -71,15 +71,6 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 // }
 
-namespace ola {
-    
-    int jj() {
-
-
-
-    }
-
-}
 
 void getByteCode(char* _code) {
 
@@ -105,24 +96,7 @@ void getByteCode(char* _code) {
 
 }
 
-namespace ola {
-
-    int j;
-
-    void gg();
-
-}
-
-void ola::gg() {
-    j;
-}
-
-namespace adeus {
-
-
-}
-
-
+int k; 
 
 int main() {
 
@@ -132,10 +106,12 @@ int main() {
     "int j; {int k; { int kl; j; } } { int j; int ll; } j += 12 + 12 * 5;";
     "namespace ola {} :: ola ::";
     "namespace ola { void gg(); } ola::gg() {}";
+    "int l; namespace adeus {  struct test { int j; }; int oo = 12; int mario = oo; } namespace ola { int marinho; void mormormor(int l = 12) { *::adeus::mario = (::adeus::oo); }  } int o; " \
+    "void main() { adeus::test* l; } void ::ola::test::jk(int j, int k) {} ";
 
     getByteCode(
-        "int l; namespace adeus {  struct test { int j; }; int oo = 12; int mario = oo; } namespace ola { int marinho; void mormormor(int l = 12) { *::adeus::mario = (::adeus::oo); }  } int o; "
-        "void main() { adeus::test* l; } "
+        "int k; namespace ola {  int mamamia; struct test { int k; int oll = k; void jk(int j, int k); }; } " \
+        "int main() { ola::test::jk(12, 12); }"
     );
 
     // delete _com;
