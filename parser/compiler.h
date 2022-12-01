@@ -12,6 +12,7 @@ namespace parser {
 
     // Forward
     struct Compiler_Control;
+    struct Compiled_Output;
 
     struct Compiler_Declarations {
 
@@ -70,8 +71,26 @@ namespace parser {
 
         void generate();
 
+        /* Generator output */
+        Compiled_Output* generateOutPut(); 
+
     };
 
+    struct Compiled_Code_Block {
+        utils::LinkedList <byte_code::Byte_Code*>* compiled_code_block;
+        ~Compiled_Code_Block(); Compiled_Code_Block(utils::LinkedList <byte_code::Byte_Code*>*);
+    };
+
+    struct Compiled_Output {
+
+        utils::LinkedList <Compiled_Code_Block*>* compiled_code_blocks;
+        utils::LinkedList <char*>* implicit_values;
+
+        ~Compiled_Output(); Compiled_Output(utils::LinkedList <Compiled_Code_Block*>*, utils::LinkedList <char*>*);
+
+        void printByteCode();
+
+    };
 
 }
 

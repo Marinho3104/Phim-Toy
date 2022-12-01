@@ -2,6 +2,7 @@
 
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
+#include "./parser_helper.h"
 #include "./ast_helper.h"
 #include "./token.h"
 #include "./ast.h"
@@ -251,9 +252,9 @@ cont:
 
     if (parser::isPrimativeType(_tk) || _tk->id == TOKEN_IDENTIFIER) {
 
-        Type_Information* _typeInformation = Type_Information::generate(__astCntrl, __nmSpc);
+        int _inicial_point = __astCntrl->current_token_position;
 
-        if (__astCntrl->getToken(0)->id != TOKEN_IDENTIFIER) { delete _typeInformation; __astCntrl->current_token_position--; goto expressionGen;}
+        Type_Information* _typeInformation = Type_Information::generate(__astCntrl, __nmSpc);
 
         __nmSpc = Name_Space::checkIfNameSpace(__astCntrl, NULL);
 
@@ -268,7 +269,7 @@ cont:
             );
 
             break;        
-        default: 
+        case TOKEN_EQUAL: case TOKEN_COMMA: case TOKEN_ENDINSTRUCTION: 
 
             delete _;
 
@@ -277,6 +278,13 @@ cont:
                 );
 
             break;
+        default:
+
+            __astCntrl->current_token_position = _inicial_point;
+            delete _typeInformation;
+            goto expressionGen;
+            break;
+
         }
 
     } 
@@ -446,6 +454,8 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
     return _;
 
 }
+
+parser::Type_Information* parser::Ast_Node_Variable_Declaration::getType() { return variable_type; }
 
 
 parser::Ast_Node_Function_Declaration::~Ast_Node_Function_Declaration() { 
@@ -755,7 +765,7 @@ parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* 
     _expTk = __astCntrl->getToken(0);
 
     
-    if (parser::isExpressionOperator(_expTk)) _scndValue = getSecondNode(__astCntrl);
+    if (parser::isExpressionOperator(_expTk)) { __astCntrl->current_token_position++; _scndValue = getSecondNode(__astCntrl); }
 
     else _scndValue = NULL;
 
@@ -780,6 +790,8 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstNode(Ast_Control* __astCn
     parser::Ast_Node* _;
 
     if (!__nmSpc) __nmSpc = Name_Space::checkIfNameSpace(__astCntrl, NULL);
+
+    std::cout << __astCntrl->getToken(0)->id << std::endl;
 
     switch (__astCntrl->getToken(0)->id)
     {
@@ -877,6 +889,19 @@ parser::Ast_Node_Value* parser::Ast_Node_Value::generate(Ast_Control* __astCntrl
 
 }
 
+parser::Type_Information* parser::Ast_Node_Value::getType() {
+
+    parser::Type_Information* _;
+
+    _ = new parser::Type_Information(
+        parser_helper::getTokenIdTypeFromTokenIdImplicitValue(token_id),
+        0, NULL, NULL
+    );
+
+    return _;
+
+}
+
 
 parser::Ast_Node_Variable::~Ast_Node_Variable() {}
 
@@ -917,6 +942,8 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __as
 
 }
 
+parser::Type_Information* parser::Ast_Node_Variable::getType() { return variable_declaration ? variable_declaration->getType() : NULL; }
+
 
 parser::Ast_Node_Variable_Assignment::~Ast_Node_Variable_Assignment() {
     if (value_before_assign) value_before_assign->~Ast_Node(); free(value_before_assign);
@@ -935,6 +962,7 @@ parser::Ast_Node_Variable_Assignment* parser::Ast_Node_Variable_Assignment::gene
     parser::Token* _expTk = __astCntrl->getToken(0);
 
     if (!parser::isSingleAssignment(_expTk)) new Ast_Execption("Not single assignment not allowed before variable");
+    else _expTk->id = TOKEN_INCREMENT ? TOKEN_INCREMENT_LEFT : TOKEN_DECREMENT_LEFT;
     __astCntrl->current_token_position++;
 
     _valBef = getValueBeforeAssign(__astCntrl);

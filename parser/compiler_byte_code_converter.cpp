@@ -6,10 +6,45 @@
 #include "./parser_definitions.h"
 #include "./compiler.h"
 #include "./token.h"
-#include "./ast.h"
 
 #include <iostream>
 
+parser::Type_Information parser::getTypeInformationOfNode(Ast_Node* __node) {
+
+    Type_Information* _temp, _typeInfo;
+
+    switch (__node->node_id)
+    {
+    case AST_NODE_VALUE: // Need to be free
+
+        _temp = ((Ast_Node_Value*) __node)->getType();
+
+        _typeInfo = *_temp;
+
+        delete _temp;
+
+        goto rtr;
+
+    case AST_NODE_VARIABLE:
+
+        _temp = ((Ast_Node_Variable*) __node)->getType();
+
+        if (!_temp) break;
+
+        _typeInfo = *_temp;
+
+        goto rtr;
+    
+    default: break;
+    }
+
+    new Compiler_Exception("Unexpected node to get type from");
+
+rtr:
+
+    return _typeInfo;
+
+}
 
 int parser::getExpressionPriority(int _tkId) {
 
@@ -28,9 +63,22 @@ byte_code::Byte_Code* parser::getByteCodeOfExpressionId(int _tkId) {
 
     switch (_tkId)
     {
-    case TOKEN_ADDITION: new(_) byte_code::Byte_Code(BYTECODE_ADDITION, 0); break;
-    case TOKEN_SUBTRACTION: new(_) byte_code::Byte_Code(BYTECODE_SUBTRACTION, 0); break;
-    default: new Compiler_Exception("Expression not supported");
+        case TOKEN_ADDITION: new(_) byte_code::Byte_Code(BYTECODE_ADDITION, 0); break;
+        case TOKEN_SUBTRACTION: new(_) byte_code::Byte_Code(BYTECODE_SUBTRACTION, 0); break;
+        case TOKEN_MULTIPLICATION: new(_) byte_code::Byte_Code(BYTECODE_MULTIPLICATION, 0); break;
+        case TOKEN_DIVISION: new(_) byte_code::Byte_Code(BYTECODE_DIVISION, 0); break;
+        case TOKEN_MODULUS: new(_) byte_code::Byte_Code(BYTECODE_MODULOS, 0); break;
+        case TOKEN_ADDITIONASSIGMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_ADDITION, 0); break;
+        case TOKEN_SUBTRACTIONASSIGMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_SUBTRACTION, 0); break;
+        case TOKEN_MULTIPLICATIONASSIGMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_MULTIPLICATION, 0); break;
+        case TOKEN_DIVISIONASSIGMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_DIVISION, 0); break;
+        case TOKEN_MODULOSASSIGMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_MODULOS, 0); break;
+        case TOKEN_INCREMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_INCREMENT, 0); break;
+        case TOKEN_DECREMENT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_DECREMENT, 0); break;
+        case TOKEN_INCREMENT_LEFT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_INCREMENT_LEFT, 0); break;
+        case TOKEN_DECREMENT_LEFT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_DECREMENT_LEFT, 0); break;
+        case TOKEN_EQUAL: new (_) byte_code::Byte_Code(BYTECODE_ASSIGN, 0); break;
+        default: new Compiler_Exception("Expression not supported");
     }
 
     return _;
@@ -95,6 +143,33 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNode(Ast_Node*
                     (Ast_Node_Variable*) __node,
                     __crrnt, __comCntrl
                 )
+            ); break;
+
+        case AST_NODE_VARIABLE_ASSIGNMENT:
+
+            delete _;
+
+            _ = parser::getByteCodeFromVariableAssignment(
+                (Ast_Node_Variable_Assignment*) __node,
+                __crrnt, __comCntrl
+            ); break;
+
+        case AST_NODE_POINTER_OPERATORS:
+
+            delete _;
+
+            _ = parser::getByteCodeFromPointerOperators(
+                (Ast_Node_Pointer_Operators*) __node,
+                __crrnt, __comCntrl
+            ); break;
+
+        case AST_NODE_PARENTHESIS:
+
+            delete _;
+
+            _ = parser::getByteCodeFromParenthesis(
+                (Ast_Node_Parenthesis*) __node,
+                __crrnt, __comCntrl
             ); break;
 
         default: break;
@@ -264,4 +339,82 @@ byte_code::Byte_Code* parser::getByteCodeFromVariable(Ast_Node_Variable* __var, 
 
 }
 
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromVariableAssignment(Ast_Node_Variable_Assignment* __varAssign, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
 
+    __comCntrl->printDebugInfo("--> Byte Code for node Value Assignment <--");
+
+    utils::LinkedList <byte_code::Byte_Code*>* _byte_code = new utils::LinkedList <byte_code::Byte_Code*>(), *_temp;
+    byte_code::Byte_Code* _assign_expression =  getByteCodeOfExpressionId(__varAssign->expression_id);
+
+    _temp = getByteCodeFromNode(
+        __varAssign->value_before_assign, __crrnt, __comCntrl
+    );
+
+    _byte_code->join(
+        _temp
+    );
+
+    _temp->destroy_content = 0; delete _temp;
+
+    if (!__varAssign->operation_is_left) {
+
+        _temp = getByteCodeFromNode(
+            __varAssign->value, __crrnt, __comCntrl
+        );
+
+        _byte_code->join(
+            _temp
+        );
+
+        _temp->destroy_content = 0; delete _temp;
+
+    }
+
+    _byte_code->add(_assign_expression);
+
+    return _byte_code;
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromPointerOperators(Ast_Node_Pointer_Operators* __pntrOprt, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
+
+    __comCntrl->printDebugInfo("--> Byte Code for node Pointer Operators <--");
+
+    utils::LinkedList <byte_code::Byte_Code*>* _byte_code = new utils::LinkedList <byte_code::Byte_Code*>(), *_temp;
+    byte_code::Byte_Code* _bc;
+    int _off, _bcId, _lvl;
+
+    _temp = getByteCodeFromNode(
+        __pntrOprt->value, __crrnt, __comCntrl
+    );
+
+    _byte_code->join(_temp);
+
+    _temp->destroy_content = 0; delete _temp;
+
+    Type_Information _type = getTypeInformationOfNode(__pntrOprt->value);
+
+    if ((_off = _type.pointer_level - __pntrOprt->pointer_level) < 0) new Compiler_Exception("Error pointer operators");
+
+    _bcId = _off > _type.pointer_level ? BYTECODE_POINTER_OPERATIONS_UP : BYTECODE_POINTER_OPERATIONS_DOWN;
+    _lvl = _bcId == BYTECODE_POINTER_OPERATIONS_UP ? _off - _type.pointer_level : _type.pointer_level - _off;
+
+    if (!_lvl) return _byte_code;
+
+    _bc  = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_bc) byte_code::Byte_Code(
+        _bcId, _lvl
+    );
+
+    _byte_code->add(_bc);
+
+    return _byte_code;
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromParenthesis(Ast_Node_Parenthesis* __paren, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
+
+    return getByteCodeFromExpression(__paren->value, __crrnt, __comCntrl);
+
+}

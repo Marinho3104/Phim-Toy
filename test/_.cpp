@@ -72,7 +72,7 @@ parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node
 }
 
 
-void getByteCode(char* _code) {
+parser::Compiled_Output* getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
@@ -84,15 +84,15 @@ void getByteCode(char* _code) {
 
     delete _astCntrl;
 
-    // parser::Compiled_Output* _ = _comCntrl->generateOutPut();
+    parser::Compiled_Output* _ = _comCntrl->generateOutPut();
 
     delete _comCntrl;
 
-    // std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
+    std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
 
-    // _->printByteCode();
+    _->printByteCode();
 
-    // return _;
+    return _;
 
 }
 
@@ -111,12 +111,12 @@ int main() {
     "int k; namespace ola {  int mamamia; struct test { int k; int oll = k; void jk(int j, int k); }; } " \
     "int main() { ola::test* var; }";
 
-    getByteCode(
-        "struct ola { void olak() {} }; int test;" \
-        "void main() { test; } "
+    parser::Compiled_Output* _com = getByteCode(
+        "int jk; struct ola { int jk; void olak() { this; } }; int* test;" \
+        "void main() { test = test * (test + 15); *test; } "
     );
 
-    // delete _com;
+    delete _com;
 
     // executeByteCode(_com);
 

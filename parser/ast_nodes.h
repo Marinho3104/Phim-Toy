@@ -76,6 +76,8 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node*>* generateFunctionParameter(Ast_Control*);
 
+        Type_Information* getType();
+
     };
 
     /* Represent a function declaration */
@@ -152,6 +154,8 @@ namespace parser {
 
         /* Generator */
         static Ast_Node_Value* generate(Ast_Control*);
+
+        Type_Information* getType();
     
     };
 
@@ -166,6 +170,8 @@ namespace parser {
         ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
         static Ast_Node_Variable* generate(Ast_Control*, Name_Space*);
+
+        Type_Information* getType();
 
     };
 
