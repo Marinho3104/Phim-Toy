@@ -57,7 +57,7 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Declarations::getStructDec
 
 parser::Compiler_Code_Block::~Compiler_Code_Block() { delete byte_code; delete compiler_declarations; }
 
-parser::Compiler_Code_Block::Compiler_Code_Block() { 
+parser::Compiler_Code_Block::Compiler_Code_Block(Compiler_Code_Block* _prev) : previous_name_space(_prev) { 
     byte_code = new utils::LinkedList <byte_code::Byte_Code*>(); 
     compiler_declarations = new Compiler_Declarations();
 }
@@ -66,7 +66,7 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-    new (_rtr) parser::Compiler_Code_Block();
+    new (_rtr) parser::Compiler_Code_Block(__prev);
 
 
     for (int _ = 0; _ < __nmSpc->declarations->count; _++) {
@@ -88,8 +88,8 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-    new (_rtr) parser::Compiler_Code_Block();
-
+    new (_rtr) parser::Compiler_Code_Block(__prev);
+ 
 
     if (__node->body) { // TODO support null
 
@@ -113,7 +113,7 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-    new (_rtr) parser::Compiler_Code_Block();
+    new (_rtr) parser::Compiler_Code_Block(__prev);
 
     if (__strcDecl->fields->count || __strcDecl->functions->count) {
 
@@ -147,7 +147,7 @@ parser::Ast_Node_Variable_Declaration* parser::Compiler_Code_Block::getVariableD
 
     if (_) return _;
 
-    else if (previous_name_space) previous_name_space->getVariableDeclaration(__decl);
+    else if (previous_name_space) return previous_name_space->getVariableDeclaration(__decl);
 
     return _;
 
@@ -159,7 +159,7 @@ parser::Ast_Node_Function_Declaration* parser::Compiler_Code_Block::getFunctionD
 
     if (_) return _;
 
-    else if (previous_name_space) previous_name_space->getFunctionDeclaration(__decl);
+    else if (previous_name_space) return previous_name_space->getFunctionDeclaration(__decl);
 
     return _;
 
@@ -171,7 +171,7 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Code_Block::getStructDecla
 
     if (_) return _;
 
-    else if (previous_name_space) previous_name_space->getStructDeclaration(__decl);
+    else if (previous_name_space) return previous_name_space->getStructDeclaration(__decl);
 
     return _;
 

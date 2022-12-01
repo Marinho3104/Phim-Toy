@@ -35,6 +35,12 @@ namespace parser {
     void getByteCodeFromStructDeclaration(Ast_Node_Struct_Declaration*, Compiler_Code_Block*, Compiler_Control*);
 
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromExpression(Ast_Node_Expression*, Compiler_Code_Block*, Compiler_Control*);
+    
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromExpressionS(Ast_Node_Expression*&, Compiler_Code_Block*, Compiler_Control*, bool&);
+
+    byte_code::Byte_Code* getByteCodeFromValue(Ast_Node_Value*, Compiler_Code_Block*, Compiler_Control*);
+
+    byte_code::Byte_Code* getByteCodeFromVariable(Ast_Node_Variable*, Compiler_Code_Block*, Compiler_Control*);
 
 }
 

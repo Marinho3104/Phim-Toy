@@ -37,7 +37,7 @@ namespace parser {
         Compiler_Declarations* compiler_declarations;
         Compiler_Code_Block* previous_name_space;
 
-        ~Compiler_Code_Block(); Compiler_Code_Block();
+        ~Compiler_Code_Block(); Compiler_Code_Block(Compiler_Code_Block*);
 
         static int generate(Compiler_Control*, parser::Ast_Node_Name_Space*, Compiler_Code_Block*);
 

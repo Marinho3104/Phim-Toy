@@ -158,6 +158,7 @@ namespace parser {
     /* Node Variable represent the use of value of a variable name */
     struct Ast_Node_Variable : public Ast_Node {
 
+        Ast_Node_Variable_Declaration* variable_declaration;
         Name_Space* name_space; // if null means is current name space
         int declaration_id;
         bool is_global;

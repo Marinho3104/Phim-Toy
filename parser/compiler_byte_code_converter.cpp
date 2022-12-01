@@ -41,7 +41,7 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNode(Ast_Node*
 
     utils::LinkedList <byte_code::Byte_Code*>* _ = new utils::LinkedList <byte_code::Byte_Code*>();
 
-    std::cout << "Node -> " << __node->node_id << std::endl;
+    // std::cout << "Node -> " << __node->node_id << std::endl;
 
     switch (__node->node_id)
     {
@@ -72,6 +72,30 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNode(Ast_Node*
 
         case AST_NODE_EXPRESSION:
 
+            delete _;
+
+            _ = parser::getByteCodeFromExpression(
+                (Ast_Node_Expression*) __node,
+                __crrnt, __comCntrl
+            ); break;
+
+        case AST_NODE_VALUE:
+
+            _->add(
+                parser::getByteCodeFromValue(
+                    (Ast_Node_Value*) __node,
+                    __crrnt, __comCntrl
+                )
+            ); break;
+
+        case AST_NODE_VARIABLE:
+
+            _->add(
+                parser::getByteCodeFromVariable(
+                    (Ast_Node_Variable*) __node,
+                    __crrnt, __comCntrl
+                )
+            ); break;
 
         default: break;
     }
@@ -120,9 +144,124 @@ void parser::getByteCodeFromStructDeclaration(Ast_Node_Struct_Declaration* __str
 
 utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromExpression(Ast_Node_Expression* __exp, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
 
+    __comCntrl->printDebugInfo("--> Byte Code for node Expression <--");
 
+    utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
+    utils::LinkedList <byte_code::Byte_Code*>* _;
+    bool _c = true;
+
+    while(__exp) {
+        _ = getByteCodeFromExpressionS(__exp, __crrnt, __comCntrl, _c);
+
+        _rtr->join(_);
+
+        _->destroy_content = 0;
+
+        delete _;
+
+    }
+
+    return _rtr;
 
 }
 
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromExpressionS(Ast_Node_Expression*& __exp, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl, bool& _c) {
+
+    utils::LinkedList <byte_code::Byte_Code*>* _rtr = new utils::LinkedList <byte_code::Byte_Code*>();
+    utils::LinkedList <byte_code::Byte_Code*>* _;
+    int _frstOp, _frstOpPri;
+
+    if (_c) {
+        _ = parser::getByteCodeFromNode(__exp->first, __crrnt, __comCntrl);
+        _rtr->join(
+            _
+        );
+        _->destroy_content = 0;
+        delete _;
+    }
+    else _c = true;
+
+    _frstOp = __exp->expression_id;
+    _frstOpPri = getExpressionPriority(_frstOp);
+
+    if (__exp->second) {
+
+        __exp = (parser::Ast_Node_Expression*) __exp->second;
+
+        if (
+            getExpressionPriority(__exp->expression_id) <= _frstOpPri
+        ) {
+
+            _ = parser::getByteCodeFromExpressionS(__exp, __crrnt, __comCntrl, _c);
+            _rtr->join(
+                _
+            );
+            _->destroy_content = 0;
+            delete _;
+
+            _rtr->add(
+                parser::getByteCodeOfExpressionId(
+                    _frstOp
+                )
+            );
+
+        } else {
+
+            _ = parser::getByteCodeFromNode(__exp->first, __crrnt, __comCntrl);
+            _rtr->join(
+                _
+            );
+            _->destroy_content = 0;
+            delete _;
+
+            _rtr->add(
+                parser::getByteCodeOfExpressionId(
+                    _frstOp
+                )
+            );
+
+        }
+
+    } else __exp = NULL;
+
+    _c = false;
+
+    return _rtr;
+
+}
+
+byte_code::Byte_Code* parser::getByteCodeFromValue(Ast_Node_Value* __value, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
+
+    __comCntrl->printDebugInfo("--> Byte Code for node Value <--");
+
+    byte_code::Byte_Code* _byteCode = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_byteCode) byte_code::Byte_Code(
+        BYTECODE_MEM_STACK_LOAD_IMPLICIT, __value->value_position
+    );
+
+    return _byteCode;
+}
+
+byte_code::Byte_Code* parser::getByteCodeFromVariable(Ast_Node_Variable* __var, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
+
+    __comCntrl->printDebugInfo("--> Byte Code for node Variable <--");
+
+    byte_code::Byte_Code* _loadVar = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    parser::Ast_Node_Variable_Declaration* _astVarDecl = __crrnt->getVariableDeclaration(__var->declaration_id);
+
+    if (!_astVarDecl) new Compiler_Exception("No variable in declared with given name");
+
+    __var->variable_declaration = _astVarDecl;
+
+    new (_loadVar) byte_code::Byte_Code(
+        BYTECODE_LOAD_VARIABLE,
+        __var->declaration_id
+    );
+
+    return _loadVar;
+
+}
 
 
