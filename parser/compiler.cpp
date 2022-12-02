@@ -58,7 +58,7 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Declarations::getStructDec
 
 parser::Compiler_Code_Block::~Compiler_Code_Block() { delete compiler_declarations; }
 
-parser::Compiler_Code_Block::Compiler_Code_Block(Compiler_Code_Block* _prev) : previous_name_space(_prev) { 
+parser::Compiler_Code_Block::Compiler_Code_Block(Name_Space* __name_space, Compiler_Code_Block* _prev) : name_space(__name_space), previous_name_space(_prev) { 
     byte_code = new utils::LinkedList <byte_code::Byte_Code*>(); 
     compiler_declarations = new Compiler_Declarations();
 }
@@ -67,7 +67,8 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-    new (_rtr) parser::Compiler_Code_Block(__prev);
+    new (_rtr) parser::Compiler_Code_Block(__nmSpc->name_space, __prev);
+    __comCntrl->compiled_blocks->add(_rtr);
 
 
     for (int _ = 0; _ < __nmSpc->declarations->count; _++) {
@@ -82,9 +83,6 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     }
 
-
-    __comCntrl->compiled_blocks->add(_rtr);
-
     return __comCntrl->compiled_blocks->count - 1;
 
 }
@@ -93,7 +91,8 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-    new (_rtr) parser::Compiler_Code_Block(__prev);
+    new (_rtr) parser::Compiler_Code_Block(__node->name_space, __prev);
+    __comCntrl->compiled_blocks->add(_rtr);
  
 
     if (__node) {
@@ -112,7 +111,6 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     } else return -1;
 
-    __comCntrl->compiled_blocks->add(_rtr);
     
     return __comCntrl->compiled_blocks->count - 1;
 
@@ -122,7 +120,8 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
 
     parser::Compiler_Code_Block* _rtr = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-    new (_rtr) parser::Compiler_Code_Block(__prev);
+    new (_rtr) parser::Compiler_Code_Block(NULL, __prev); // todo
+    __comCntrl->compiled_blocks->add(_rtr);
 
     if (__strcDecl->fields->count || __strcDecl->functions->count) {
 
@@ -151,8 +150,6 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __comCntrl, parser::
         }
 
     } else return -1;
-
-    __comCntrl->compiled_blocks->add(_rtr);
 
     return __comCntrl->compiled_blocks->count - 1;
 
@@ -205,7 +202,17 @@ parser::Compiler_Control::Compiler_Control(utils::LinkedList <parser::Ast_Node_N
 
 void parser::Compiler_Control::printDebugInfo(char* _) { if (debug_info) std::cout << "Compiler Control  Debug Info: " << _ << std::endl; }
 
-void parser::Compiler_Control::generate() { Compiler_Code_Block::generate(this, name_spaces->last->object, NULL); }
+void parser::Compiler_Control::generate() { 
+
+    for (int _ = 0; _ < name_spaces->count; _++)
+
+        if ((*name_spaces)[_]->name_space->name_space_scope->count == 1) 
+
+            Compiler_Code_Block::generate(this, (*name_spaces)[_], NULL); 
+
+    Compiler_Code_Block::generate(this, name_spaces->last->object, NULL); 
+    
+}
 
 parser::Compiled_Output* parser::Compiler_Control::generateOutPut() {
 
@@ -232,6 +239,16 @@ parser::Compiled_Output* parser::Compiler_Control::generateOutPut() {
     );
 
     return _rtr;
+
+}
+
+parser::Compiler_Code_Block* parser::Compiler_Control::getCodeBlockFromNameSpace(Name_Space* __name_space) {
+
+    for (int _ = 0; _ < compiled_blocks->count; _++)
+
+        if ((*compiled_blocks)[_]->name_space == __name_space) return (*compiled_blocks)[_];
+
+    return NULL;
 
 }
 

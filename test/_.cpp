@@ -110,10 +110,12 @@ int main() {
     "void main() { adeus::test* l; } void ::ola::test::jk(int j, int k) {} ";
     "int k; namespace ola {  int mamamia; struct test { int k; int oll = k; void jk(int j, int k); }; } " \
     "int main() { ola::test* var; }";
+    "int jk; struct ola { int jk; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
+    "void main() { testFunc(12); } ";
 
     parser::Compiled_Output* _com = getByteCode(
-        "int jk; struct ola { int jk; void olak() { this; } }; int* test;" \
-        "void main() { test = test * (test + 15); *test; } "
+        "int jk; struct ola { int jk; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
+        "void main() { testFunc(12); } "
     );
 
     delete _com;

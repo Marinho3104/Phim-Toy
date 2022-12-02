@@ -4,6 +4,7 @@
 #include "./../byteCode/byteCode.h"
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
+#include "./compiler_helper.h"
 #include "./compiler.h"
 #include "./token.h"
 
@@ -172,6 +173,15 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNode(Ast_Node*
                 __crrnt, __comCntrl
             ); break;
 
+        case AST_NODE_FUNCTION_CALL:
+
+            delete _;
+
+            _ = parser::getByteCodeFromFunctionCall(
+                (Ast_Node_Function_Call*) __node,
+                __crrnt, __comCntrl
+            ); break;
+
         default: break;
     }
 
@@ -324,14 +334,24 @@ byte_code::Byte_Code* parser::getByteCodeFromVariable(Ast_Node_Variable* __var, 
 
     byte_code::Byte_Code* _loadVar = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
 
-    parser::Ast_Node_Variable_Declaration* _astVarDecl = __crrnt->getVariableDeclaration(__var->declaration_id);
+    parser::Ast_Node_Variable_Declaration* _astVarDecl = NULL;
+    
+    if (__var->name_space) {
 
-    if (!_astVarDecl) new Compiler_Exception("No variable in declared with given name");
+        __crrnt = __comCntrl->getCodeBlockFromNameSpace(__var->name_space);
+
+        if (!__crrnt) new Compiler_Exception("No variable is declared with given name - name space");
+
+    }
+
+    _astVarDecl = __crrnt->getVariableDeclaration(__var->declaration_id);
+
+    if (!_astVarDecl) new Compiler_Exception("No variable is declared with given name");
 
     __var->variable_declaration = _astVarDecl;
 
     new (_loadVar) byte_code::Byte_Code(
-        BYTECODE_LOAD_VARIABLE,
+        __var->is_global ? BYTECODE_LOAD_VARIABLE_GLOBAL : BYTECODE_LOAD_VARIABLE,
         __var->declaration_id
     );
 
@@ -415,6 +435,62 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromPointerOperato
 
 utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromParenthesis(Ast_Node_Parenthesis* __paren, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
 
+    __comCntrl->printDebugInfo("--> Byte Code for node Parenthesis <--"); 
+
     return getByteCodeFromExpression(__paren->value, __crrnt, __comCntrl);
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromFunctionCall(Ast_Node_Function_Call* __funcCall, Compiler_Code_Block* __crrnt, Compiler_Control* __comCntrl) {
+
+    __comCntrl->printDebugInfo("--> Byte Code for node Function Call <--");
+
+    utils::LinkedList <byte_code::Byte_Code*>* _byte_code = new utils::LinkedList <byte_code::Byte_Code*>(), *_temp;
+    byte_code::Byte_Code* _func_call_byte_code;
+    Ast_Node_Function_Declaration* _funcDecl;
+
+    if (__funcCall->name_space) {
+
+        __crrnt = __comCntrl->getCodeBlockFromNameSpace(__funcCall->name_space);
+
+        if (!__crrnt) new Compiler_Exception("No variable is declared with given name - name space");
+
+    }
+
+    _funcDecl = __crrnt->getFunctionDeclaration(__funcCall->declaration_id);
+
+    if (!_funcDecl) new Ast_Execption("Function not defined");
+
+    __funcCall->function_declaration = _funcDecl;
+
+    if(!parser_helper::confirmFunctionCallParameters(_funcDecl->parameters, __funcCall->parameters)) 
+        new Compiler_Exception(
+            "No same lenght of inputs in function declaration and function call\n" \
+            "Or No same type size of inputs in function declaration and function call"
+        );
+
+    if (!_funcDecl->function_body) new Compiler_Exception("Forward not supported");
+
+    for (int _ = 0; _ < __funcCall->parameters->count; _++) {
+
+        _temp = parser::getByteCodeFromExpression(
+            (*__funcCall->parameters)[_], __crrnt, __comCntrl
+        );
+
+        _byte_code->join(_temp);
+
+        _temp->destroy_content = 0; delete _temp;
+
+    }
+
+    _func_call_byte_code = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new(_func_call_byte_code) byte_code::Byte_Code(
+        BYTECODE_CALL, _funcDecl->body_pos
+    );
+
+    _byte_code->add(_func_call_byte_code);
+
+    return _byte_code;
 
 }

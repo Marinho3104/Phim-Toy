@@ -20,8 +20,11 @@ namespace parser {
     struct Name_Tracker {
 
         utils::LinkedList <char*>* names_declared;
+        utils::LinkedList <int>* names_declarations_id;
+        Ast_Control* ast_control;
+        int count;
 
-        ~Name_Tracker(); Name_Tracker();
+        ~Name_Tracker(); Name_Tracker(Ast_Control*);
 
         /* Return the declaration id of given name or -1 if name is not declared */
         int getDeclarationId(char*);
@@ -44,10 +47,11 @@ namespace parser {
         int token_id, user_defined_declaration_id; // Token id representing the type | if token_id == identifier means is a user defined type (a.k.a struct)
         int pointer_level, reference_level; // Pointer ans reference level of type
         Name_Space* name_space; // if null is current name space
+        Ast_Control* ast_control;
 
         ~Type_Information(); Type_Information();
 
-        Type_Information(int, int, utils::LinkedList <int>*, Name_Space*);
+        Type_Information(Ast_Control*, int, int, utils::LinkedList <int>*, Name_Space*);
 
         static Type_Information* generate(Ast_Control*, Name_Space*);
 
@@ -67,7 +71,7 @@ namespace parser {
         Name_Tracker* name_tracker;
         int off_count;
 
-        ~Name_Space(); Name_Space(Name_Space_Control*, utils::LinkedList <char*>*);
+        ~Name_Space(); Name_Space(Ast_Control*, Name_Space_Control*, utils::LinkedList <char*>*);
 
         void offCountSet();
 
@@ -94,8 +98,9 @@ namespace parser {
 
         utils::LinkedList <Name_Space*>* name_space_declarations;
         Name_Space* global_name_space;
+        Ast_Control* ast_control;
 
-        ~Name_Space_Control(); Name_Space_Control();
+        ~Name_Space_Control(); Name_Space_Control(Ast_Control*);
 
         Name_Space* getNameSpaceDefinition(utils::LinkedList <char*>*);
 
@@ -133,6 +138,7 @@ namespace parser {
         Ast_Node_Code_Block* current_code_block; // Current code block in use
         int current_token_position; // Keeps track of current token position
         Storage* storage;
+        int count;
 
         bool debug_info;
 

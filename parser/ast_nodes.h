@@ -45,6 +45,7 @@ namespace parser {
         int declaration_type, count_off;
         Name_Tracker* name_tracker;
         Name_Space* name_space;
+        int count;
 
         ~Ast_Node_Code_Block(); Ast_Node_Code_Block(utils::LinkedList <Ast_Node*>*); Ast_Node_Code_Block(Ast_Node_Code_Block*, Name_Space*, int);
 
@@ -78,6 +79,8 @@ namespace parser {
 
         Type_Information* getType();
 
+        int getByteSize();
+
     };
 
     /* Represent a function declaration */
@@ -95,9 +98,10 @@ namespace parser {
 
         static Ast_Node_Function_Declaration* generate(Ast_Control*, Type_Information*, Name_Space*, int);
 
-        // static 
+        Type_Information* getType();
 
-        
+        int getByteSize();
+
     };
 
     /* Represent a struct declaration */
@@ -105,26 +109,27 @@ namespace parser {
         int declaration_id, body_pos; // Struct Declaration id
         bool is_contract; // Is contract
         Name_Space* own_name_space;
+        Type_Information* struct_type;
         utils::LinkedList <Ast_Node*>* fields;
         utils::LinkedList <Ast_Node_Function_Declaration*>* functions;
 
         ~Ast_Node_Struct_Declaration(); 
         
-        Ast_Node_Struct_Declaration(int, bool, Name_Space*, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
+        Ast_Node_Struct_Declaration(int, bool, Name_Space*, Type_Information*, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
         
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
 
         static Name_Space* createNameSpace(Ast_Control*);
-
-
-
-
 
         static void ignoreCodeBlock(Ast_Control*);
 
         static utils::LinkedList <Ast_Node*>* getFields(Ast_Control*);
 
         static utils::LinkedList <Ast_Node_Function_Declaration*>* getFunctions(Ast_Control*, int); 
+
+        Type_Information* getType();
+
+        int getByteSize();
 
     };
 
@@ -143,6 +148,8 @@ namespace parser {
 
         static Ast_Node_Expression* getSecondNode(Ast_Control*);
 
+        int getByteSize();
+
     };
 
     /* Node Value representa implicit value */
@@ -156,7 +163,9 @@ namespace parser {
         static Ast_Node_Value* generate(Ast_Control*);
 
         Type_Information* getType();
-    
+
+        int getByteSize();
+ 
     };
 
     /* Node Variable represent the use of value of a variable name */
@@ -173,11 +182,14 @@ namespace parser {
 
         Type_Information* getType();
 
+        int getByteSize();
+
     };
 
     /* Represent a assign to a variable */
     struct Ast_Node_Variable_Assignment : public Ast_Node {
 
+        Ast_Node_Variable_Assignment* variable_declaration;
         Ast_Node* value_before_assign;
         Ast_Node_Expression* value;
         bool operation_is_left;
@@ -192,6 +204,10 @@ namespace parser {
         static Ast_Node* getValueBeforeAssign(Ast_Control*);
         
         static Ast_Node_Expression* getValue(Ast_Control*);
+
+        Type_Information* getType();
+
+        int getByteSize();
 
     };
 
@@ -225,6 +241,7 @@ namespace parser {
         utils::LinkedList <Ast_Node_Expression*>* parameters; // Parameters of function
         int declaration_id; // Id
         Name_Space* name_space; // if null read before
+        Ast_Node_Function_Declaration* function_declaration;
 
         ~Ast_Node_Function_Call(); Ast_Node_Function_Call(int, utils::LinkedList <Ast_Node_Expression*>*, Name_Space*);
         
@@ -232,6 +249,10 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node_Expression*>* getFunctionCallParameters(Ast_Control*);
 
+        Type_Information* getType();
+
+        int getByteSize();
+        
     };
 
     /* Represent a accessing variable in struct variable declaration */

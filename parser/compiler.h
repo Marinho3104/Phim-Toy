@@ -13,6 +13,7 @@ namespace parser {
     // Forward
     struct Compiler_Control;
     struct Compiled_Output;
+    struct Name_Space;
 
     struct Compiler_Declarations {
 
@@ -37,8 +38,9 @@ namespace parser {
         utils::LinkedList <byte_code::Byte_Code*>* byte_code;
         Compiler_Declarations* compiler_declarations;
         Compiler_Code_Block* previous_name_space;
+        Name_Space* name_space;
 
-        ~Compiler_Code_Block(); Compiler_Code_Block(Compiler_Code_Block*);
+        ~Compiler_Code_Block(); Compiler_Code_Block(Name_Space*, Compiler_Code_Block*);
 
         static int generate(Compiler_Control*, parser::Ast_Node_Name_Space*, Compiler_Code_Block*);
 
@@ -73,6 +75,8 @@ namespace parser {
 
         /* Generator output */
         Compiled_Output* generateOutPut(); 
+
+        Compiler_Code_Block* getCodeBlockFromNameSpace(Name_Space*);
 
     };
 
