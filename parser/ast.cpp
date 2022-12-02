@@ -209,7 +209,26 @@ int parser::Type_Information::getByteSize() {
     
     if (!pointer_level) {
 
-        if (token_id == TOKEN_IDENTIFIER) { std::cout << "User defined get size not implemented " << std::endl; exit(-1); /* TODO */ }
+        if (token_id == TOKEN_IDENTIFIER) {
+            
+            // Get name space Ast
+            Ast_Node_Name_Space* _astNameSpace = NULL;
+            for (int _ = 0;_ < ast_control->name_spaces->count;_++)
+
+                if ((*ast_control->name_spaces)[_]->name_space == name_space) _astNameSpace = (*ast_control->name_spaces)[_];
+
+            if (!_astNameSpace) new Ast_Execption("Name space not found - Type Information");
+
+            for (int _ = 0; _ < _astNameSpace->declarations->count; _++)
+
+                if (
+                    (*_astNameSpace->declarations)[_]->node_id == AST_NODE_STRUCT_DECLARATION &&
+                    ((Ast_Node_Struct_Declaration*)(*_astNameSpace->declarations)[_])->declaration_id == user_defined_declaration_id
+                ) return ((Ast_Node_Struct_Declaration*)(*_astNameSpace->declarations)[_])->getByteSize();
+
+            new Ast_Execption("Error no declaration with given id in given name space - Type Information");
+
+        }
 
         else return parser_helper::getSizePrimitiveType(token_id);
 

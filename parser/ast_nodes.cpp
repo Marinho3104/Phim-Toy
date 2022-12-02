@@ -351,6 +351,8 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
     parser::Ast_Node_Variable_Declaration* _varDecl;
     int _declId;
 
+    __varTp->name_space = __astCntrl->current_name_space;
+
     while(__astCntrl->getToken(0)->id != TOKEN_ENDINSTRUCTION) {
 
         __astCntrl->printDebugInfo("--> Ast Node Variable Declaration <--");
@@ -760,7 +762,7 @@ int parser::Ast_Node_Struct_Declaration::getByteSize() {
     
         if ((*fields)[_]->node_id != AST_NODE_VARIABLE_DECLARATION) continue;
 
-        else _byte_size = ((Ast_Node_Variable_Declaration*)(*fields)[_])->getByteSize();
+        else _byte_size += ((Ast_Node_Variable_Declaration*)(*fields)[_])->getByteSize();
 
     return _byte_size;
 

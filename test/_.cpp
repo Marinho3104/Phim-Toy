@@ -114,8 +114,8 @@ int main() {
     "void main() { testFunc(12); } ";
 
     parser::Compiled_Output* _com = getByteCode(
-        "int jk; struct ola { int jk; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
-        "void main() { testFunc(12); } "
+        "int jk; struct ola { int jk, qw, ol; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
+        "void main() { ola meu; } "
     );
 
     delete _com;

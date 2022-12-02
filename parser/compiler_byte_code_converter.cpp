@@ -200,7 +200,7 @@ byte_code::Byte_Code* parser::getByteCodeFromVariableDeclaration(Ast_Node_Variab
     byte_code::Byte_Code* _bcVarDecl = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
 
     new (_bcVarDecl) byte_code::Byte_Code(
-        BYTECODE_MEM_STACK_LOAD, __varDecl->variable_type->getByteSize()
+        BYTECODE_MEM_STACK_LOAD, __varDecl->getByteSize()
     );
 
     return _bcVarDecl;
