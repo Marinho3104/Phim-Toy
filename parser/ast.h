@@ -8,6 +8,7 @@ namespace utils { template <typename> struct LinkedList; }
 namespace parser {
 
     // Forward
+    struct Ast_Node_Struct_Declaration;
     struct Ast_Node_Code_Block;
     struct Ast_Node_Name_Space;
     struct Name_Space_Control;
@@ -56,6 +57,8 @@ namespace parser {
         static Type_Information* generate(Ast_Control*, Name_Space*);
 
         static Type_Information* generate(Ast_Control*, Type_Information*);
+
+        Ast_Node_Struct_Declaration* getStructDeclaration();
 
         bool operator==(Type_Information&);
 

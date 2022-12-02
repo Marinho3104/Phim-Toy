@@ -829,8 +829,7 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstNode(Ast_Control* __astCn
                     switch (__astCntrl->getToken(0)->id)
                     {
                     case TOKEN_EQUAL: _ = Ast_Node_Variable_Assignment::generate(__astCntrl, _); break;
-                    // case TOKEN_ACCESSINGVARIABLE: case TOKEN_ACCESSINGVARIABLEPOINTER:
-                    //     _ = Ast_Node_Accessing::generate(__astCntrl, _); break;
+                    case TOKEN_ACCESSINGVARIABLE: case TOKEN_ACCESSINGVARIABLEPOINTER: _ = Ast_Node_Accessing::generate(__astCntrl, _); break;
                     default: break;
                     }
 
@@ -1277,3 +1276,30 @@ parser::Type_Information* parser::Ast_Node_Function_Call::getType() { return fun
 int parser::Ast_Node_Function_Call::getByteSize() { return function_declaration ? function_declaration->getByteSize() : -1; }
 
 
+parser::Ast_Node_Accessing::~Ast_Node_Accessing() { 
+    if (value) value->~Ast_Node(); free(value);
+    if (accessing) accessing->~Ast_Node(); free(accessing);
+}
+
+parser::Ast_Node_Accessing::Ast_Node_Accessing(Ast_Node* __value, Ast_Node* __accessing, bool __pointer) 
+    : Ast_Node(AST_NODE_ACCESSING), value(__value), accessing(__accessing), is_pointer(__pointer) {}
+
+parser::Ast_Node_Accessing* parser::Ast_Node_Accessing::generate(Ast_Control* __astCntrl, Ast_Node* __value) {
+
+    __astCntrl->printDebugInfo("--> Ast Node Accessing <--");
+
+    parser::Ast_Node_Accessing* _accessing = (parser::Ast_Node_Accessing*) malloc(sizeof(parser::Ast_Node_Accessing));
+
+    bool _is_pointer = __astCntrl->getToken(0)->id == TOKEN_ACCESSINGVARIABLEPOINTER;
+
+    __astCntrl->current_token_position++;
+
+    // new (_accessing) parser::Ast_Node_Accessing(
+    //     __value, getAccessingValue(__astCntrl, getNameSpaceOfValue(__astCntrl, __value)), _is_pointer 
+    // );
+
+    new Ast_Execption("Error accessing");
+
+    return _accessing;    
+
+}

@@ -258,7 +258,12 @@ namespace parser {
     /* Represent a accessing variable in struct variable declaration */
     struct Ast_Node_Accessing : public Ast_Node {
 
-        // TODO
+        Ast_Node* value, *accessing;
+        bool is_pointer;
+
+        ~Ast_Node_Accessing(); Ast_Node_Accessing(Ast_Node*, Ast_Node*, bool);
+
+        static Ast_Node_Accessing* generate(Ast_Control*, Ast_Node*);
 
     };
 
