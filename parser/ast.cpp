@@ -309,7 +309,7 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(utils::Link
 
     utils::LinkedList <char*>* _previous_scope = new utils::LinkedList <char*>();
 
-    if (!__scope->count) return NULL;
+    if (!__scope->count) { delete _previous_scope; return NULL; }
 
     for (int _ = 0; _ < __scope->count - 1; _++) 
 
@@ -318,6 +318,8 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(utils::Link
         );
 
     Name_Space* _previous_name_space = getNameSpace(_previous_scope);
+
+    // delete _previous_scope;
 
     if (!_previous_name_space) new Ast_Exception("Unexpected error - getPreviousNameSpace()");
 
