@@ -8,40 +8,12 @@ namespace utils { template <typename> struct LinkedList; }
 namespace parser {
 
     // Forward
-    struct Ast_Node_Struct_Declaration;
     struct Ast_Node_Code_Block;
     struct Ast_Node_Name_Space;
     struct Name_Space_Control;
-    struct Type_Information;
     struct Ast_Control;
     struct Name_Space;
     struct Token;
-
-    /* Keeps track of names declaration accors code */
-    struct Name_Tracker {
-
-        utils::LinkedList <char*>* names_declared;
-        utils::LinkedList <int>* names_declarations_id;
-        Ast_Control* ast_control;
-        int count;
-
-        ~Name_Tracker(); Name_Tracker(Ast_Control*);
-
-        /* Return the declaration id of given name or -1 if name is not declared */
-        int getDeclarationId(char*);
-
-        /* Adds a new name into the declaration list if is not declared 
-        *   Returns true if name was declared or false if name was already declared
-        */
-        bool addNewName(char*, bool);
-
-        static int addToCorrectNameTracker(Ast_Control*);
-
-        static int getDeclarationId(Ast_Control*, char*);
-
-        static int isDeclarationIdGlobal(Ast_Control*, char*);
-
-    };
 
     /* Represent a type */
     struct Type_Information {
@@ -58,105 +30,94 @@ namespace parser {
 
         static Type_Information* generate(Ast_Control*, Type_Information*);
 
-        Ast_Node_Struct_Declaration* getStructDeclaration();
-
         bool operator==(Type_Information&);
 
         int getByteSize();
 
+        Type_Information* getCopy();
+
     };
 
-    /* Keeps track of every declaration occur in a name space */
+    struct Name_Tracker {
+
+        utils::LinkedList <char*>* names_declared;
+        utils::LinkedList <int>* names_declarations_id;
+        int* off;
+
+        ~Name_Tracker(); Name_Tracker(int*);
+
+        int getDeclarationId(char*);
+
+        bool addNewName(char*);
+
+    };
+
     struct Name_Space {
 
         Name_Space_Control* name_space_control;
-        utils::LinkedList <char*>* name_space_scope;
+        utils::LinkedList <char*>* scope;
         Name_Tracker* name_tracker;
-        int off_count;
 
-        ~Name_Space(); Name_Space(Ast_Control*, Name_Space_Control*, utils::LinkedList <char*>*);
+        ~Name_Space(); Name_Space(Name_Space_Control*, utils::LinkedList <char*>*);
 
-        void offCountSet();
+        void updateOff(int*);
 
         bool addNewName(char*);
 
         int getDeclarationId(char*);
 
-        static Name_Space* checkIfNameSpace(Ast_Control*, int*);
-
-        static Name_Space* getNameSpaceFromStruct(Ast_Control*, utils::LinkedList <char*>*, int*);
-
-        static Name_Space* getNameSpace(Ast_Control*, bool, int*);
-
-        static Name_Space* getNameSpace(Ast_Control*);
-
-        void print();
+        void printScope();
 
     };
 
-    /* Keeps track of every name space created in code
-    *   Name space with 0 names in scope is global one
-    */
     struct Name_Space_Control {
 
-        utils::LinkedList <Name_Space*>* name_space_declarations;
-        Name_Space* global_name_space;
-        Ast_Control* ast_control;
+        utils::LinkedList <parser::Name_Space*>* name_spaces;
+        int declarations_count;
 
-        ~Name_Space_Control(); Name_Space_Control(Ast_Control*);
+        ~Name_Space_Control(); Name_Space_Control();
 
-        Name_Space* getNameSpaceDefinition(utils::LinkedList <char*>*);
-
-        Name_Space* getPreviousNameSpace(Name_Space*);
+        bool addNameSpace(Name_Space*);
 
         Name_Space* getNameSpace(utils::LinkedList <char*>*);
 
-        Name_Space* getNameSpaceStruct();
+        Name_Space* getNameSpaceSpecific(utils::LinkedList <char*>*);
+
+        Name_Space* getNameSpaceOrAdd(utils::LinkedList <char*>*);
+
+        Name_Space* getPreviousNameSpace(utils::LinkedList <char*>*);
+
+
 
     };
 
-    /* Store every implicit value */
-    struct Storage {
-
-        utils::LinkedList <char*>* implicit_values;
-
-        ~Storage(); Storage();
-
-        /* Add new value into Linked List
-        *   If value already exists dont add
-        *   @return Pos of value given in Linked List 
-        */
-        int addNewValue(char*, bool);
-
-    };
-
-    struct Ast_Execption { const char* description; Ast_Execption(const char*); };
+    struct Ast_Exception { const char* description; Ast_Exception(const char*); };
 
     struct Ast_Control {
 
-        utils::LinkedList <Ast_Node_Name_Space*>* name_spaces; // all code is here
+        utils::LinkedList <Ast_Node_Name_Space*>* nodes_name_spaces;
+
+        utils::LinkedList <Name_Space*>* name_spaces_saved, *struct_name_spaces_saved;
+        utils::LinkedList <Ast_Node_Code_Block*>* code_blocks_saved;
+
         utils::LinkedList <Token*>* tokens_collection;
-        Name_Space* current_name_space, *struct_name_space; // Currnet name space in use
         Name_Space_Control* name_space_control;
-        Ast_Node_Code_Block* current_code_block; // Current code block in use
-        int current_token_position; // Keeps track of current token position
-        Storage* storage;
-        int count;
+        int current_token_position;
+        
+        Ast_Node_Code_Block* current_code_block;
+        Name_Space* current_name_space, *current_struct_name_space;
 
         bool debug_info;
 
-        Name_Space* current_name_space_saved, *struct_name_space_saved;
-        Ast_Node_Code_Block* current_code_block_saved;
-
         ~Ast_Control(); Ast_Control(utils::LinkedList <Token*>*, bool);
+
+        void saveState();
+
+        void setLastSavedState();
 
         void printDebugInfo(const char*);
 
         parser::Token* getToken(int);
-
-        void saveState();
-
-        void setPreviousSavedState();
 
         void generate();
 
@@ -165,3 +126,6 @@ namespace parser {
 }
 
 #endif
+
+
+
