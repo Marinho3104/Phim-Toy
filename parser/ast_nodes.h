@@ -79,7 +79,7 @@ namespace parser {
 
         ~Ast_Node_Function_Declaration(); Ast_Node_Function_Declaration(Name_Space*, Type_Information*, utils::LinkedList <Ast_Node*>*, Ast_Node_Code_Block*);
 
-        static Ast_Node_Function_Declaration* generate(Ast_Control*, Name_Space*, Type_Information*, utils::LinkedList <Ast_Node*>*, utils::LinkedList <char*>*);
+        static Ast_Node_Function_Declaration* generate(Ast_Control*, Name_Space*, Type_Information*);
 
         static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*);
 

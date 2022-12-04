@@ -135,7 +135,7 @@ utils::DataLL <type>* utils::LinkedList<type>::removeLast() {
 
         if (frst == last) { frst = NULL; last = NULL; }
 
-        else { _->previous->next = NULL; }
+        else { _->previous->next = NULL; last = _->previous; }
 
         _->previous = NULL;
 

@@ -42,6 +42,7 @@ namespace parser {
 
         utils::LinkedList <char*>* names_declared;
         utils::LinkedList <int>* names_declarations_id;
+        bool delete_off;
         int* off;
 
         ~Name_Tracker(); Name_Tracker(int*);
@@ -87,8 +88,6 @@ namespace parser {
 
         Name_Space* getPreviousNameSpace(utils::LinkedList <char*>*);
 
-
-
     };
 
     struct Ast_Exception { const char* description; Ast_Exception(const char*); };
@@ -97,7 +96,7 @@ namespace parser {
 
         utils::LinkedList <Ast_Node_Name_Space*>* nodes_name_spaces;
 
-        utils::LinkedList <Name_Space*>* name_spaces_saved, *struct_name_spaces_saved;
+        utils::LinkedList <Name_Space*>* name_spaces_saved;
         utils::LinkedList <Ast_Node_Code_Block*>* code_blocks_saved;
 
         utils::LinkedList <Token*>* tokens_collection;
@@ -105,7 +104,7 @@ namespace parser {
         int current_token_position;
         
         Ast_Node_Code_Block* current_code_block;
-        Name_Space* current_name_space, *current_struct_name_space;
+        Name_Space* current_name_space;
 
         bool debug_info;
 
@@ -120,6 +119,8 @@ namespace parser {
         parser::Token* getToken(int);
 
         void generate();
+
+        Ast_Node_Name_Space* getNameSpaceNodeFromNameSpace(Name_Space*);
 
     };
 

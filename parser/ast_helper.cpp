@@ -5,6 +5,7 @@
 #include "./token.h"
 #include "./ast.h"
 #include "./ast_nodes.h"
+#include "./parser_definitions.h"
 
 #include <iostream>
 
@@ -31,17 +32,28 @@ parser::Name_Space* parser_helper::checkIfIsNameSpaceChanging(parser::Ast_Contro
 
     if (__ast_control->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR || __ast_control->getToken(1)->id == TOKEN_NAMESPACE_OPERATOR) {
 
+        bool _is_global_operator = __ast_control->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR;
+
         utils::LinkedList <char*>* _scope = getNameSpaceScope(__ast_control);
 
         _name_space = __ast_control->name_space_control->getNameSpace(_scope);
 
-        while(!_name_space) { // need to decrease token position
+        if (!_name_space) __ast_control->current_token_position++; // TODO reduce right
+
+        while(!_name_space) {
+
+            if (_scope->count == 1) __ast_control->current_token_position -= _is_global_operator ? 1 : 0;
+
+            else __ast_control->current_token_position -= 2;
 
             utils::DataLL <char*>* _last_name = _scope->removeLast();
 
-            if (!_last_name) break;
+            // if (!_last_name) break;
 
             _name_space = __ast_control->name_space_control->getNameSpace(_scope);
+
+            if (!_name_space)
+                _name_space = checkIfIsStructNameSpace(__ast_control, _scope);
 
             delete _last_name;
 
@@ -53,6 +65,37 @@ parser::Name_Space* parser_helper::checkIfIsNameSpaceChanging(parser::Ast_Contro
 
     return _name_space;
 
+}
+
+parser::Name_Space* parser_helper::checkIfIsStructNameSpace(parser::Ast_Control* __ast_control, utils::LinkedList <char*>* __scope) {
+
+    utils::DataLL <char*>* _struct_name = __scope->removeLast();
+
+    parser::Name_Space* _name_space = __ast_control->name_space_control->getNameSpace(__scope);
+
+    if (_name_space) {
+
+        int _declaration_id = _name_space->getDeclarationId(_struct_name->object); 
+
+        parser::Ast_Node_Name_Space* _node_name_space = __ast_control->getNameSpaceNodeFromNameSpace(_name_space);
+
+        _name_space = NULL;
+
+        for (int _ = 0; _ < _node_name_space->declarations->count; _++)
+
+            if (
+                (*_node_name_space->declarations)[_]->node_id == AST_NODE_STRUCT_DECLARATION &&
+                ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->declaration_id == _declaration_id
+            ) _name_space = ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->own_name_space;
+
+    }
+
+    __scope->add(_struct_name->object);
+
+    _struct_name->destroy_content = 0; delete _struct_name;
+
+    return _name_space;
+     
 }
 
 utils::LinkedList <char*>* parser_helper::getNameSpaceScope(parser::Ast_Control* __ast_control) {
@@ -148,7 +191,6 @@ int parser_helper::addToNameTracker(parser::Ast_Control* __ast_control) {
     return _declaration_id;
 
 }
-
 
 int parser_helper::addToNameTracker(parser::Ast_Control* __ast_control, char* __n) {
 

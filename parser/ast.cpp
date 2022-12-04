@@ -44,11 +44,16 @@ parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astC
     utils::LinkedList <int>* _pntrOprts = new utils::LinkedList <int>();
     int _id = __astCntrl->getToken(0)->id, _usrDeclId = -1;
 
+    if (_nmSpc) { __astCntrl->saveState(); __astCntrl->current_name_space = _nmSpc; }
+
+    std::cout << "Name space -> " << _nmSpc << std::endl;
+    _nmSpc->printScope();
+
     if (_id == TOKEN_IDENTIFIER) {
 
-        if (_nmSpc) _usrDeclId = _nmSpc->getDeclarationId(__astCntrl->getToken(0)->phr);
+        _usrDeclId = parser_helper::getDeclarationId(__astCntrl);
 
-        else _usrDeclId = parser_helper::getDeclarationId(__astCntrl);
+        std::cout << "Type user defined with id -> " << _usrDeclId << std::endl;
 
         if (_usrDeclId == -1) new Ast_Exception("Unknow type for declaration");
 
@@ -63,6 +68,8 @@ parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astC
     // std::cout << "Variable type user defined id -> " << _usrDeclId << std::endl;
 
     delete _pntrOprts;
+
+    if (_nmSpc) __astCntrl->setLastSavedState();
 
     return _;
 
@@ -125,9 +132,9 @@ parser::Type_Information* parser::Type_Information::getCopy() {
 }
 
 
-parser::Name_Tracker::~Name_Tracker() { delete names_declared; delete names_declarations_id; }
+parser::Name_Tracker::~Name_Tracker() { if (delete_off) free(off); delete names_declared; delete names_declarations_id; }
 
-parser::Name_Tracker::Name_Tracker(int* __off) : off(__off) {
+parser::Name_Tracker::Name_Tracker(int* __off) : off(__off), delete_off(0) {
     names_declarations_id = new utils::LinkedList <int>();
     names_declared = new utils::LinkedList <char*>();
 }
@@ -160,7 +167,7 @@ parser::Name_Space::~Name_Space() { delete scope; delete name_tracker; }
 parser::Name_Space::Name_Space(Name_Space_Control* __name_space_control, utils::LinkedList <char*>* __scope) 
     : name_space_control(__name_space_control), scope(__scope) { name_tracker = new Name_Tracker(0); }
 
-void parser::Name_Space::updateOff(int* __off) { name_tracker->off = __off; }
+void parser::Name_Space::updateOff(int* __off) { if (!__off) { __off = (int*) malloc(4); *__off = 0; name_tracker->delete_off = 1; }  name_tracker->off = __off; }
 
 bool parser::Name_Space::addNewName(char* __n) { return name_tracker->addNewName(__n); }
 
@@ -331,14 +338,13 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(utils::Link
 parser::Ast_Exception::Ast_Exception(const char* __descr) : description(__descr) { std::cout << "Ast Exception: " << description << std::endl; exit(1); }
 
 
-parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces_saved; delete nodes_name_spaces; delete code_blocks_saved; delete struct_name_spaces_saved; }
+parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces_saved; delete nodes_name_spaces; delete code_blocks_saved; }
 
 parser::Ast_Control::Ast_Control(utils::LinkedList <Token*>* __tokens_collection, bool __debug_info) 
-    : tokens_collection(__tokens_collection), debug_info(__debug_info), current_name_space(NULL), current_code_block(NULL), current_struct_name_space(NULL), current_token_position(0) { 
+    : tokens_collection(__tokens_collection), debug_info(__debug_info), current_name_space(NULL), current_code_block(NULL), current_token_position(0) { 
         nodes_name_spaces = new utils::LinkedList <Ast_Node_Name_Space*>();
         name_spaces_saved = new utils::LinkedList <Name_Space*>(); 
         code_blocks_saved = new utils::LinkedList <Ast_Node_Code_Block*>(); 
-        struct_name_spaces_saved = new utils::LinkedList <Name_Space*>();
         name_space_control = new Name_Space_Control(); 
     }
 
@@ -346,7 +352,6 @@ void parser::Ast_Control::saveState() {
 
     name_spaces_saved->addFrst(current_name_space);
     code_blocks_saved->addFrst(current_code_block);
-    struct_name_spaces_saved->addFrst(current_struct_name_space);
 
 }
 
@@ -354,21 +359,18 @@ void parser::Ast_Control::setLastSavedState() {
 
     utils::DataLL <Name_Space*>* _saved_name_space = name_spaces_saved->removeFrst();
     utils::DataLL <Ast_Node_Code_Block*>* _saved_code_block = code_blocks_saved->removeFrst();
-    utils::DataLL <Name_Space*>* _saved_struct_name_space = struct_name_spaces_saved->removeFrst();
 
     current_name_space = _saved_name_space->object;
     current_code_block = _saved_code_block->object;
-    current_struct_name_space = _saved_struct_name_space->object;
 
     _saved_name_space->destroy_content = 0; delete _saved_name_space;
     _saved_code_block->destroy_content = 0; delete _saved_code_block;
-    _saved_struct_name_space->destroy_content = 0; delete _saved_struct_name_space;
 
 }
 
 void parser::Ast_Control::printDebugInfo(const char* __debug_info) {
 
-    if (debug_info) std::cout << "Ast Control - Debug Info: " << __debug_info << std::endl;
+    if (debug_info) std::cout << "Ast Control - Debug Info: " << __debug_info << "\n" << std::endl;
 
 }
 
@@ -382,6 +384,15 @@ parser::Token* parser::Ast_Control::getToken(int __off) {
 
 void parser::Ast_Control::generate() { Ast_Node_Name_Space::generate(this, name_space_control->getNameSpaceOrAdd(NULL)); }
 
+parser::Ast_Node_Name_Space* parser::Ast_Control::getNameSpaceNodeFromNameSpace(Name_Space* __name_space) {
+
+    for (int _ = 0; _ < nodes_name_spaces->count; _++)
+
+        if ((*nodes_name_spaces)[_]->name_space == __name_space) return (*nodes_name_spaces)[_];
+
+    return NULL;
+
+}
 
 
 

@@ -18,6 +18,8 @@ namespace parser_helper {
 
     parser::Name_Space* checkIfIsNameSpaceChanging(parser::Ast_Control*);
 
+    parser::Name_Space* checkIfIsStructNameSpace(parser::Ast_Control*, utils::LinkedList <char*>*);
+
     utils::LinkedList <char*>* getNameSpaceScope(parser::Ast_Control*);
 
     int getDeclarationId(parser::Ast_Control*);

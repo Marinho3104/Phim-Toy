@@ -29,11 +29,11 @@ void parser::Ast_Node_Name_Space::generate(Ast_Control* __ast_control, Name_Spac
 
     new (_ast_name_space) parser::Ast_Node_Name_Space(__name_space);
 
+    __ast_control->nodes_name_spaces->add(_ast_name_space);
+
     __ast_control->current_name_space = __name_space;
 
     _ast_name_space->setDeclarations(__ast_control);
-
-    __ast_control->nodes_name_spaces->add(_ast_name_space);
 
     __ast_control->setLastSavedState();
 
@@ -126,14 +126,14 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Name_Space::getNodes(Ast
         
             _declarations->add(
                 parser::Ast_Node_Function_Declaration::generate(
-                    __ast_control, __name_space, _typeInformation, NULL, NULL
+                    __ast_control, __name_space, _typeInformation
                 )
             );
 
             break;        
         default: 
 
-            delete __ast_control;
+            delete _declarations;
 
             _declarations = Ast_Node_Variable_Declaration::generate(
                     __ast_control, _typeInformation
@@ -312,7 +312,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
         _declaration_id = parser_helper::addToNameTracker(__ast_control);
         __ast_control->current_token_position++;
 
-        std::cout << "Declaration id -> " << _declaration_id << std::endl;
+        // std::cout << "Declaration id -> " << _declaration_id << std::endl;
 
         _variable_declaration = (parser::Ast_Node_Variable_Declaration*) malloc(sizeof(parser::Ast_Node_Variable_Declaration));
         new (_variable_declaration) parser::Ast_Node_Variable_Declaration(__type, _declaration_id);
@@ -351,7 +351,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
     }
 
-    std::cout << "Declaration id -> " << _declaration_id << std::endl;
+    // std::cout << "Declaration id -> " << _declaration_id << std::endl;
     
     _variable_declaration = (parser::Ast_Node_Variable_Declaration*) malloc(sizeof(parser::Ast_Node_Variable_Declaration));
     new (_variable_declaration) parser::Ast_Node_Variable_Declaration(__type, _declaration_id);
@@ -374,7 +374,7 @@ parser::Ast_Node_Function_Declaration::Ast_Node_Function_Declaration(
     Name_Space* __name_space, Type_Information* __return_type, utils::LinkedList <Ast_Node*>* __params, Ast_Node_Code_Block* __body) 
         : Ast_Node(AST_NODE_FUNCTION_DECLARATION), name_space(__name_space), return_type(__return_type), parameters(__params), body(__body) {}
 
-parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* __ast_control, Name_Space* __name_space, Type_Information* __return_type,  utils::LinkedList <Ast_Node*>* __params, utils::LinkedList <char*>* __params_names) {
+parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::generate(Ast_Control* __ast_control, Name_Space* __name_space, Type_Information* __return_type) {
 
     __ast_control->printDebugInfo("--> Node Function Declaration <--");
 
@@ -389,23 +389,7 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
     Ast_Node_Code_Block::setUp(__ast_control);
     _function_body = __ast_control->current_code_block;
 
-    utils::LinkedList <Ast_Node*>* _params = __params;
-
-    if (!_params) _params = new utils::LinkedList <Ast_Node*>();
-
-    else 
-
-        for (int _ = 0; _ < __params_names->count; _++)
-
-            parser_helper::addToNameTracker(__ast_control, (*__params_names)[_]);
-
-    __params = getParameters(__ast_control);
-
-    _params->join(
-        __params
-    );
-
-    __params->destroy_content = 0; delete __params;
+    utils::LinkedList <Ast_Node*>* _params = getParameters(__ast_control);
 
     if (__ast_control->getToken(0)->id == TOKEN_ENDINSTRUCTION) {
 
@@ -419,8 +403,8 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
         __name_space, __return_type, _params, _function_body
     );
 
-    std::cout << "Function declaration id - >" << _declaration_id << std::endl;
-    std::cout << "Params count -> " << _params->count << std::endl;
+    // std::cout << "Function declaration id - >" << _declaration_id << std::endl;
+    // std::cout << "Params count -> " << _params->count << std::endl;
 
     if (__name_space) __ast_control->setLastSavedState();
 
@@ -517,17 +501,18 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
     default: new Ast_Exception("Unexpected token in struct declaration");
     }
 
-    std::cout << "Struct fields count -> " << _fields->count << std::endl;
-    std::cout << "Struct functions count -> " << _functions->count << std::endl;
-    std::cout << "Struct id -> " << _declaration_id << std::endl;
+    // std::cout << "Struct fields count -> " << _fields->count << std::endl;
+    // std::cout << "Struct functions count -> " << _functions->count << std::endl;
+    // std::cout << "Struct id -> " << _declaration_id << std::endl;
+    // std::cout << "Struct own name space -> " << __ast_control->current_name_space << std::endl;
 
     Ast_Node_Struct_Declaration* _struct_declaration = (Ast_Node_Struct_Declaration*) malloc(sizeof(Ast_Node_Struct_Declaration));
 
     new (_struct_declaration) parser::Ast_Node_Struct_Declaration(
-        __ast_control->current_struct_name_space, _declaration_id, _is_contract, _fields, _functions
+        __ast_control->current_name_space, _declaration_id, _is_contract, _fields, _functions
     );
 
-    __ast_control->setLastSavedState();
+    __ast_control->setLastSavedState(); __ast_control->current_token_position++;
 
     __ast_control->printDebugInfo("--> Node Struct Declaration End <--");
 
@@ -608,37 +593,17 @@ utils::LinkedList <parser::Ast_Node_Function_Declaration*>* parser::Ast_Node_Str
     __ast_control->printDebugInfo("--> Ast Node Struct Functions <--");
 
     utils::LinkedList <parser::Ast_Node_Function_Declaration*>* _functions = new utils::LinkedList <parser::Ast_Node_Function_Declaration*>();
-    Ast_Node_Variable_Declaration* _thisDecl;
-    utils::LinkedList <Ast_Node*>* _params;
-    utils::LinkedList <char*>* _params_names;
     Type_Information* _type; Name_Space* _name_space;
 
     __ast_control->current_token_position++;
 
     while(__ast_control->getToken(0)->id != TOKEN_CLOSECURLYBRACKET) {
 
-        _params = new utils::LinkedList <Ast_Node*>();
-        _params_names = new utils::LinkedList <char*>();
-
-        _params_names->add(
-            utils::copyString("this", 5)
-        );
-
-        _thisDecl = (Ast_Node_Variable_Declaration*) malloc(sizeof(Ast_Node_Variable_Declaration));
-
-        new (_thisDecl) Ast_Node_Variable_Declaration(
-            __type_struct->getCopy(), 0
-        );
-
-        _params->add(_thisDecl);
-
         _name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control);
 
         _type = Type_Information::generate(__ast_control, _name_space);
 
         if (__ast_control->getToken(1)->id != TOKEN_OPENPARENTHESES) {
-
-            delete _params; delete _type; delete _params_names;
 
             // Until it reaches the end of of instruction ';'
             while((*__ast_control->tokens_collection)[__ast_control->current_token_position++]->id != TOKEN_ENDINSTRUCTION);
@@ -649,13 +614,13 @@ utils::LinkedList <parser::Ast_Node_Function_Declaration*>* parser::Ast_Node_Str
 
         _functions->add(
             parser::Ast_Node_Function_Declaration::generate(
-                __ast_control, _name_space, _type, _params, _params_names
+                __ast_control, NULL, _type
             )
         );
 
-        delete _params_names;
-
     }
+
+    __ast_control->current_token_position++;
 
     return  _functions;
 
@@ -671,9 +636,11 @@ void parser::Ast_Node_Struct_Declaration::setNewNameSpaceForStruct(Ast_Control* 
         __ast_control->name_space_control, _scope
     );
 
+    _name_space->updateOff(NULL);
+
     __ast_control->saveState();
 
-    __ast_control->current_struct_name_space = _name_space;
+    __ast_control->current_name_space = _name_space;
 
 }
 

@@ -115,8 +115,8 @@ int main() {
         "int jk; struct ola { int jk, qw, ol; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
         "void main() { ola meu; ::ola::olak(meu); } ";
     getByteCode(
-        "struct test { void ola1(int ola) {} int ola, adeus; void ola2(int ola) {} int kk; void ola(int ola) {} };" \
-        ""
+        " namespace test { struct testing {}; struct testing1 {}; }"  \
+        "::test::testing1 ola;"
     );
 
     // delete _com;
