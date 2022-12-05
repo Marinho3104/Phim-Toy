@@ -234,14 +234,12 @@ int utils::LinkedList<char*>::getObjectPosition(char* _toCmp, bool (*func) (char
 
 template class utils::DataLL <parser::Ast_Node_Code_Block*>;
 // template class utils::DataLL <parser::Type_Information*>;
-
-
 // template class utils::DataLL <objects::Phim_Object*>;
 
 template class utils::DataLL <parser::Ast_Node_Variable_Declaration*>;
 template class utils::DataLL <parser::Ast_Node_Function_Declaration*>;
 template class utils::DataLL <parser::Ast_Node_Struct_Declaration*>;
-// template class utils::DataLL <parser::Compiled_Code_Block*>;
+template class utils::DataLL <parser::Compiled_Code_Block*>;
 template class utils::DataLL <parser::Ast_Node_Expression*>;
 template class utils::DataLL <parser::Ast_Node_Name_Space*>;
 template class utils::DataLL <parser::Compiler_Code_Block*>;
@@ -259,7 +257,7 @@ template class utils::LinkedList <parser::Ast_Node_Code_Block*>;
 template class utils::LinkedList <parser::Ast_Node_Variable_Declaration*>;
 template class utils::LinkedList <parser::Ast_Node_Function_Declaration*>;
 template class utils::LinkedList <parser::Ast_Node_Struct_Declaration*>;
-// template class utils::LinkedList <parser::Compiled_Code_Block*>;
+template class utils::LinkedList <parser::Compiled_Code_Block*>;
 template class utils::LinkedList <parser::Ast_Node_Expression*>;
 template class utils::LinkedList <parser::Ast_Node_Name_Space*>;
 template class utils::LinkedList <parser::Compiler_Code_Block*>;

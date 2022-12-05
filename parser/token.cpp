@@ -230,3 +230,16 @@ bool parser::isExpressionOperator(parser::Token* _) { // Miss things
 bool parser::isAccessingExpression(parser::Token* _) { return _->id == TOKEN_ACCESSINGVARIABLE || _->id == TOKEN_ACCESSINGVARIABLEPOINTER; }
 
 
+bool parser::isSingleAssignment(int __id) {
+
+    switch (__id)
+    {
+    case TOKEN_INCREMENT: case TOKEN_DECREMENT: case TOKEN_INCREMENT_LEFT: case TOKEN_DECREMENT_LEFT: return 1;
+    default: break;
+    }
+
+    return 0;
+
+}
+
+

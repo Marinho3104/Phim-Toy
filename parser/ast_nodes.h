@@ -78,8 +78,10 @@ namespace parser {
         Ast_Node_Code_Block* body;
         Name_Space* name_space;
         int declaration_id;
+        
+        int body_pos;
 
-        ~Ast_Node_Function_Declaration(); Ast_Node_Function_Declaration(Name_Space*, Type_Information*, utils::LinkedList <Ast_Node*>*, Ast_Node_Code_Block*);
+        ~Ast_Node_Function_Declaration(); Ast_Node_Function_Declaration(Name_Space*, Type_Information*, int, utils::LinkedList <Ast_Node*>*, Ast_Node_Code_Block*);
 
         static Ast_Node_Function_Declaration* generate(Ast_Control*, Name_Space*, Type_Information*);
 

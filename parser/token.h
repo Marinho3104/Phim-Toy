@@ -173,6 +173,8 @@ namespace parser {
     bool isExpressionOperator(parser::Token*);
     bool isAccessingExpression(parser::Token*);
 
+    bool isSingleAssignment(int);
+
 }
 
 

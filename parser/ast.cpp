@@ -337,7 +337,7 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(utils::Link
 }
 
 
-parser::Storage::~Storage() { delete implicit_values; }
+parser::Storage::~Storage() {}
 
 parser::Storage::Storage() {
     implicit_values = new utils::LinkedList <char*>();

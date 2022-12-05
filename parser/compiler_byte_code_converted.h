@@ -15,9 +15,29 @@ namespace parser {
     struct Compiler_Control;
     struct Ast_Node;
 
-    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeOfNode(Compiler_Control*, Compiler_Code_Block*, Ast_Node*);
+    byte_code::Byte_Code* getByteCodeOfExpressionId(int);
+
+    int getExpressionPriority(int);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromNode(Compiler_Control*, Compiler_Code_Block*, Ast_Node*);
 
     byte_code::Byte_Code* getByteCodeFromVariableDeclaration(Ast_Node_Variable_Declaration*, Compiler_Code_Block*, Compiler_Control*);
+
+    void getByteCodeFromFunctionDeclaration(Ast_Node_Function_Declaration*, Compiler_Code_Block*, Compiler_Control*);
+
+    void getByteCodeFromStructDeclaration(Ast_Node_Struct_Declaration*, Compiler_Code_Block*, Compiler_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromExpression(Ast_Node_Expression*, Compiler_Code_Block*, Compiler_Control*);
+    
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromExpressionS(Ast_Node_Expression*&, Compiler_Code_Block*, Compiler_Control*, bool&);
+
+    byte_code::Byte_Code* getByteCodeFromValue(Ast_Node_Value*, Compiler_Code_Block*, Compiler_Control*);
+
+    byte_code::Byte_Code* getByteCodeFromVariable(Ast_Node_Variable*, Compiler_Code_Block*, Compiler_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromAssignment(Ast_Node_Assignment*, Compiler_Code_Block*, Compiler_Control*);
+
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromParenthesis(Ast_Node_Parenthesis*, Compiler_Code_Block*, Compiler_Control*);
 
 }
 

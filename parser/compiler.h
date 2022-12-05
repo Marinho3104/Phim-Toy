@@ -13,6 +13,7 @@ namespace parser {
     // Forward
     struct Ast_Node_Name_Space;
     struct Compiler_Control;
+    struct Compiled_Output;
 
     struct Compiler_Declarations {
 
@@ -36,11 +37,22 @@ namespace parser {
 
         utils::LinkedList <byte_code::Byte_Code*>* byte_code;
         Compiler_Declarations* compiler_declarations;
+        Compiler_Code_Block* previous;
         Name_Space* name_space;
 
-        ~Compiler_Code_Block(); Compiler_Code_Block(Name_Space*);
+        ~Compiler_Code_Block(); Compiler_Code_Block(Name_Space*, Compiler_Code_Block*);
 
-        static int generate(Compiler_Control*, parser::Ast_Node_Name_Space*);
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+        
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int);
+        
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
+
+        static int generate(Compiler_Control*, parser::Ast_Node_Name_Space*, Compiler_Code_Block*);
+
+        static int generate(Compiler_Control*, parser::Ast_Node_Function_Declaration*, Compiler_Code_Block*);
+
+        static void generate(Compiler_Control*, parser::Ast_Node_Struct_Declaration*, Compiler_Code_Block*);
 
     };
 
@@ -60,6 +72,26 @@ namespace parser {
         void printDebugInfo(const char*);
 
         void generate();
+
+        Compiled_Output* generateOutPut(); 
+
+        Compiler_Code_Block* getCompilerCodeBlockFromNameSpace(Name_Space*);
+
+    };
+
+    struct Compiled_Code_Block {
+        utils::LinkedList <byte_code::Byte_Code*>* byte_code;
+        ~Compiled_Code_Block(); Compiled_Code_Block(utils::LinkedList <byte_code::Byte_Code*>*);
+    };
+
+    struct Compiled_Output {
+
+        utils::LinkedList <Compiled_Code_Block*>* compiled_code_blocks;
+        utils::LinkedList <char*>* implicit_values;
+
+        ~Compiled_Output(); Compiled_Output(utils::LinkedList <Compiled_Code_Block*>*, utils::LinkedList <char*>*);
+
+        void printByteCode();
 
     };
 

@@ -71,7 +71,7 @@ parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node
 
 }
 
-void getByteCode(char* _code) {
+parser::Compiled_Output* getByteCode(char* _code) {
 
     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
 
@@ -81,17 +81,17 @@ void getByteCode(char* _code) {
 
     parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->nodes_name_spaces, _astCntrl->storage);
 
-    delete _astCntrl;
+    parser::Compiled_Output* _ = _comCntrl->generateOutPut();
 
-    // parser::Compiled_Output* _ = _comCntrl->generateOutPut();
+    delete _astCntrl;
 
     delete _comCntrl;
 
-    // std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
+    std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
 
-    // _->printByteCode();
+    _->printByteCode();
 
-    // return _;
+    return _;
 
 }
 
@@ -130,11 +130,12 @@ int main() {
         "int jk; struct ola { int jk, qw, ol; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
         "void main() { ola meu; ::ola::olak(meu); } ";
         " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
-    getByteCode(
-        "int var;"
+    
+    parser::Compiled_Output* _compiler_output = getByteCode(
+        "namespace testNameSpace {int var;} void func(); struct ola { int function() { int k; k = (12 + 15) * 20; } }; "
     );
 
-    // delete _com;
+    delete _compiler_output;
 
     // executeByteCode(_com);
 
