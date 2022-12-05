@@ -227,3 +227,6 @@ bool parser::isExpressionOperator(parser::Token* _) { // Miss things
 
 }
 
+bool parser::isAccessingExpression(parser::Token* _) { return _->id == TOKEN_ACCESSINGVARIABLE || _->id == TOKEN_ACCESSINGVARIABLEPOINTER; }
+
+

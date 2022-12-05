@@ -738,6 +738,8 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstExpression(Ast_Control* _
 
             if (parser::isAssignment(__ast_control->getToken(0))) _node = Ast_Node_Assignment::generate(__ast_control, _node);
 
+            else if (parser::isAccessingExpression(__ast_control->getToken(0))) _node = Ast_Node_Accessing::generator(__ast_control, _node);
+
             goto rtr;
 
         case TOKEN_INCREMENT: case TOKEN_DECREMENT: _node = parser::Ast_Node_Assignment::generate(__ast_control); goto rtr;
@@ -1038,4 +1040,94 @@ parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control
     return _parenthesis_node;
 
 }
+
+
+parser::Ast_Node_Accessing::~Ast_Node_Accessing() {
+    if (value_before_accessing) value_before_accessing->~Ast_Node(); free(value_before_accessing);
+    if (value_after_acessing) value_after_acessing->~Ast_Node(); free(value_after_acessing);
+}
+
+parser::Ast_Node_Accessing::Ast_Node_Accessing(Ast_Node* __value_before, Ast_Node* __value_after, bool __is_pointer) 
+    : Ast_Node(AST_NODE_ACCESSING), value_before_accessing(__value_before), value_after_acessing(__value_after), pointer_accessing(__is_pointer) {}
+
+parser::Ast_Node_Accessing* parser::Ast_Node_Accessing::generator(Ast_Control* __ast_control, Ast_Node* __value_before) {
+
+    __ast_control->printDebugInfo("--> Node Accessing <--");
+
+    parser::Ast_Node_Accessing* _accessing_node = (parser::Ast_Node_Accessing*) malloc(sizeof(parser::Ast_Node_Accessing));
+
+    setValueBeforeNameSpace(__ast_control, __value_before);
+
+    parser::Ast_Node* _accessing_value = getAccessingValue(__ast_control);
+
+    std::cout << _accessing_value << std::endl;
+
+    __ast_control->printDebugInfo("--> Node Accessing End <--");
+
+    exit(1);
+
+    return _accessing_node;
+
+}
+
+void parser::Ast_Node_Accessing::setValueBeforeNameSpace(Ast_Control* __ast_control, Ast_Node* __value_before) {
+
+    __ast_control->printDebugInfo("--> Set Value Before Name Space <--");
+    Name_Space* _name_space;
+
+    switch (__value_before->node_id)
+    {
+    case AST_NODE_VARIABLE: 
+        {
+            Ast_Node_Variable* _variable_node = (Ast_Node_Variable*) __value_before;
+
+            Ast_Node_Variable_Declaration* _variable_declaration_node = parser_helper::getDeclarationOfVariable(__ast_control, _variable_node);
+
+            Ast_Node_Struct_Declaration* _struct_declaration = parser_helper::getDeclarationOfType(__ast_control, _variable_declaration_node->type);
+
+            _name_space = _struct_declaration->own_name_space;
+
+            break;
+
+        }     
+    default: 
+        new Ast_Exception("Unknow Node");
+    }
+    
+    // Name_Space* _value_before_own_name_space = parser_helper::checkIfIsStructNameSpace();
+
+    __ast_control->saveState();
+
+    __ast_control->current_name_space = _name_space;
+
+    __ast_control->printDebugInfo("--> Set Value Before Name Space End <--");
+    
+}
+
+parser::Ast_Node* parser::Ast_Node_Accessing::getAccessingValue(Ast_Control* __ast_control) {
+
+    /* Supported Nodes:
+    *   Ast_Node_Variable 
+    *   Ast_Node_Parenthesis 
+    *   Ast_Node_Function_Call 
+    *   Ast_Node_Pointer_Operations 
+    */
+
+    switch (__ast_control->getToken(0)->id)
+    {
+    case TOKEN_IDENTIFIER:
+        
+        if (__ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) return parser::Ast_Node_Function_Call::generate(__ast_control, NULL);
+
+        return parser::Ast_Node_Variable::generate(__ast_control, NULL);
+
+    default: new Ast_Exception("Error");
+    }
+
+    return NULL;
+
+}
+
+
+
 

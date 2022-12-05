@@ -129,8 +129,10 @@ int main() {
     "void main() { testFunc(12); } ";
         "int jk; struct ola { int jk, qw, ol; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
         "void main() { ola meu; ::ola::olak(meu); } ";
+        " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
     getByteCode(
-        " namespace test { int j; int testFunc() {} }  void ola () { test::j; *(**test::testFunc(::test::j)) = 12; } "  // <- check this case
+        "int var; namespace testing { struct test {}; } testing::test ola; " \
+        "int main() {  ola->test(); } "
     );
 
     // delete _com;
@@ -138,7 +140,6 @@ int main() {
     // executeByteCode(_com);
 
     return 0;
-
 
 
     vm::Memory* _memory = new vm::Memory();

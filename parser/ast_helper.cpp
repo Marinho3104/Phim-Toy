@@ -199,3 +199,86 @@ int parser_helper::addToNameTracker(parser::Ast_Control* __ast_control, char* __
 
 }
 
+parser::Ast_Node_Variable_Declaration* parser_helper::getDeclarationOfVariable(parser::Ast_Control* __ast_control, parser::Ast_Node_Variable* __node_variable) {
+
+    if (!__node_variable->name_space) {
+
+        for (int _ = 0; _ < __ast_control->current_code_block->code->count; _++)
+
+            if (
+                (*__ast_control->current_code_block->code)[_]->node_id == AST_NODE_VARIABLE_DECLARATION &&
+                ((parser::Ast_Node_Variable_Declaration*) (*__ast_control->current_code_block->code)[_])->declaration_id == __node_variable->declaration_id &&
+                !__node_variable->is_global
+            ) return (parser::Ast_Node_Variable_Declaration*) (*__ast_control->current_code_block->code)[_];
+
+        parser::Ast_Node_Name_Space* _node_name_space = __ast_control->getNameSpaceNodeFromNameSpace(__ast_control->current_name_space);
+
+        for (int _ = 0; _ < _node_name_space->declarations->count; _++)
+
+            if (
+                (*_node_name_space->declarations)[_]->node_id == AST_NODE_VARIABLE_DECLARATION &&
+                ((parser::Ast_Node_Variable_Declaration*) (*_node_name_space->declarations)[_])->declaration_id == __node_variable->declaration_id &&
+                __node_variable->is_global
+            ) return (parser::Ast_Node_Variable_Declaration*) (*_node_name_space->declarations)[_]; // check name spaces before
+    } 
+
+    else {
+
+        parser::Ast_Node_Name_Space* _node_name_space = __ast_control->getNameSpaceNodeFromNameSpace(__node_variable->name_space);
+
+        for (int _ = 0; _ < _node_name_space->declarations->count; _++)
+
+            if (
+                (*_node_name_space->declarations)[_]->node_id == AST_NODE_VARIABLE_DECLARATION &&
+                ((parser::Ast_Node_Variable_Declaration*) (*_node_name_space->declarations)[_])->declaration_id == __node_variable->declaration_id &&
+                __node_variable->is_global
+            ) return (parser::Ast_Node_Variable_Declaration*) (*_node_name_space->declarations)[_];
+
+    }
+    
+    return NULL;
+
+
+}
+
+parser::Ast_Node_Struct_Declaration* parser_helper::getDeclarationOfType(parser::Ast_Control* __ast_control, parser::Type_Information* __type) {
+
+    if (!__type->name_space) {
+
+        for (int _ = 0; _ < __ast_control->current_code_block->code->count; _++)
+
+            if (
+                (*__ast_control->current_code_block->code)[_]->node_id == AST_NODE_STRUCT_DECLARATION &&
+                ((parser::Ast_Node_Variable_Declaration*) (*__ast_control->current_code_block->code)[_])->declaration_id == __type->user_defined_declaration_id
+            ) return (parser::Ast_Node_Struct_Declaration*) (*__ast_control->current_code_block->code)[_];
+
+        parser::Ast_Node_Name_Space* _node_name_space = __ast_control->getNameSpaceNodeFromNameSpace(__ast_control->current_name_space);
+
+        for (int _ = 0; _ < _node_name_space->declarations->count; _++)
+
+            if (
+                (*_node_name_space->declarations)[_]->node_id == AST_NODE_STRUCT_DECLARATION &&
+                ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->declaration_id == __type->user_defined_declaration_id
+            ) return (parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_]; // check name spaces before
+
+    }
+
+    else {
+
+        parser::Ast_Node_Name_Space* _node_name_space = __ast_control->getNameSpaceNodeFromNameSpace(__type->name_space);
+
+        for (int _ = 0; _ < _node_name_space->declarations->count; _++)
+
+            if (
+                (*_node_name_space->declarations)[_]->node_id == AST_NODE_STRUCT_DECLARATION &&
+                ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->declaration_id == __type->user_defined_declaration_id
+            ) return (parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_];
+
+
+    }
+
+    return NULL;
+
+}
+
+

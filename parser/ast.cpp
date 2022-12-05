@@ -51,6 +51,7 @@ parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astC
         _usrDeclId = parser_helper::getDeclarationId(__astCntrl);
 
         std::cout << "Type user defined with id -> " << _usrDeclId << std::endl;
+        std::cout << "Name space -> " << _nmSpc << std::endl;
 
         // if (_usrDeclId == -1) new Ast_Exception("Unknow type for declaration");
 

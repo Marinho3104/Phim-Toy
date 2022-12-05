@@ -196,6 +196,21 @@ namespace parser {
 
     };
 
+    struct Ast_Node_Accessing : public Ast_Node {
+
+        Ast_Node* value_before_accessing, *value_after_acessing;
+        bool pointer_accessing;
+
+        ~Ast_Node_Accessing(); Ast_Node_Accessing(Ast_Node*, Ast_Node*, bool);
+
+        static Ast_Node_Accessing* generator(Ast_Control*, Ast_Node*);
+
+        static void setValueBeforeNameSpace(Ast_Control*, Ast_Node*);
+
+        static Ast_Node* getAccessingValue(Ast_Control*);
+
+    };
+
 }
 
 #endif
