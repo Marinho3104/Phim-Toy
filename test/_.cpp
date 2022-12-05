@@ -131,8 +131,8 @@ int main() {
         "void main() { ola meu; ::ola::olak(meu); } ";
         " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
     getByteCode(
-        "int var; namespace testing { struct test {}; } testing::test ola; " \
-        "int main() {  ola->test(); } "
+        "int var; namespace testing { struct test { int hey, oi;  }; } testing::test ola; " \
+        "int main() {  ola->oi; } "
     );
 
     // delete _com;

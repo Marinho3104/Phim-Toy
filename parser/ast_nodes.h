@@ -87,6 +87,7 @@ namespace parser {
 
     struct Ast_Node_Struct_Declaration : public Ast_Node {
 
+        Ast_Node_Code_Block* own_code_block;
         Name_Space* own_name_space;
         int declaration_id;
         bool is_contract;
@@ -94,13 +95,13 @@ namespace parser {
         utils::LinkedList <Ast_Node*>* fields;
         utils::LinkedList <Ast_Node_Function_Declaration*>* functions;
 
-        ~Ast_Node_Struct_Declaration(); Ast_Node_Struct_Declaration(Name_Space*, int, bool, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
+        ~Ast_Node_Struct_Declaration(); Ast_Node_Struct_Declaration(Name_Space*, Ast_Node_Code_Block*, int, bool, utils::LinkedList <Ast_Node*>*, utils::LinkedList <Ast_Node_Function_Declaration*>*);
 
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
 
         static void ignoreCodeBlock(Ast_Control*);
 
-        static utils::LinkedList <Ast_Node*>* getFields(Ast_Control*);
+        static utils::LinkedList <Ast_Node*>* getFields(Ast_Control*, Ast_Node_Code_Block**);
 
         static utils::LinkedList <Ast_Node_Function_Declaration*>* getFunctions(Ast_Control*, Type_Information*);
 
@@ -140,7 +141,7 @@ namespace parser {
 
         ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
-        static Ast_Node_Variable* generate(Ast_Control*, Name_Space*);
+        static Ast_Node_Variable* generate(Ast_Control*, Name_Space*, int);
 
     };
 
@@ -167,7 +168,7 @@ namespace parser {
 
         ~Ast_Node_Function_Call(); Ast_Node_Function_Call(Name_Space*, int, utils::LinkedList <parser::Ast_Node_Expression*>*);
 
-        static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*);
+        static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*, int);
 
         static utils::LinkedList <parser::Ast_Node_Expression*>* getParameters(Ast_Control*);
 
@@ -205,9 +206,11 @@ namespace parser {
 
         static Ast_Node_Accessing* generator(Ast_Control*, Ast_Node*);
 
-        static void setValueBeforeNameSpace(Ast_Control*, Ast_Node*);
+        static Ast_Node_Struct_Declaration* setValueBeforeNameSpace(Ast_Control*, Ast_Node*);
 
-        static Ast_Node* getAccessingValue(Ast_Control*);
+        static int isNameDeclared(Ast_Control*, Ast_Node_Struct_Declaration*);
+
+        static Ast_Node* getAccessingValue(Ast_Control*, int);
 
     };
 

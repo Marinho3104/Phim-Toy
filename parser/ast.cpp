@@ -160,7 +160,9 @@ bool parser::Name_Tracker::addNewName(char* __n) {
 }
 
 
-parser::Name_Space::~Name_Space() { delete scope; delete name_tracker; }
+parser::Name_Space::~Name_Space() { 
+    delete scope; 
+    delete name_tracker; }
 
 parser::Name_Space::Name_Space(Name_Space_Control* __name_space_control, utils::LinkedList <char*>* __scope) 
     : name_space_control(__name_space_control), scope(__scope) { name_tracker = new Name_Tracker(0); }
