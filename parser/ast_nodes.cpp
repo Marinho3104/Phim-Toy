@@ -397,6 +397,8 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::ge
 
 }
 
+int parser::Ast_Node_Variable_Declaration::getByteSize() { return 0; }
+
 
 parser::Ast_Node_Function_Declaration::~Ast_Node_Function_Declaration() { 
     delete return_type; 
@@ -738,13 +740,13 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstExpression(Ast_Control* _
             
             switch (__ast_control->getToken(1)->id)
             {
-            case TOKEN_OPENPARENTHESES: _node = parser::Ast_Node_Function_Call::generate(__ast_control, __name_space, -1); break;
-            default: _node = parser::Ast_Node_Variable::generate(__ast_control, __name_space, -1); break;
+            case TOKEN_OPENPARENTHESES: _node = parser::Ast_Node_Function_Call::generate(__ast_control, __name_space); break;
+            default: _node = parser::Ast_Node_Variable::generate(__ast_control, __name_space); break;
             }
 
             if (parser::isAssignment(__ast_control->getToken(0))) _node = Ast_Node_Assignment::generate(__ast_control, _node);
 
-            else if (parser::isAccessingExpression(__ast_control->getToken(0))) _node = Ast_Node_Accessing::generator(__ast_control, _node);
+            else if (parser::isAccessingExpression(__ast_control->getToken(0))) _node = Ast_Node_Accessing::generate(__ast_control, _node);
 
             goto rtr;
 
@@ -767,7 +769,6 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstExpression(Ast_Control* _
 
         default: break;
     }
-
 
     if (parser::isImplicitValue(__ast_control->getToken(0))) _node = Ast_Node_Value::generate(__ast_control);
 
@@ -810,7 +811,7 @@ parser::Ast_Node_Variable::~Ast_Node_Variable() {}
 parser::Ast_Node_Variable::Ast_Node_Variable(Name_Space* __name_space, int __declaration_id, bool __is_global) 
     : Ast_Node(AST_NODE_VARIABLE), name_space(__name_space), declaration_id(__declaration_id), is_global(__is_global) {}
 
-parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __ast_control, Name_Space* __name_space, int _declaration_id) {
+parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __ast_control, Name_Space* __name_space) {
 
     __ast_control->printDebugInfo("--> Node Variable <--");
 
@@ -818,7 +819,7 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __as
 
     if (__name_space) { __ast_control->saveState(); __ast_control->current_name_space = __name_space; __ast_control->current_code_block = NULL; }
 
-    if (_declaration_id == -1) _declaration_id = parser_helper::getDeclarationId(__ast_control);
+    int _declaration_id = parser_helper::getDeclarationId(__ast_control);
 
     if (_declaration_id == -1) new Ast_Exception("Name not declared");
 
@@ -901,7 +902,7 @@ parser::Ast_Node_Function_Call::~Ast_Node_Function_Call() { delete parameters; }
 parser::Ast_Node_Function_Call::Ast_Node_Function_Call(Name_Space* __name_space, int __declaration_id, utils::LinkedList <parser::Ast_Node_Expression*>* __parameters) 
     : Ast_Node(AST_NODE_FUNCTION_CALL), name_space(__name_space), declaration_id(__declaration_id), parameters(__parameters) {}
 
-parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Control* __ast_control, Name_Space* __name_space, int _declaration_id) {
+parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Control* __ast_control, Name_Space* __name_space) {
 
     __ast_control->printDebugInfo("--> Node Function Call <--");
 
@@ -909,7 +910,7 @@ parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Con
 
     if (__name_space) { __ast_control->saveState(); __ast_control->current_name_space = __name_space; __ast_control->current_code_block = NULL; }
 
-    if (_declaration_id == -1) _declaration_id = parser_helper::getDeclarationId(__ast_control);
+    int _declaration_id = parser_helper::getDeclarationId(__ast_control);
     __ast_control->current_token_position++;
 
     if (_declaration_id == -1) new Ast_Exception("No name declared");
@@ -1005,9 +1006,9 @@ parser::Ast_Node* parser::Ast_Node_Pointer_Operator::getValue(Ast_Control* __ast
     {
     case TOKEN_IDENTIFIER:
         
-        if (__ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) return parser::Ast_Node_Function_Call::generate(__ast_control, _name_space, -1);
+        if (__ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) return parser::Ast_Node_Function_Call::generate(__ast_control, _name_space);
 
-        return parser::Ast_Node_Variable::generate(__ast_control, _name_space, -1);
+        return parser::Ast_Node_Variable::generate(__ast_control, _name_space);
 
     case TOKEN_OPENPARENTHESES: return parser::Ast_Node_Parenthesis::generate(__ast_control);
     
@@ -1048,111 +1049,67 @@ parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control
 }
 
 
-parser::Ast_Node_Accessing::~Ast_Node_Accessing() {
-    if (value_before_accessing) value_before_accessing->~Ast_Node(); free(value_before_accessing);
-    if (value_after_acessing) value_after_acessing->~Ast_Node(); free(value_after_acessing);
+parser::Ast_Node_Accessing_Middle::~Ast_Node_Accessing_Middle() { if (next_access) next_access->~Ast_Node_Accessing_Middle(); free(next_access); delete parameters; }
+
+parser::Ast_Node_Accessing_Middle::Ast_Node_Accessing_Middle(
+    char* __name, bool __pointer_access, utils::LinkedList <parser::Ast_Node_Expression*>* __params, Ast_Node_Accessing_Middle* __next_access) 
+        : Ast_Node(AST_NODE_ACCESSING_MIDDLE), name(__name), parameters(__params), next_access(__next_access) {}
+
+parser::Ast_Node_Accessing_Middle* parser::Ast_Node_Accessing_Middle::generate(Ast_Control* __ast_control) {
+
+    __ast_control->printDebugInfo("--> Node Accessing Middle <--");
+
+    bool _pointer_access = __ast_control->getToken(0)->id == TOKEN_ACCESSINGVARIABLEPOINTER;
+    __ast_control->current_token_position++;
+
+    char* _name = __ast_control->getToken(0)->phr;
+    __ast_control->current_token_position++;
+
+    utils::LinkedList <parser::Ast_Node_Expression*>* _params = NULL;
+
+    if (__ast_control->getToken(0)->id == TOKEN_OPENPARENTHESES) _params = parser::Ast_Node_Function_Call::getParameters(__ast_control);
+
+    parser::Ast_Node_Accessing_Middle* _next_access = NULL;
+
+    if (__ast_control->getToken(0)->id == TOKEN_ACCESSINGVARIABLE || __ast_control->getToken(0)->id == TOKEN_ACCESSINGVARIABLEPOINTER)
+
+        _next_access = parser::Ast_Node_Accessing_Middle::generate(__ast_control);
+
+    parser::Ast_Node_Accessing_Middle* _accessing_middle = (parser::Ast_Node_Accessing_Middle*) malloc(sizeof(parser::Ast_Node_Accessing_Middle));
+
+    new (_accessing_middle) parser::Ast_Node_Accessing_Middle(
+        _name, _pointer_access, _params, _next_access
+    );
+    
+    __ast_control->printDebugInfo("--> Node Accessing Middle End <--");
+
+    return _accessing_middle;
+
 }
 
-parser::Ast_Node_Accessing::Ast_Node_Accessing(Ast_Node* __value_before, Ast_Node* __value_after, bool __is_pointer) 
-    : Ast_Node(AST_NODE_ACCESSING), value_before_accessing(__value_before), value_after_acessing(__value_after), pointer_accessing(__is_pointer) {}
 
-parser::Ast_Node_Accessing* parser::Ast_Node_Accessing::generator(Ast_Control* __ast_control, Ast_Node* __value_before) {
+parser::Ast_Node_Accessing::~Ast_Node_Accessing() {
+    if (value_before) value_before->~Ast_Node(); free(value_before);
+    if (access) access->~Ast_Node_Accessing_Middle(); free(access);
+}
+
+parser::Ast_Node_Accessing::Ast_Node_Accessing(Ast_Node* __value_before, Ast_Node_Accessing_Middle* __access) 
+    : Ast_Node(AST_NODE_ACCESSING), value_before(__value_before), access(__access) {}
+
+parser::Ast_Node_Accessing* parser::Ast_Node_Accessing::generate(Ast_Control* __ast_control, Ast_Node* __value_before) {
 
     __ast_control->printDebugInfo("--> Node Accessing <--");
 
     parser::Ast_Node_Accessing* _accessing_node = (parser::Ast_Node_Accessing*) malloc(sizeof(parser::Ast_Node_Accessing));
 
-    Ast_Node_Struct_Declaration* _struct_declaration = setValueBeforeNameSpace(__ast_control, __value_before);
-    bool _is_pointer = __ast_control->getToken(0)->id == TOKEN_ACCESSINGVARIABLEPOINTER;
-    __ast_control->current_token_position++;
-
-    int _declaration_id = isNameDeclared(__ast_control, _struct_declaration);
-
-    if (_declaration_id == -1) new Ast_Exception("Name is not declared in accessing");
-
     new (_accessing_node) parser::Ast_Node_Accessing(
-        __value_before, getAccessingValue(__ast_control, _declaration_id), _is_pointer
+        __value_before, parser::Ast_Node_Accessing_Middle::generate(__ast_control)
     );
-
-    __ast_control->setLastSavedState();
 
     __ast_control->printDebugInfo("--> Node Accessing End <--");
 
     return _accessing_node;
 
 }
-
-parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Accessing::setValueBeforeNameSpace(Ast_Control* __ast_control, Ast_Node* __value_before) {
-
-    __ast_control->printDebugInfo("--> Set Value Before Name Space <--");
-    Ast_Node_Struct_Declaration* _struct_declaration;
-    Name_Space* _name_space;
-
-    switch (__value_before->node_id)
-    {
-    case AST_NODE_VARIABLE: 
-        {
-            Ast_Node_Variable* _variable_node = (Ast_Node_Variable*) __value_before;
-
-            Ast_Node_Variable_Declaration* _variable_declaration_node = parser_helper::getDeclarationOfVariable(__ast_control, _variable_node);
-
-            _struct_declaration= parser_helper::getDeclarationOfType(__ast_control, _variable_declaration_node->type);
-
-            _name_space = _struct_declaration->own_name_space;
-
-            break;
-
-        }     
-    default: 
-        new Ast_Exception("Unknow Node");
-    }
-    
-    // Name_Space* _value_before_own_name_space = parser_helper::checkIfIsStructNameSpace();
-
-    __ast_control->saveState();
-
-    __ast_control->current_name_space = _name_space;
-
-    __ast_control->printDebugInfo("--> Set Value Before Name Space End <--");
-    
-    return _struct_declaration;
-
-}
-
-int parser::Ast_Node_Accessing::isNameDeclared(Ast_Control* __ast_control, Ast_Node_Struct_Declaration* __struct_declaration) {
-
-    int _val;
-
-    if ((_val = __struct_declaration->own_code_block->name_tracker->getDeclarationId(__ast_control->getToken(0)->phr)) != -1) return _val;
-
-    if ((_val = __struct_declaration->own_name_space->name_tracker->getDeclarationId(__ast_control->getToken(0)->phr)) != -1) return _val;
-
-    return _val;
-
-}
-
-parser::Ast_Node* parser::Ast_Node_Accessing::getAccessingValue(Ast_Control* __ast_control, int __declaration_id) {
-
-    /* Supported Nodes:
-    *   Ast_Node_Variable //
-    *   Ast_Node_Function_Call //
-    */
-
-    switch (__ast_control->getToken(0)->id)
-    {
-    case TOKEN_IDENTIFIER:
-        
-        if (__ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) return parser::Ast_Node_Function_Call::generate(__ast_control, NULL, __declaration_id);
-
-        return parser::Ast_Node_Variable::generate(__ast_control, NULL, __declaration_id);
-
-    default: new Ast_Exception("Error");
-    }
-
-    return NULL;
-
-}
-
-
 
 

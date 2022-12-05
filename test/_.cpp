@@ -11,7 +11,7 @@
 
 #include "./../byteCode/byteCode.h" // Byte Code
 
-// #include "./../parser/compiler.h" // Compiler
+#include "./../parser/compiler.h" // Compiler
 
 #include "./../parser/tokenizer.h" // Tokenizer
 #include "./../parser/token.h" // Tokens
@@ -59,17 +59,17 @@ parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
 }
 
-// parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Name_Space*>* _name_spaces, parser::Storage* _storage) {
+parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Name_Space*>* _name_spaces, parser::Storage* _storage) {
 
-//     std::cout << "\n --> Generate Compiler <--\n" << std::endl;
+    std::cout << "\n --> Generate Compiler <--\n" << std::endl;
 
-//     parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_name_spaces, _storage->implicit_values, 1);
+    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_name_spaces, _storage->implicit_values, 1);
 
-//     _comCntrl->generate();
+    _comCntrl->generate();
 
-//     return _comCntrl;
+    return _comCntrl;
 
-// }
+}
 
 void getByteCode(char* _code) {
 
@@ -79,13 +79,13 @@ void getByteCode(char* _code) {
     
     delete _tkCntrl;
 
-    // parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->name_spaces, _astCntrl->storage);
+    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->nodes_name_spaces, _astCntrl->storage);
 
     delete _astCntrl;
 
     // parser::Compiled_Output* _ = _comCntrl->generateOutPut();
 
-    // delete _comCntrl;
+    delete _comCntrl;
 
     // std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
 
@@ -131,8 +131,7 @@ int main() {
         "void main() { ola meu; ::ola::olak(meu); } ";
         " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
     getByteCode(
-        "int var; namespace testing { struct test { int hey, oi;  }; } testing::test ola; " \
-        "int main() {  ola->oi; } "
+        "int var;"
     );
 
     // delete _com;

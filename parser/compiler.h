@@ -1,0 +1,68 @@
+#pragma once
+
+#ifndef PARSER_COMPILER_H
+#define PARSER_COMPILER_H
+
+#include "./ast_nodes.h"
+
+namespace utils { template <typename> struct LinkedList; }
+namespace byte_code { struct Byte_Code; }
+
+namespace parser {
+
+    // Forward
+    struct Ast_Node_Name_Space;
+    struct Compiler_Control;
+
+    struct Compiler_Declarations {
+
+        utils::LinkedList <Ast_Node_Variable_Declaration*>* variable_declarations;
+        utils::LinkedList <Ast_Node_Function_Declaration*>* function_declarations;
+        utils::LinkedList <Ast_Node_Struct_Declaration*>* struct_declarations;
+
+        ~Compiler_Declarations(); Compiler_Declarations();
+
+        bool isDeclared(int);
+
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+        
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int);
+        
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
+
+    };
+
+    struct Compiler_Code_Block {
+
+        utils::LinkedList <byte_code::Byte_Code*>* byte_code;
+        Compiler_Declarations* compiler_declarations;
+        Name_Space* name_space;
+
+        ~Compiler_Code_Block(); Compiler_Code_Block(Name_Space*);
+
+        static int generate(Compiler_Control*, parser::Ast_Node_Name_Space*);
+
+    };
+
+    struct Compiler_Exception { const char* description; Compiler_Exception(const char*); };
+
+    struct Compiler_Control {
+
+        utils::LinkedList <Compiler_Code_Block*>* compiled_code_blocks;
+
+        utils::LinkedList <Ast_Node_Name_Space*>* name_space_nodes;
+        utils::LinkedList <char*>* implicit_values;
+
+        bool debug_info;
+
+        ~Compiler_Control(); Compiler_Control(utils::LinkedList <Ast_Node_Name_Space*>*, utils::LinkedList <char*>*, bool);
+
+        void printDebugInfo(const char*);
+
+        void generate();
+
+    };
+
+}
+
+#endif

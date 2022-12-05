@@ -67,6 +67,8 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node*>* generateFunctionParameter(Ast_Control*, Type_Information*);
 
+        int getByteSize();
+
     };
 
     struct Ast_Node_Function_Declaration : public Ast_Node {
@@ -141,7 +143,7 @@ namespace parser {
 
         ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
-        static Ast_Node_Variable* generate(Ast_Control*, Name_Space*, int);
+        static Ast_Node_Variable* generate(Ast_Control*, Name_Space*);
 
     };
 
@@ -168,7 +170,7 @@ namespace parser {
 
         ~Ast_Node_Function_Call(); Ast_Node_Function_Call(Name_Space*, int, utils::LinkedList <parser::Ast_Node_Expression*>*);
 
-        static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*, int);
+        static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*);
 
         static utils::LinkedList <parser::Ast_Node_Expression*>* getParameters(Ast_Control*);
 
@@ -197,20 +199,27 @@ namespace parser {
 
     };
 
+    struct Ast_Node_Accessing_Middle : public Ast_Node {
+
+        char* name;
+        utils::LinkedList <parser::Ast_Node_Expression*>* parameters;
+        Ast_Node_Accessing_Middle* next_access;
+        bool pointer_access;
+
+        ~Ast_Node_Accessing_Middle(); Ast_Node_Accessing_Middle(char*, bool, utils::LinkedList <parser::Ast_Node_Expression*>*, Ast_Node_Accessing_Middle*);
+
+        static Ast_Node_Accessing_Middle* generate(Ast_Control*);
+
+    }; 
+
     struct Ast_Node_Accessing : public Ast_Node {
 
-        Ast_Node* value_before_accessing, *value_after_acessing;
-        bool pointer_accessing;
+        Ast_Node_Accessing_Middle* access;
+        Ast_Node* value_before;
 
-        ~Ast_Node_Accessing(); Ast_Node_Accessing(Ast_Node*, Ast_Node*, bool);
+        ~Ast_Node_Accessing(); Ast_Node_Accessing(Ast_Node*, Ast_Node_Accessing_Middle*);
 
-        static Ast_Node_Accessing* generator(Ast_Control*, Ast_Node*);
-
-        static Ast_Node_Struct_Declaration* setValueBeforeNameSpace(Ast_Control*, Ast_Node*);
-
-        static int isNameDeclared(Ast_Control*, Ast_Node_Struct_Declaration*);
-
-        static Ast_Node* getAccessingValue(Ast_Control*, int);
+        static Ast_Node_Accessing* generate(Ast_Control*, Ast_Node*);
 
     };
 
