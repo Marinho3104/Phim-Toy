@@ -42,9 +42,7 @@ parser::Name_Space* parser_helper::checkIfIsNameSpaceChanging(parser::Ast_Contro
 
         while(!_name_space) {
 
-            if (_scope->count == 1) __ast_control->current_token_position -= _is_global_operator ? 1 : 0;
-
-            else __ast_control->current_token_position -= 2;
+            __ast_control->current_token_position -= (_scope->count == 1 && _is_global_operator) ? 1 : 2;
 
             utils::DataLL <char*>* _last_name = _scope->removeLast();
 
@@ -53,7 +51,7 @@ parser::Name_Space* parser_helper::checkIfIsNameSpaceChanging(parser::Ast_Contro
             _name_space = __ast_control->name_space_control->getNameSpace(_scope);
 
             if (!_name_space)
-                _name_space = checkIfIsStructNameSpace(__ast_control, _scope);
+                _name_space = checkIfIsStructNameSpace(__ast_control, _scope, _last_name);
 
             delete _last_name;
 
@@ -67,7 +65,7 @@ parser::Name_Space* parser_helper::checkIfIsNameSpaceChanging(parser::Ast_Contro
 
 }
 
-parser::Name_Space* parser_helper::checkIfIsStructNameSpace(parser::Ast_Control* __ast_control, utils::LinkedList <char*>* __scope) {
+parser::Name_Space* parser_helper::checkIfIsStructNameSpace(parser::Ast_Control* __ast_control, utils::LinkedList <char*>* __scope, utils::DataLL <char*>* __struct_access) {
 
     utils::DataLL <char*>* _struct_name = __scope->removeLast();
 
@@ -86,7 +84,13 @@ parser::Name_Space* parser_helper::checkIfIsStructNameSpace(parser::Ast_Control*
             if (
                 (*_node_name_space->declarations)[_]->node_id == AST_NODE_STRUCT_DECLARATION &&
                 ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->declaration_id == _declaration_id
-            ) _name_space = ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->own_name_space;
+            ) { 
+                
+                _name_space = ((parser::Ast_Node_Struct_Declaration*) (*_node_name_space->declarations)[_])->own_name_space;
+            
+                if (_name_space->getDeclarationId(__struct_access->object) == -1) _name_space = NULL;
+
+            }
 
     }
 
@@ -117,25 +121,17 @@ utils::LinkedList <char*>* parser_helper::getNameSpaceScope(parser::Ast_Control*
 
     int _expected = TOKEN_IDENTIFIER;
 
-    while(__ast_control->getToken(0)->id == TOKEN_IDENTIFIER || __ast_control->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR) {
+    while(__ast_control->getToken(0)->id == _expected) {
 
-        if (_expected != __ast_control->getToken(0)->id) {
-
-            if (_expected == TOKEN_NAMESPACE_OPERATOR) break;
-
-            new parser::Ast_Exception("Unexpected token - getNameSpaceScope()");
-
-        }
-
-        else if (_expected != TOKEN_NAMESPACE_OPERATOR) 
+        if (__ast_control->getToken(0)->id == TOKEN_IDENTIFIER)
 
             _scope->add(
                 utils::copyString(__ast_control->getToken(0)->phr, utils::getStringSize(__ast_control->getToken(0)->phr))
             );
-        
+
         __ast_control->current_token_position ++;
 
-        _expected = _expected == TOKEN_IDENTIFIER ? TOKEN_NAMESPACE_OPERATOR : TOKEN_IDENTIFIER;
+        _expected = ((_expected == TOKEN_IDENTIFIER) ? TOKEN_NAMESPACE_OPERATOR : TOKEN_IDENTIFIER);
 
     }
 
@@ -145,28 +141,17 @@ utils::LinkedList <char*>* parser_helper::getNameSpaceScope(parser::Ast_Control*
 
 int parser_helper::getDeclarationId(parser::Ast_Control* __ast_control) {
 
-    int _declId;
+    if (__ast_control->current_code_block) return __ast_control->current_code_block->getDeclarationId(__ast_control->getToken(0)->phr);
 
-    if (__ast_control->current_code_block) {
+    return __ast_control->current_name_space->getDeclarationId(__ast_control->getToken(0)->phr);
 
-        if (
-            (_declId = __ast_control->current_code_block->getDeclarationId(
-                __ast_control->getToken(0)->phr
-            )) == -1
-        ) goto current_name_space;
+}
 
-    }
+bool parser_helper::isDeclarationIdGlobal(parser::Ast_Control* __ast_control) {
 
-    else {
+    if (__ast_control->current_code_block) return __ast_control->current_code_block->isDeclarationIdGlobal(__ast_control->getToken(0)->phr);
 
-    current_name_space:
-        _declId = __ast_control->current_name_space->getDeclarationId(
-            __ast_control->getToken(0)->phr
-        );
-
-    }
-
-    return _declId;
+    return 1;
 
 }
 

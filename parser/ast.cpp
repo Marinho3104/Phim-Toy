@@ -46,16 +46,13 @@ parser::Type_Information* parser::Type_Information::generate(Ast_Control* __astC
 
     if (_nmSpc) { __astCntrl->saveState(); __astCntrl->current_name_space = _nmSpc; }
 
-    std::cout << "Name space -> " << _nmSpc << std::endl;
-    _nmSpc->printScope();
-
     if (_id == TOKEN_IDENTIFIER) {
 
         _usrDeclId = parser_helper::getDeclarationId(__astCntrl);
 
         std::cout << "Type user defined with id -> " << _usrDeclId << std::endl;
 
-        if (_usrDeclId == -1) new Ast_Exception("Unknow type for declaration");
+        // if (_usrDeclId == -1) new Ast_Exception("Unknow type for declaration");
 
     }
 
@@ -176,7 +173,9 @@ int parser::Name_Space::getDeclarationId(char* __n) {
     Name_Space* _current_name_space = this; int _id;
 
     _id = 
-        name_tracker->getDeclarationId(__n);
+        name_tracker->getDeclarationId(
+            __n
+        );
 
     if (_id == -1) {
 
@@ -335,10 +334,34 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(utils::Link
 }
 
 
+parser::Storage::~Storage() { delete implicit_values; }
+
+parser::Storage::Storage() {
+    implicit_values = new utils::LinkedList <char*>();
+}
+
+int parser::Storage::addNewValue(char* __n) {
+    __n = utils::copyString(
+        __n, utils::getStringSize(__n)
+    );
+
+    int __pos;
+
+    if (
+        (__pos = implicit_values->getObjectPosition(__n, NULL)) == -1
+    ) __pos = implicit_values->add(__n);
+
+    else free(__n);
+
+    return __pos;
+
+}
+
+
 parser::Ast_Exception::Ast_Exception(const char* __descr) : description(__descr) { std::cout << "Ast Exception: " << description << std::endl; exit(1); }
 
 
-parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces_saved; delete nodes_name_spaces; delete code_blocks_saved; }
+parser::Ast_Control::~Ast_Control() { delete name_space_control; delete name_spaces_saved; delete nodes_name_spaces; delete code_blocks_saved; delete storage; }
 
 parser::Ast_Control::Ast_Control(utils::LinkedList <Token*>* __tokens_collection, bool __debug_info) 
     : tokens_collection(__tokens_collection), debug_info(__debug_info), current_name_space(NULL), current_code_block(NULL), current_token_position(0) { 
@@ -346,12 +369,13 @@ parser::Ast_Control::Ast_Control(utils::LinkedList <Token*>* __tokens_collection
         name_spaces_saved = new utils::LinkedList <Name_Space*>(); 
         code_blocks_saved = new utils::LinkedList <Ast_Node_Code_Block*>(); 
         name_space_control = new Name_Space_Control(); 
+        storage = new Storage();
     }
 
 void parser::Ast_Control::saveState() {
 
-    name_spaces_saved->addFrst(current_name_space);
-    code_blocks_saved->addFrst(current_code_block);
+    name_spaces_saved->addFrst(current_name_space); // current_name_space = NULL;
+    code_blocks_saved->addFrst(current_code_block); // current_code_block = NULL;
 
 }
 

@@ -4,7 +4,7 @@
 #define PARSER_AST_HELPER_H
 
 // Forward
-namespace utils { template <typename> struct LinkedList; }
+namespace utils { template <typename> struct LinkedList; template <typename> struct DataLL; }
 namespace parser {
 
     struct Name_Space;
@@ -18,11 +18,13 @@ namespace parser_helper {
 
     parser::Name_Space* checkIfIsNameSpaceChanging(parser::Ast_Control*);
 
-    parser::Name_Space* checkIfIsStructNameSpace(parser::Ast_Control*, utils::LinkedList <char*>*);
+    parser::Name_Space* checkIfIsStructNameSpace(parser::Ast_Control*, utils::LinkedList <char*>*, utils::DataLL <char*>*);
 
     utils::LinkedList <char*>* getNameSpaceScope(parser::Ast_Control*);
 
     int getDeclarationId(parser::Ast_Control*);
+
+    bool isDeclarationIdGlobal(parser::Ast_Control*);
 
     int addToNameTracker(parser::Ast_Control*);
 

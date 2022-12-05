@@ -24,9 +24,9 @@ namespace parser {
         utils::LinkedList <Ast_Node*>* declarations;
         Name_Space* name_space;
 
-        ~Ast_Node_Name_Space(); Ast_Node_Name_Space(Name_Space*, utils::LinkedList <Ast_Node*>*);
+            ~Ast_Node_Name_Space(); Ast_Node_Name_Space(Name_Space*, utils::LinkedList <Ast_Node*>*);
 
-        static void generate(Ast_Control*, Name_Space*);
+            static void generate(Ast_Control*, Name_Space*);
 
         static Ast_Node_Name_Space* generateByOperator(Ast_Control*, Name_Space*);
 

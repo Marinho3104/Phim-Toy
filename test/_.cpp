@@ -97,6 +97,21 @@ void getByteCode(char* _code) {
 
 int k; 
 
+namespace ola {
+
+    struct ff {};
+}
+
+namespace adeus {
+
+    ola::ff func();
+
+}
+
+ola::ff adeus::func() {
+
+}
+
 
 int main() {
 
@@ -115,8 +130,7 @@ int main() {
         "int jk; struct ola { int jk, qw, ol; void olak() { jk; } }; int* test; void testFunc(int j) {}" \
         "void main() { ola meu; ::ola::olak(meu); } ";
     getByteCode(
-        " namespace test { struct testing {}; struct testing1 {}; }"  \
-        "::test::testing1 ola;"
+        " namespace test { int j; int testFunc() {} }  void ola () { test::j; *(**test::testFunc(::test::j)) = 12; } "  // <- check this case
     );
 
     // delete _com;

@@ -25,7 +25,7 @@ int parser::Name_Tracker::getDeclarationId(char* __n) {
 }
 
 bool parser::Name_Tracker::addNewName(char* __n, bool __cpy) {
-    if (__cpy) __n = utils::copyString(__n, utils::getStringSize(__n));
+    if (__cpy)  
     if (getDeclarationId(__n) != -1) { if (__cpy) free(__n); return 0; }
     names_declared->add(__n);
     names_declarations_id->add(ast_control ? ast_control->count++ : count++);

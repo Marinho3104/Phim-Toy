@@ -90,6 +90,16 @@ namespace parser {
 
     };
 
+    struct Storage {
+
+        utils::LinkedList <char*>* implicit_values;
+
+        ~Storage(); Storage();
+
+        int addNewValue(char*);
+
+    };
+
     struct Ast_Exception { const char* description; Ast_Exception(const char*); };
 
     struct Ast_Control {
@@ -102,6 +112,7 @@ namespace parser {
         utils::LinkedList <Token*>* tokens_collection;
         Name_Space_Control* name_space_control;
         int current_token_position;
+        Storage* storage;
         
         Ast_Node_Code_Block* current_code_block;
         Name_Space* current_name_space;
