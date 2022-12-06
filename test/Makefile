@@ -1,5 +1,5 @@
 byteCodePath := ./../byteCode/
-objectsPath := ./../objects/
+builtInPath := ./../built_in/
 parserPath := ./../parser/
 utilsPath := ./../utils/
 vmPath := ./../vm/
@@ -7,7 +7,7 @@ ownFile := ./
 
 outPutName := test
 
-all: ownFileObjectFile utilsObjectFile parserObjectFile byteCodeObjectFile objectsObjectFile
+all: ownFileObjectFile utilsObjectFile parserObjectFile byteCodeObjectFile
 	g++ -o $(outPutName) ./*.o -g
 	$(MAKE) clean
 
@@ -26,9 +26,9 @@ byteCodeObjectFile:
 	$(MAKE) -C $(byteCodePath) objectFile
 	mv $(byteCodePath)*.o ./
 
-objectsObjectFile:
-	$(MAKE) -C $(objectsPath) objectFile
-	mv $(objectsPath)*.o ./
+builtInObjectFile:
+	$(MAKE) -C $(builtInPath) objectFile
+	mv $(builtInPath)*.o ./
 
 vmObjectFile:
 	$(MAKE) -C $(vmPath) objectFile

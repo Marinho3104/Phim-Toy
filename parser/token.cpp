@@ -110,6 +110,7 @@ int parser::getTokenSymbTwoChars(int _f, int _s) {
             switch (_s) {           
                 case '+': return TOKEN_INCREMENT;
                 case '=': return TOKEN_ADDITIONASSIGMENT;
+                case 'b': return TOKEN_ADDITION_BINARY;
                 default: return 0;
             }
         case '-':
@@ -117,6 +118,7 @@ int parser::getTokenSymbTwoChars(int _f, int _s) {
                 case '>': return TOKEN_ACCESSINGVARIABLEPOINTER;
                 case '-': return TOKEN_DECREMENT;
                 case '=': return TOKEN_SUBTRACTIONASSIGMENT;
+                case 'b': return TOKEN_SUBTRACTION_BINARY;
                 default: return 0;
             }
         case '*':
@@ -177,7 +179,8 @@ int parser::getTokenIdKeyWord(char** _) {
     if (!strncmp( (const char*) *_, "double", 6)) { *_+= 6; return TOKEN_TYPE_DOUBLE; }
     if (!strncmp( (const char*) *_, "void", 4)) { *_+= 4; return TOKEN_TYPE_VOID; }
     if (!strncmp( (const char*) *_, "wchar", 5)) { *_+= 5; return TOKEN_TYPE_WCHAR; }
-    if (!strncmp( (const char*) *_, "unsigned", 8)) { *_+= 5; return TOKEN_TYPE_UNSIGNED; }
+    if (!strncmp( (const char*) *_, "unsigned", 8)) { *_+= 8; return TOKEN_TYPE_UNSIGNED; }
+    if (!strncmp( (const char*) *_, "byte", 4)) { *_+= 4; return TOKEN_TYPE_BYTE; }
 
     /* Others */
     if (!strncmp( (const char*) *_, "struct", 6)) { *_+= 6; return TOKEN_STRUCT; }
@@ -215,7 +218,7 @@ bool parser::isIdentifierType(parser::Token* _) {
 bool parser::isImplicitValue(parser::Token* _) { return _->id >= TOKEN_NUMBERINT && _->id <= TOKEN_STRING; }
 
 bool parser::isPrimativeType(parser::Token* _) { return (_->id >= TOKEN_TYPE_INT && _->id <= TOKEN_TYPE_WCHAR) || 
-    (_->id >= TOKEN_TYPE_UNSIGNED_INT && _->id <= TOKEN_TYPE_UNSIGNED_CHAR); }
+    (_->id >= TOKEN_TYPE_UNSIGNED_INT && _->id <= TOKEN_TYPE_UNSIGNED_CHAR) || _->id == TOKEN_TYPE_BYTE;  }
 
 bool parser::isAssignment(parser::Token* _) { return _->id >= TOKEN_EQUAL && _->id <= TOKEN_DECREMENT; }
 
@@ -223,7 +226,7 @@ bool parser::isSingleAssignment(parser::Token*_) { return _->id == TOKEN_INCREME
 
 bool parser::isExpressionOperator(parser::Token* _) { // Miss things
 
-    return _->id >= TOKEN_ADDITION && _->id <= TOKEN_MODULUS;
+    return _->id >= TOKEN_ADDITION && _->id <= TOKEN_MODULUS || _->id >= TOKEN_ADDITION_BINARY && _->id <= TOKEN_SUBTRACTION_BINARY;
 
 }
 

@@ -48,9 +48,9 @@ namespace parser {
         
         Ast_Node_Struct_Declaration* getStructDeclaration(int);
 
-        static int generate(Compiler_Control*, parser::Ast_Node_Name_Space*, Compiler_Code_Block*);
+        static void generate(Compiler_Control*, parser::Ast_Node_Name_Space*, Compiler_Code_Block*);
 
-        static int generate(Compiler_Control*, parser::Ast_Node_Function_Declaration*, Compiler_Code_Block*);
+        static int generate(Compiler_Control*, parser::Ast_Node_Function_Declaration*, Compiler_Code_Block*, int);
 
         static void generate(Compiler_Control*, parser::Ast_Node_Struct_Declaration*, Compiler_Code_Block*);
 
@@ -60,7 +60,7 @@ namespace parser {
 
     struct Compiler_Control {
 
-        utils::LinkedList <Compiler_Code_Block*>* compiled_code_blocks;
+        utils::LinkedList <Compiler_Code_Block*>* built_in_code_blocks, *compiled_code_blocks;
 
         utils::LinkedList <Ast_Node_Name_Space*>* name_space_nodes;
         utils::LinkedList <char*>* implicit_values;
@@ -68,6 +68,8 @@ namespace parser {
         bool debug_info;
 
         ~Compiler_Control(); Compiler_Control(utils::LinkedList <Ast_Node_Name_Space*>*, utils::LinkedList <char*>*, bool);
+
+        void generateBuiltInCodeBlocks();
 
         void printDebugInfo(const char*);
 

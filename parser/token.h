@@ -150,6 +150,11 @@
 #define TOKEN_INCREMENT_LEFT 113
 #define TOKEN_DECREMENT_LEFT 114
 
+#define TOKEN_TYPE_BYTE 115
+
+#define TOKEN_ADDITION_BINARY 116
+#define TOKEN_SUBTRACTION_BINARY 117
+
 namespace parser {
 
     struct Token {

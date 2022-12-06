@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+#include "./../utils/commonFunctions.h"
 
 parser::Tokenizer_Control* getTokens(char* _code) {
 
@@ -131,9 +131,13 @@ int main() {
         "void main() { ola meu; ::ola::olak(meu); } ";
         " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
     
+    char* code = utils::getFileContent("./../built_in/byte.ph");
+
     parser::Compiled_Output* _compiler_output = getByteCode(
-        "namespace testNameSpace {int var; void func1() { 12; } void func() { 12 + 12; } }  struct ola { int function() { testNameSpace::func(12); } }; "
+        code
     );
+
+    free(code);
 
     delete _compiler_output;
 

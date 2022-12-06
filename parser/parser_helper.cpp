@@ -3,6 +3,8 @@
 #include "./parser_definitions.h" // Parser definitions
 #include "./token.h" // Token id s
 
+#include "./../built_in/built_in_definitions.h"
+
 #include <iostream>
 
 int parser_helper::getSizePrimitiveType(int _tkId) {
@@ -11,6 +13,9 @@ int parser_helper::getSizePrimitiveType(int _tkId) {
     {
     case TOKEN_TYPE_INT: return PRIMATIVES_TYPE_INT_SIZE;
     case TOKEN_TYPE_VOID: return PRIMATIVES_TYPE_VOID_SIZE;
+    
+    
+    case TOKEN_TYPE_BYTE: return BUILT_IN_TYPE_SIZE_BYTE;
     
     default:
         break;

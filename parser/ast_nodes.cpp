@@ -228,7 +228,9 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNodes(Ast
     if (!__name_space)
         
         if (Name_Space* _name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control)) __name_space = _name_space;
-    
+
+    if (__name_space) __name_space->printScope();
+
     switch (__ast_control->getToken(0)->id)
     {
         case TOKEN_END_CODE: case TOKEN_CLOSECURLYBRACKET: __ast_control->current_token_position++; goto cont;
@@ -748,8 +750,11 @@ parser::Ast_Node* parser::Ast_Node_Expression::getFirstExpression(Ast_Control* _
 
    parser::Ast_Node* _node = NULL;
 
+
     if (!__name_space) __name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control);
 
+    else __name_space->printScope(); 
+    
     __ast_control->printDebugInfo("--> Node Expression -- First Expression <--");
 
     switch (__ast_control->getToken(0)->id)

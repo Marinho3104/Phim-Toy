@@ -43,6 +43,8 @@ byte_code::Byte_Code* parser::getByteCodeOfExpressionId(int _tkId) {
         case TOKEN_INCREMENT_LEFT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_INCREMENT_LEFT, 0); break;
         case TOKEN_DECREMENT_LEFT: new(_) byte_code::Byte_Code(BYTECODE_ASSIGN_DECREMENT_LEFT, 0); break;
         case TOKEN_EQUAL: new (_) byte_code::Byte_Code(BYTECODE_ASSIGN, 0); break;
+        case TOKEN_ADDITION_BINARY: new (_) byte_code::Byte_Code(BYTECODE_BINARY_ADDITION, 0); break;
+        case TOKEN_SUBTRACTION_BINARY: new (_) byte_code::Byte_Code(BYTECODE_BINARY_SUBTRACTION, 0); break;
         default: new Compiler_Exception("Expression not supported");
     }
 
@@ -163,6 +165,8 @@ byte_code::Byte_Code* parser::getByteCodeFromVariableDeclaration(Ast_Node_Variab
 
     __compiler_control->printDebugInfo("--> Byte Code From Variable Declaration <--");
 
+    std::cout << __variable_declaration->declaration_id << std::endl;
+
     if (__current->compiler_declarations->isDeclared(__variable_declaration->declaration_id)) new Compiler_Exception("Redeclaration of variable");
 
     __current->compiler_declarations->variable_declarations->add(__variable_declaration);
@@ -183,21 +187,34 @@ void parser::getByteCodeFromFunctionDeclaration(Ast_Node_Function_Declaration* _
 
     __compiler_control->printDebugInfo("--> Byte Code From Function Declaration <--");
 
-    if (__current->compiler_declarations->isDeclared(__function_declaration->declaration_id)) new Compiler_Exception("Redeclaration of variable");
+    Ast_Node_Function_Declaration* _function_declaration = NULL;
+    Compiler_Code_Block* _compiler_code_block = __current;
 
-    __current->compiler_declarations->function_declarations->add(__function_declaration);
+    if (__function_declaration->name_space) 
 
-    __function_declaration->body_pos = Compiler_Code_Block::generate(__compiler_control, __function_declaration, NULL);
+        if (!(_compiler_code_block = __compiler_control->getCompilerCodeBlockFromNameSpace(__function_declaration->name_space)))
+    
+            new Compiler_Exception("Error getting name space");  
+
+    _function_declaration = _compiler_code_block->getFunctionDeclaration(__function_declaration->declaration_id);
+
+    if (_compiler_code_block->compiler_declarations->isDeclared(__function_declaration->declaration_id)) {
+    
+        if (_function_declaration->body) new Compiler_Exception("Redeclaration of function");
+    
+    } else _compiler_code_block->compiler_declarations->function_declarations->add(__function_declaration);  
+
+    __function_declaration->body_pos = Compiler_Code_Block::generate(__compiler_control, __function_declaration, __current, _function_declaration ? _function_declaration->body_pos : -1);
 
     __compiler_control->printDebugInfo("--> Byte Code From Function Declaration End <--");
-
+    
 }
 
 void parser::getByteCodeFromStructDeclaration(Ast_Node_Struct_Declaration* __struct_declaration, Compiler_Code_Block* __current, Compiler_Control* __compiler_control) {
 
     __compiler_control->printDebugInfo("--> Byte Code From Struct Declaration <--");
 
-    if (__current->compiler_declarations->isDeclared(__struct_declaration->declaration_id)) new Compiler_Exception("Redeclaration of variable");
+    if (__current->compiler_declarations->isDeclared(__struct_declaration->declaration_id)) new Compiler_Exception("Redeclaration of struct");
 
     __current->compiler_declarations->struct_declarations->add(__struct_declaration);
 
@@ -460,9 +477,13 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromPointerOperato
 
     _byte_code->add(_bc);
 
-    return _byte_code;
 
     __compiler_control->printDebugInfo("--> Byte Code From Pointer Operator End <--");
+
+    new Compiler_Exception("Not done yet");
+
+    return _byte_code;
+
 
 }
 

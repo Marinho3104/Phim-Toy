@@ -3,6 +3,7 @@
 #include "./compiler_byte_code_converted.h"
 #include "./../byteCode/byteCode.h"
 #include "./../utils/linkedList.h"
+#include "./ast.h"
 
 #include <iostream>
 
@@ -18,6 +19,8 @@ parser::Compiler_Declarations::Compiler_Declarations() {
 }
 
 bool parser::Compiler_Declarations::isDeclared(int __declaration_id) {
+
+    std::cout << getVariableDeclaration(__declaration_id) << std::endl;
 
     return (
         getVariableDeclaration(__declaration_id) || getFunctionDeclaration(__declaration_id) || getStructDeclaration(__declaration_id)
@@ -87,16 +90,19 @@ parser::Ast_Node_Struct_Declaration* parser::Compiler_Code_Block::getStructDecla
 
 }
 
-int parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control, parser::Ast_Node_Name_Space* __name_space_node, Compiler_Code_Block* __previous) {
+void parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control, parser::Ast_Node_Name_Space* __name_space_node, Compiler_Code_Block* __previous) {
 
     __compiler_control->printDebugInfo("--> Compiler Code Block <--");
 
-    parser::Compiler_Code_Block* _compiler_code_block = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
-    new (_compiler_code_block) parser::Compiler_Code_Block(__name_space_node->name_space, __previous);
+    parser::Compiler_Code_Block* _compiler_code_block = __compiler_control->getCompilerCodeBlockFromNameSpace(__name_space_node->name_space);
+
+    if (!_compiler_code_block) {
+        _compiler_code_block = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
+        new (_compiler_code_block) parser::Compiler_Code_Block(__name_space_node->name_space, __previous);
+        __compiler_control->compiled_code_blocks->add(_compiler_code_block);
+    } 
 
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-
-    int _pos = __compiler_control->compiled_code_blocks->add(_compiler_code_block);
 
     for (int _ = 0; _ <  __name_space_node->declarations->count; _++) {
 
@@ -112,22 +118,25 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control, 
 
     __compiler_control->printDebugInfo("--> Compiler Code Block End <--");
 
-    return _pos;
-
 }
 
-int parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control, parser::Ast_Node_Function_Declaration* __function_declaration, Compiler_Code_Block* __previous) {
+int parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control, parser::Ast_Node_Function_Declaration* __function_declaration, Compiler_Code_Block* __previous, int __position) {
 
     __compiler_control->printDebugInfo("--> Compiler Code Block -- Function Declaration <--");
 
-    parser::Compiler_Code_Block* _compiler_code_block = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
-    new (_compiler_code_block) parser::Compiler_Code_Block(__function_declaration->name_space, __previous);
+    Compiler_Code_Block* _compiler_code_block;
+
+    if (__position != -1) _compiler_code_block = (*__compiler_control->compiled_code_blocks)[__position];
+
+    else {
+        _compiler_code_block = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
+        new (_compiler_code_block) parser::Compiler_Code_Block(__function_declaration->name_space, __previous);
+        __position = __compiler_control->compiled_code_blocks->add(_compiler_code_block);
+    }
+
+    if (!__function_declaration->body) return __position;
 
     utils::LinkedList <byte_code::Byte_Code*>* _byte_code;
-
-    int _pos = __compiler_control->compiled_code_blocks->add(_compiler_code_block);
-
-    if (!__function_declaration->body) return -1;
 
     for (int _ = 0; _ <  __function_declaration->body->code->count; _++) {
 
@@ -141,9 +150,10 @@ int parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control, 
 
     }
 
-    __compiler_control->printDebugInfo("--> Compiler Code Block End -- Function Declaration <--");
+    __compiler_control->printDebugInfo("--> Compiler Code Block -- Function Declaration End <--");
 
-    return _pos;
+    return __position;
+    
 
 }
 
@@ -151,16 +161,23 @@ void parser::Compiler_Code_Block::generate(Compiler_Control* __compiler_control,
 
     __compiler_control->printDebugInfo("--> Compiler Code Block -- Struct Declaration <--");
 
+    Compiler_Code_Block* _compiler_code_block = __compiler_control->getCompilerCodeBlockFromNameSpace(__struct_declaration->own_name_space);
+
+    if (!_compiler_code_block) {
+        _compiler_code_block = (parser::Compiler_Code_Block*) malloc(sizeof(parser::Compiler_Code_Block));
+        new (_compiler_code_block) parser::Compiler_Code_Block(__struct_declaration->own_name_space, __previous);
+        __compiler_control->compiled_code_blocks->add(_compiler_code_block);
+    } 
+
     for (int _ = 0; _ < __struct_declaration->functions->count; _++)
 
-        parser::Compiler_Code_Block::generate(
-            __compiler_control, (*__struct_declaration->functions)[_], NULL
+        parser::getByteCodeFromFunctionDeclaration(
+            (*__struct_declaration->functions)[_], _compiler_code_block, __compiler_control
         );
 
-    __compiler_control->printDebugInfo("--> Compiler Code Block End -- Struct Declaration <--");
+    __compiler_control->printDebugInfo("--> Compiler Code Block -- Struct Declaration End <--");
 
 }
-
 
 parser::Compiler_Exception::Compiler_Exception(const char* __description) : description(__description) { std::cout << "Compiler Exception: " << description << std::endl; exit(1); }
 
@@ -171,7 +188,15 @@ parser::Compiler_Control::Compiler_Control(
     utils::LinkedList <Ast_Node_Name_Space*>* __name_space_nodes, utils::LinkedList <char*>* __implicit_values, bool __debug_info) 
         : name_space_nodes(__name_space_nodes), implicit_values(__implicit_values), debug_info(__debug_info) {
             compiled_code_blocks = new utils::LinkedList <Compiler_Code_Block*>();
+            built_in_code_blocks = new utils::LinkedList <Compiler_Code_Block*>();
+            generateBuiltInCodeBlocks();
     }
+
+void parser::Compiler_Control::generateBuiltInCodeBlocks() {
+
+    
+
+}
 
 void parser::Compiler_Control::printDebugInfo(const char* __debug_info) { std::cout << "Compiler Control - Debug Info: " << __debug_info << std::endl << std::endl; }
 
@@ -179,9 +204,7 @@ void parser::Compiler_Control::generate() {
 
     for (int _ = 1; _ < name_space_nodes->count; _++) 
 
-        if (!getCompilerCodeBlockFromNameSpace((*name_space_nodes)[_]->name_space)) 
-
-            Compiler_Code_Block::generate(this, (*name_space_nodes)[_], NULL);     
+        Compiler_Code_Block::generate(this, (*name_space_nodes)[_], NULL);     
     
     Compiler_Code_Block::generate(this, name_space_nodes->frst->object, NULL); 
     
@@ -216,6 +239,11 @@ parser::Compiled_Output* parser::Compiler_Control::generateOutPut() {
 }
 
 parser::Compiler_Code_Block* parser::Compiler_Control::getCompilerCodeBlockFromNameSpace(Name_Space* __name_space) {
+
+    // std::cout << __name_space << std::endl;
+    // __name_space->printScope();
+
+    if (!__name_space) return NULL;
 
     for (int _ = 0; _ < compiled_code_blocks->count; _++)
 

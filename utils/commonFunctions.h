@@ -19,6 +19,8 @@ namespace utils {
 
     char* copyString(char*, int);
 
+    char* getFileContent(char*);
+
 }  
 
 #endif

@@ -41,6 +41,7 @@
         "string_view": "cpp",
         "system_error": "cpp",
         "typeinfo": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "fstream": "cpp"
     }
 }

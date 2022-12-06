@@ -2,6 +2,10 @@
 
 #include <iostream>
 
+#include <fstream>
+#include <string>
+
+
 int utils::getWordSize(char* _) {
 
     int _rtr = 0;
@@ -58,6 +62,16 @@ char* utils::copyString(char* __d, int __s) {
     for (int __ = 0; __ < __s; __++) _[__] = __d[__];
 
     return _; 
+
+}
+
+char* utils::getFileContent(char* __path) {
+
+    std::ifstream ifs(__path);
+    std::string content( (std::istreambuf_iterator<char>(ifs) ),
+        (std::istreambuf_iterator<char>()    ) );
+
+    return copyString((char*)content.c_str(), getStringSize((char*)content.c_str()));
 
 }
 

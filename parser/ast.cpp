@@ -301,7 +301,7 @@ parser::Name_Space* parser::Name_Space_Control::getNameSpaceOrAdd(utils::LinkedL
                 utils::copyString((*__scope)[__], utils::getStringSize((*__scope)[__]))
             );
 
-        if ((_name_space = getNameSpaceSpecific(_current_name_space_scope))) continue;
+        if ((_name_space = getNameSpaceSpecific(_current_name_space_scope))) { delete _current_name_space_scope; continue;}
 
         _name_space = (Name_Space*) malloc(sizeof(Name_Space));
         new (_name_space) Name_Space(this, _current_name_space_scope);
