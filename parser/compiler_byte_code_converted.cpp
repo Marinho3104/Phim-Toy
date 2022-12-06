@@ -4,8 +4,10 @@
 #include "./../byteCode/byteCode.h"
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
+#include "./compiler_helper.h"
 #include "./compiler.h"
 #include "./token.h"
+#include "./ast.h"
 
 #include <iostream>
 
@@ -135,6 +137,15 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromNode(Compiler_
 
         _byte_code = parser::getByteCodeFromParenthesis(
             (Ast_Node_Parenthesis*) __node,
+            __current, __compiler_control
+        );
+
+        goto rtr;
+
+    case AST_NODE_FUNCTION_CALL:
+
+        _byte_code = parser::getByteCodeFromFunctionCall(
+            (Ast_Node_Function_Call*) __node,
             __current, __compiler_control
         );
 
@@ -360,6 +371,98 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromAssignment(Ast
     __compiler_control->printDebugInfo("--> Byte Code From Variable Assignment End <--");
     
     return _byte_code;
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromFunctionCall(Ast_Node_Function_Call* __function_call, Compiler_Code_Block* __current, Compiler_Control* __compiler_control) {
+
+    // Need to check if parameters are correct
+
+    __compiler_control->printDebugInfo("--> Byte Code From Function Call <--");
+
+    utils::LinkedList <byte_code::Byte_Code*>* byte_code = new utils::LinkedList <byte_code::Byte_Code*>(), *_temp;
+
+    Ast_Node_Function_Declaration* _function_declaration;
+
+    if (__function_call->name_space) {
+
+        Compiler_Code_Block* _compiler_code_block = __compiler_control->getCompilerCodeBlockFromNameSpace(__function_call->name_space);
+
+        if (!_compiler_code_block) new Compiler_Exception("Error getting name space");
+
+        _function_declaration = _compiler_code_block->compiler_declarations->getFunctionDeclaration(__function_call->declaration_id);
+  
+    } else _function_declaration = __current->getFunctionDeclaration(__function_call->declaration_id);
+
+    if (!_function_declaration) new Compiler_Exception("No function declared with given name");
+
+    if (!parser_helper::confirmFunctionCallParameters(_function_declaration->parameters, __function_call->parameters))
+
+        new Compiler_Exception(
+            "No same lenght of inputs in function declaration and function call\n" \
+            "Or No same type size of inputs in function declaration and function call"
+        );
+
+    for (int _ = 0; _ < __function_call->parameters->count; _++) {
+
+        _temp = getByteCodeFromNode(__compiler_control, __current, (*__function_call->parameters)[_]);
+
+        byte_code->join(_temp);
+
+        _temp->destroy_content = 0; delete _temp;
+
+    }
+    
+    byte_code::Byte_Code* _call = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_call) byte_code::Byte_Code(
+        BYTECODE_CALL, _function_declaration->body_pos
+    );
+
+    byte_code->add(_call);
+
+    __compiler_control->printDebugInfo("--> Byte Code From Function Call End <--");
+
+    return byte_code;
+
+}
+
+utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromPointerOperator(Ast_Node_Pointer_Operator* __pointer_operator, Compiler_Code_Block* __current, Compiler_Control* __compiler_control) {
+
+    __compiler_control->printDebugInfo("--> Byte Code From Pointer Operator <--");
+
+    utils::LinkedList <byte_code::Byte_Code*>* _byte_code = new utils::LinkedList <byte_code::Byte_Code*>(), *_temp;
+    byte_code::Byte_Code* _bc;
+    int _off, _bcId, _lvl;
+
+    _temp = getByteCodeFromNode(
+        __compiler_control, __current, __pointer_operator->value
+    );
+
+    _byte_code->join(_temp);
+
+    _temp->destroy_content = 0; delete _temp;
+
+    Type_Information _type; // TODO getTypeInformationOfNode(__pointer_operator->value);
+
+    if ((_off = _type.pointer_level - __pointer_operator->pointer_level) < 0) new Compiler_Exception("Error pointer operators");
+
+    _bcId = _off > _type.pointer_level ? BYTECODE_POINTER_OPERATIONS_UP : BYTECODE_POINTER_OPERATIONS_DOWN;
+    _lvl = _bcId == BYTECODE_POINTER_OPERATIONS_UP ? _off - _type.pointer_level : _type.pointer_level - _off;
+
+    if (!_lvl) return _byte_code;
+
+    _bc  = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_bc) byte_code::Byte_Code(
+        _bcId, _lvl
+    );
+
+    _byte_code->add(_bc);
+
+    return _byte_code;
+
+    __compiler_control->printDebugInfo("--> Byte Code From Pointer Operator End <--");
 
 }
 

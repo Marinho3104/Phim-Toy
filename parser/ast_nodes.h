@@ -87,6 +87,8 @@ namespace parser {
 
         static utils::LinkedList <Ast_Node*>* getParameters(Ast_Control*);
 
+        int getByteSize();
+
     };
 
     struct Ast_Node_Struct_Declaration : public Ast_Node {
@@ -111,6 +113,8 @@ namespace parser {
 
         static void setNewNameSpaceForStruct(Ast_Control*);
 
+        int getByteSize();
+
     };
 
     struct Ast_Node_Expression : public Ast_Node {
@@ -125,6 +129,8 @@ namespace parser {
 
         static Ast_Node* getFirstExpression(Ast_Control*, Name_Space*);
 
+        int getByteSize();
+
     };
 
     struct Ast_Node_Value : public Ast_Node {
@@ -134,6 +140,8 @@ namespace parser {
         ~Ast_Node_Value(); Ast_Node_Value(int, int);
 
         static Ast_Node_Value* generate(Ast_Control*);
+
+        int getByteSize();
  
     };
 
@@ -143,9 +151,13 @@ namespace parser {
         int declaration_id;
         bool is_global;
 
+        Ast_Node_Variable_Declaration* variable_declaration;
+
         ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
         static Ast_Node_Variable* generate(Ast_Control*, Name_Space*);
+
+        int getByteSize();
 
     };
 
@@ -161,12 +173,16 @@ namespace parser {
 
         static Ast_Node_Assignment* generate(Ast_Control*);
 
+        int getByteSize();
+
     };
 
     struct Ast_Node_Function_Call : public Ast_Node {
 
         Name_Space* name_space;
         int declaration_id;
+
+        Ast_Node_Function_Declaration* function_declaration;
 
         utils::LinkedList <parser::Ast_Node_Expression*>* parameters;
 
@@ -175,6 +191,8 @@ namespace parser {
         static Ast_Node_Function_Call* generate(Ast_Control*, Name_Space*);
 
         static utils::LinkedList <parser::Ast_Node_Expression*>* getParameters(Ast_Control*);
+
+        int getByteSize();
 
     };
 
@@ -189,6 +207,8 @@ namespace parser {
 
         static Ast_Node* getValue(Ast_Control*);
 
+        int getByteSize();
+
     };
 
     struct Ast_Node_Parenthesis : public Ast_Node {
@@ -198,6 +218,8 @@ namespace parser {
         ~Ast_Node_Parenthesis(); Ast_Node_Parenthesis(Ast_Node_Expression*);
 
         static Ast_Node_Parenthesis* generate(Ast_Control*);
+
+        int getByteSize();
 
     };
 

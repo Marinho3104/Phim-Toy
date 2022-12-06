@@ -132,7 +132,7 @@ int main() {
         " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
     
     parser::Compiled_Output* _compiler_output = getByteCode(
-        "namespace testNameSpace {int var;} void func(); struct ola { int function() { int k; k = (12 + 15) * 20; } }; "
+        "namespace testNameSpace {int var; void func1() { 12; } void func() { 12 + 12; } }  struct ola { int function() { testNameSpace::func(12); } }; "
     );
 
     delete _compiler_output;

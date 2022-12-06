@@ -3,6 +3,7 @@
 #include "./../utils/commonFunctions.h"
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
+#include "./parser_helper.h"
 #include "./ast_helper.h"
 #include "./token.h"
 #include "./ast.h"
@@ -224,7 +225,9 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNodes(Ast
     // std::cout << "Token 1 -> " << _first_token->id << std::endl;
     // std::cout << "Token 2 -> " << _second_token->id << std::endl;
 
-    if (Name_Space* _name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control)) __name_space = _name_space;
+    if (!__name_space)
+        
+        if (Name_Space* _name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control)) __name_space = _name_space;
     
     switch (__ast_control->getToken(0)->id)
     {
@@ -249,7 +252,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNodes(Ast
 
         Type_Information* _typeInformation = Type_Information::generate(__ast_control, __name_space);
 
-        __name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control);
+        Name_Space* _name_space = parser_helper::checkIfIsNameSpaceChanging(__ast_control);
 
         if (__ast_control->getToken(0)->id != TOKEN_IDENTIFIER) 
             { delete _typeInformation; __ast_control->current_token_position = _back_up_point; goto expression; }
@@ -261,7 +264,7 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Code_Block::getNodes(Ast
         
             _code->add(
                 parser::Ast_Node_Function_Declaration::generate(
-                    __ast_control, __name_space, _typeInformation
+                    __ast_control, _name_space, _typeInformation
                 )
             );
 
@@ -479,6 +482,8 @@ utils::LinkedList <parser::Ast_Node*>* parser::Ast_Node_Function_Declaration::ge
 
 }
 
+int parser::Ast_Node_Function_Declaration::getByteSize() { return return_type->getByteSize(); }
+
 
 parser::Ast_Node_Struct_Declaration::~Ast_Node_Struct_Declaration() { 
     if (own_name_space) own_name_space->~Name_Space(); free(own_name_space); 
@@ -684,6 +689,20 @@ void parser::Ast_Node_Struct_Declaration::setNewNameSpaceForStruct(Ast_Control* 
 
 }
 
+int parser::Ast_Node_Struct_Declaration::getByteSize() {
+
+    int _size_byte = 0;
+
+    for (int _ = 0; _ < fields->count; _++)
+
+        if ((*fields)[_]->node_id == AST_NODE_VARIABLE_DECLARATION)
+
+            _size_byte += ((Ast_Node_Variable_Declaration*) (*fields)[_])->getByteSize();
+
+    return _size_byte;
+
+}
+
 
 parser::Ast_Node_Expression::~Ast_Node_Expression() {
     if (first_expression) first_expression->~Ast_Node(); free(first_expression);
@@ -781,6 +800,10 @@ rtr:
 
 }
 
+int parser::Ast_Node_Expression::getByteSize() { // TODO
+
+}
+
 
 parser::Ast_Node_Value::~Ast_Node_Value() {}
 
@@ -804,11 +827,13 @@ parser::Ast_Node_Value* parser::Ast_Node_Value::generate(Ast_Control* __ast_cont
 
 }
 
+int parser::Ast_Node_Value::getByteSize() { return parser_helper::getSizeImplicitValue(token_id); }
+
 
 parser::Ast_Node_Variable::~Ast_Node_Variable() {}
 
 parser::Ast_Node_Variable::Ast_Node_Variable(Name_Space* __name_space, int __declaration_id, bool __is_global) 
-    : Ast_Node(AST_NODE_VARIABLE), name_space(__name_space), declaration_id(__declaration_id), is_global(__is_global) {}
+    : Ast_Node(AST_NODE_VARIABLE), name_space(__name_space), declaration_id(__declaration_id), is_global(__is_global), variable_declaration(NULL) {}
 
 parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __ast_control, Name_Space* __name_space) {
 
@@ -839,6 +864,8 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __as
     return _value_node;
 
 }
+
+int parser::Ast_Node_Variable::getByteSize() { return variable_declaration ? variable_declaration->getByteSize() : -1; }
 
 
 parser::Ast_Node_Assignment::~Ast_Node_Assignment() {
@@ -895,11 +922,22 @@ parser::Ast_Node_Assignment* parser::Ast_Node_Assignment::generate(Ast_Control* 
 
 }
 
+int parser::Ast_Node_Assignment::getByteSize() { // TODO
+
+    switch (value_before_assign->node_id)
+    {
+    default: break;
+    }
+
+    return -1;
+
+}
+
 
 parser::Ast_Node_Function_Call::~Ast_Node_Function_Call() { delete parameters; }
 
 parser::Ast_Node_Function_Call::Ast_Node_Function_Call(Name_Space* __name_space, int __declaration_id, utils::LinkedList <parser::Ast_Node_Expression*>* __parameters) 
-    : Ast_Node(AST_NODE_FUNCTION_CALL), name_space(__name_space), declaration_id(__declaration_id), parameters(__parameters) {}
+    : Ast_Node(AST_NODE_FUNCTION_CALL), name_space(__name_space), declaration_id(__declaration_id), parameters(__parameters), function_declaration(NULL) {}
 
 parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate(Ast_Control* __ast_control, Name_Space* __name_space) {
 
@@ -955,6 +993,8 @@ utils::LinkedList <parser::Ast_Node_Expression*>* parser::Ast_Node_Function_Call
     return _parameters;
 
 }
+
+int parser::Ast_Node_Function_Call::getByteSize() { return function_declaration ? function_declaration->getByteSize() : -1; }
 
 
 parser::Ast_Node_Pointer_Operator::~Ast_Node_Pointer_Operator() {
@@ -1020,6 +1060,10 @@ parser::Ast_Node* parser::Ast_Node_Pointer_Operator::getValue(Ast_Control* __ast
 
 }
 
+int parser::Ast_Node_Pointer_Operator::getByteSize() { // TODO
+
+}
+
   
 parser::Ast_Node_Parenthesis::~Ast_Node_Parenthesis() {
     if (value) value->~Ast_Node_Expression(); free(value);
@@ -1046,6 +1090,8 @@ parser::Ast_Node_Parenthesis* parser::Ast_Node_Parenthesis::generate(Ast_Control
     return _parenthesis_node;
 
 }
+
+int parser::Ast_Node_Parenthesis::getByteSize() { return value->getByteSize(); }
 
 
 parser::Ast_Node_Accessing_Middle::~Ast_Node_Accessing_Middle() { if (next_access) next_access->~Ast_Node_Accessing_Middle(); free(next_access); delete parameters; }

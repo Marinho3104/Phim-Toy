@@ -37,6 +37,10 @@ namespace parser {
 
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromAssignment(Ast_Node_Assignment*, Compiler_Code_Block*, Compiler_Control*);
 
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromFunctionCall(Ast_Node_Function_Call*, Compiler_Code_Block*, Compiler_Control*);
+    
+    utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromPointerOperator(Ast_Node_Pointer_Operator*, Compiler_Code_Block*, Compiler_Control*);
+
     utils::LinkedList <byte_code::Byte_Code*>* getByteCodeFromParenthesis(Ast_Node_Parenthesis*, Compiler_Code_Block*, Compiler_Control*);
 
 }
