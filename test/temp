@@ -1,2 +1,0 @@
-test::testing1 ::test::testing::testFunc(int) {} void test::testFunc(int, int) {} 
-               ^^ error 
