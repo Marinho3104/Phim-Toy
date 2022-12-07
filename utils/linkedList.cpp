@@ -2,7 +2,7 @@
 
 // #include "./../objects/phim_object.h"
 
-#include "./../parser/compiler.h" // Compiler Code Block
+#include "./../parser/compiler_ast.h" // Compiler Code Block
 #include "./../byteCode/byteCode.h" // Byte Code
 #include "./../parser/ast_nodes.h" // Ast Nodes
 #include "./../parser/token.h" // Tokens Id

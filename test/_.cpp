@@ -11,13 +11,7 @@
 
 #include "./../byteCode/byteCode.h" // Byte Code
 
-#include "./../parser/compiler.h" // Compiler
-
-#include "./../parser/tokenizer.h" // Tokenizer
-#include "./../parser/token.h" // Tokens
-
-// #include "./../parser/ast_nodes.h" // Ast Nodes
-#include "./../parser/ast.h" // Ast control 
+#include "./../compiler/compiler.h"
 
 #include "./../utils/linkedList.h" // Linked list
 
@@ -31,69 +25,70 @@
 
 #include "./../utils/commonFunctions.h"
 
-parser::Tokenizer_Control* getTokens(char* _code) {
 
-    parser::Tokenizer_Control* _tkCntrl = new parser::Tokenizer_Control(_code);
+// parser::Tokenizer_Control* getTokens(char* _code) {
 
-    _tkCntrl->generateTokens();
+//     parser::Tokenizer_Control* _tkCntrl = new parser::Tokenizer_Control(_code);
 
-    std::cout << "\n --> Generate Tokens <--\n" << std::endl;
+//     _tkCntrl->generateTokens();
 
-    for (int _ = 0; _ < _tkCntrl->tokens->count; _++)
+//     std::cout << "\n --> Generate Tokens <--\n" << std::endl;
 
-        std::cout << "Token id -> " << (*_tkCntrl->tokens)[_]->id << std::endl;
+//     for (int _ = 0; _ < _tkCntrl->tokens->count; _++)
 
-    return _tkCntrl;
+//         std::cout << "Token id -> " << (*_tkCntrl->tokens)[_]->id << std::endl;
 
-}
+//     return _tkCntrl;
 
-parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
+// }
 
-    std::cout << "\n --> Generate Ast <--\n" << std::endl;
+// parser::Ast_Control* getAst(utils::LinkedList <parser::Token*>* tokensColl) {
 
-    parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl, 1);
+//     std::cout << "\n --> Generate Ast <--\n" << std::endl;
 
-    _astCntrl->generate();
+//     parser::Ast_Control* _astCntrl = new parser::Ast_Control(tokensColl, 1);
 
-    return _astCntrl;
+//     _astCntrl->generate();
 
-}
+//     return _astCntrl;
 
-parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Name_Space*>* _name_spaces, parser::Storage* _storage) {
+// }
 
-    std::cout << "\n --> Generate Compiler <--\n" << std::endl;
+// parser::Compiler_Control* getCompilerControl(utils::LinkedList <parser::Ast_Node_Name_Space*>* _name_spaces, parser::Storage* _storage) {
 
-    parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_name_spaces, _storage->implicit_values, 1);
+//     std::cout << "\n --> Generate Compiler <--\n" << std::endl;
 
-    _comCntrl->generate();
+//     parser::Compiler_Control* _comCntrl = new parser::Compiler_Control(_name_spaces, _storage->implicit_values, 1);
 
-    return _comCntrl;
+//     _comCntrl->generate();
 
-}
+//     return _comCntrl;
 
-parser::Compiled_Output* getByteCode(char* _code) {
+// }
 
-    parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
+// parser::Compiled_Output* getByteCode(char* _code) {
 
-    parser::Ast_Control* _astCntrl = getAst(_tkCntrl->tokens);
+//     parser::Tokenizer_Control* _tkCntrl = getTokens(_code);
+
+//     parser::Ast_Control* _astCntrl = getAst(_tkCntrl->tokens);
     
-    delete _tkCntrl;
+//     delete _tkCntrl;
 
-    parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->nodes_name_spaces, _astCntrl->storage);
+//     parser::Compiler_Control* _comCntrl = getCompilerControl(_astCntrl->nodes_name_spaces, _astCntrl->storage);
 
-    parser::Compiled_Output* _ = _comCntrl->generateOutPut();
+//     parser::Compiled_Output* _ = _comCntrl->generateOutPut();
 
-    delete _astCntrl;
+//     delete _astCntrl;
 
-    delete _comCntrl;
+//     delete _comCntrl;
 
-    std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
+//     std::cout << "\n --> Generate Byte Code <--\n" << std::endl;
 
-    _->printByteCode();
+//     _->printByteCode();
 
-    return _;
+//     return _;
 
-}
+// }
 
 int k; 
 
@@ -131,15 +126,21 @@ int main() {
         "void main() { ola meu; ::ola::olak(meu); } ";
         " namespace test { int j; int testFunc() {} }  void ola () { *(**test::testFunc(j)) = 12; } " ;
     
-    char* code = utils::getFileContent("./../built_in/byte.ph");
+    char* code = (char*) "byte o, l; "; // utils::getFileContent("./../built_in/byte.ph");
 
-    parser::Compiled_Output* _compiler_output = getByteCode(
-        code
-    );
+    // parser::Compiled_Output* _compiler_output = getByteCode(
+    //     code
+    // );
 
-    free(code);
+    compiler::Compiler* _compiler = new compiler::Compiler(code);
 
-    delete _compiler_output;
+    _compiler->generateByteCode();
+
+    // free(code);
+
+    delete _compiler;
+
+    // delete _compiler_output;
 
     // executeByteCode(_com);
 

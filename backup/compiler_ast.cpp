@@ -1,4 +1,4 @@
-#include "./compiler.h"
+#include "./compiler_ast.h"
 
 #include "./compiler_byte_code_converted.h"
 #include "./../byteCode/byteCode.h"
@@ -6,6 +6,7 @@
 #include "./ast.h"
 
 #include <iostream>
+#include <string.h>
 
 parser::Compiler_Declarations::~Compiler_Declarations() { 
     variable_declarations->destroy_content = 0; function_declarations->destroy_content = 0; struct_declarations->destroy_content = 0;
@@ -185,18 +186,10 @@ parser::Compiler_Exception::Compiler_Exception(const char* __description) : desc
 parser::Compiler_Control::~Compiler_Control() { delete compiled_code_blocks; }
 
 parser::Compiler_Control::Compiler_Control(
-    utils::LinkedList <Ast_Node_Name_Space*>* __name_space_nodes, utils::LinkedList <char*>* __implicit_values, bool __debug_info) 
-        : name_space_nodes(__name_space_nodes), implicit_values(__implicit_values), debug_info(__debug_info) {
+    utils::LinkedList <Ast_Node_Name_Space*>* __name_space_nodes, utils::LinkedList <char*>* __implicit_values, bool __debug_info, utils::LinkedList <Compiler_Code_Block*>* __built_in) 
+        : name_space_nodes(__name_space_nodes), implicit_values(__implicit_values), debug_info(__debug_info), built_in_code_blocks(__built_in) {
             compiled_code_blocks = new utils::LinkedList <Compiler_Code_Block*>();
-            built_in_code_blocks = new utils::LinkedList <Compiler_Code_Block*>();
-            generateBuiltInCodeBlocks();
-    }
-
-void parser::Compiler_Control::generateBuiltInCodeBlocks() {
-
-    
-
-}
+        }
 
 void parser::Compiler_Control::printDebugInfo(const char* __debug_info) { std::cout << "Compiler Control - Debug Info: " << __debug_info << std::endl << std::endl; }
 
@@ -248,6 +241,31 @@ parser::Compiler_Code_Block* parser::Compiler_Control::getCompilerCodeBlockFromN
     for (int _ = 0; _ < compiled_code_blocks->count; _++)
 
         if ((*compiled_code_blocks)[_]->name_space == __name_space) return (*compiled_code_blocks)[_];
+
+    return NULL;
+
+}
+
+parser::Compiler_Code_Block* parser::Compiler_Control::getCompilerCodeBlockFromNameSpaceBuiltIn(utils::LinkedList <char*>* __scope) {
+
+    bool rtr;
+
+    for (int _ = 0; _ < built_in_code_blocks->count; _++) {
+
+        rtr = 1;
+
+        std::cout << (*built_in_code_blocks)[_]->name_space->scope
+         << std::endl;
+
+        if ((*built_in_code_blocks)[_]->name_space->scope->count != __scope->count) continue;
+
+        for (int __ = 0; __ < __scope->count && rtr; __++)
+
+            if (strcmp((*(*built_in_code_blocks)[_]->name_space->scope)[__], (*__scope)[__])) rtr = 0;
+
+        if (rtr) return (*built_in_code_blocks)[_];
+
+    }
 
     return NULL;
 

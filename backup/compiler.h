@@ -3,6 +3,8 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
+namespace utils { template <typename> struct LinkedList; }
+
 namespace parser {
 
     struct Tokenizer_Control;
@@ -12,8 +14,6 @@ namespace parser {
     struct Compiler_Code_Block;
     
 };
-
-namespace utils { template <typename> struct LinkedList; }
 
 namespace compiler {
 
@@ -25,13 +25,16 @@ namespace compiler {
         parser::Ast_Control* ast_control;
         parser::Compiler_Control* compiler_control;
 
-        utils::LinkedList <parser::Compiler_Code_Block*>* built_in_code_blocks;
+        parser::Tokenizer_Control* tokenizer_control_built_in;
+        parser::Ast_Control* ast_control_built_in;
+        parser::Compiler_Control* compiler_control_built_in;
 
-        parser::Compiled_Output* compiled_output;
+        utils::LinkedList <parser::Compiler_Code_Block*>* compiled_built_in;
+        parser::Compiled_Output* compiled_output, *compiler_output_built_in;
 
         ~Compiler(); Compiler(char*);
 
-        void getBuiltInCodeBlock();
+        void getBuiltIn();
 
         void generateByteCode();
 

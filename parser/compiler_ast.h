@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef PARSER_COMPILER_H
-#define PARSER_COMPILER_H
+#ifndef PARSER_COMPILER_AST_H
+#define PARSER_COMPILER_AST_H
 
 #include "./ast_nodes.h"
 
@@ -14,7 +14,7 @@ namespace parser {
     struct Ast_Node_Name_Space;
     struct Compiler_Control;
     struct Compiled_Output;
-
+    
     struct Compiler_Declarations {
 
         utils::LinkedList <Ast_Node_Variable_Declaration*>* variable_declarations;
@@ -60,24 +60,26 @@ namespace parser {
 
     struct Compiler_Control {
 
-        utils::LinkedList <Compiler_Code_Block*>* built_in_code_blocks, *compiled_code_blocks;
+        utils::LinkedList <Compiler_Code_Block*>* compiler_code_blocks, *built_in_code_blocks;
 
         utils::LinkedList <Ast_Node_Name_Space*>* name_space_nodes;
         utils::LinkedList <char*>* implicit_values;
 
         bool debug_info;
 
-        ~Compiler_Control(); Compiler_Control(utils::LinkedList <Ast_Node_Name_Space*>*, utils::LinkedList <char*>*, bool);
+        ~Compiler_Control(); 
+        
+        Compiler_Control(utils::LinkedList <Ast_Node_Name_Space*>*, utils::LinkedList <char*>*, utils::LinkedList <Compiler_Code_Block*>*, bool);
 
-        void generateBuiltInCodeBlocks();
+        Compiler_Control(utils::LinkedList <Ast_Node_Name_Space*>*, utils::LinkedList <char*>*);
 
         void printDebugInfo(const char*);
 
         void generate();
 
-        Compiled_Output* generateOutPut(); 
-
         Compiler_Code_Block* getCompilerCodeBlockFromNameSpace(Name_Space*);
+
+        Compiled_Output* generateOutPut(); 
 
     };
 

@@ -3,11 +3,12 @@ builtInPath := ./../built_in/
 parserPath := ./../parser/
 utilsPath := ./../utils/
 vmPath := ./../vm/
+compilerPath := ./../compiler/
 ownFile := ./
 
 outPutName := test
 
-all: ownFileObjectFile utilsObjectFile parserObjectFile byteCodeObjectFile
+all: ownFileObjectFile utilsObjectFile parserObjectFile byteCodeObjectFile compilerObjectFile
 	g++ -o $(outPutName) ./*.o -g
 	$(MAKE) clean
 
@@ -17,6 +18,10 @@ ownFileObjectFile:
 utilsObjectFile:
 	$(MAKE) -C $(utilsPath) objectFile
 	mv $(utilsPath)*.o ./
+
+compilerObjectFile:
+	$(MAKE) -C $(compilerPath) objectFile
+	mv $(compilerPath)*.o ./
 
 parserObjectFile:
 	$(MAKE) -C $(parserPath) objectFile

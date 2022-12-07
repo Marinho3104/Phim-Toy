@@ -332,6 +332,8 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(utils::Link
 
     if (!_previous_name_space) new Ast_Exception("Unexpected error - getPreviousNameSpace()");
 
+    delete _previous_scope;
+
     return _previous_name_space;
 
 }

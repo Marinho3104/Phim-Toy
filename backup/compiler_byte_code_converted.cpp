@@ -4,7 +4,7 @@
 #include "./../byteCode/byteCode.h"
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
-// #include "./compiler_helper.h"
+#include "./compiler_helper.h"
 #include "./compiler_ast.h"
 #include "./token.h"
 #include "./ast.h"
@@ -425,12 +425,12 @@ utils::LinkedList <byte_code::Byte_Code*>* parser::getByteCodeFromFunctionCall(A
 
     }
 
-    // if (!parser_helper::confirmFunctionCallParameters(__compiler_control, _function_declaration->parameters, __function_call->parameters))
+    if (!parser_helper::confirmFunctionCallParameters(__compiler_control, _function_declaration->parameters, __function_call->parameters))
 
-    //     new Compiler_Exception(
-    //         "No same lenght of inputs in function declaration and function call\n" \
-    //         "Or No same type size of inputs in function declaration and function call"
-    //     );
+        new Compiler_Exception(
+            "No same lenght of inputs in function declaration and function call\n" \
+            "Or No same type size of inputs in function declaration and function call"
+        );
 
 
     
