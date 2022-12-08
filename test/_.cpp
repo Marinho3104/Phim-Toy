@@ -7,6 +7,8 @@
 
 int main() {
 
+    int _;
+
     compiler::Compiler* _compiler = new compiler::Compiler("byte o;");
 
     delete _compiler;

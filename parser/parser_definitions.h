@@ -1,0 +1,8 @@
+#pragma once
+
+#ifndef PARSER_DEFINITIONS_H
+#define PARSER_DEFINITIONS_H
+
+#define EXCEPTION_HANDLE_TYPE_TOKENIZER 0
+
+#endif

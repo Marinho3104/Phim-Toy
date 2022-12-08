@@ -8,10 +8,7 @@ namespace utils { template <typename> struct Linked_List; }
 namespace parser {
 
     // Forward
-    struct Tokenizer_Control;
     struct Token;
-
-    struct Tokenizer_Exception { const char* description; Tokenizer_Exception(const char*, Tokenizer_Control*); };
 
     struct Tokenizer_Control {
 

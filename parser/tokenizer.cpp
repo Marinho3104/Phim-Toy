@@ -1,17 +1,12 @@
 #include "./tokenizer.h"
 
 #include "./../utils/linkedList.h"
-
+#include "./parser_definitions.h"
+#include "./exception_handle.h"
 #include "./token.h"
 
 #include <iostream>
 #include <string.h>
-
-
-parser::Tokenizer_Exception::Tokenizer_Exception(const char* __description, Tokenizer_Control* _tokenizer_control) : description(__description) {
-    std::cout << "Tokenizer Exception: " << description << " " << _tokenizer_control->current_collumn << ":" << (_tokenizer_control->code - _tokenizer_control->initial_position) << std::endl; exit(1);
-}
-
 
 parser::Tokenizer_Control::~Tokenizer_Control() { delete tokens_collection; }
 
@@ -174,7 +169,7 @@ void parser::Tokenizer_Control::handleString(parser::Token* __token) {
 
     do {
 
-        if (!isInRange(0)) new Tokenizer_Exception("Expected token '\"' at the end of string", this);
+        if (!isInRange(0)) new Exception_Handle(this, "Expected token '\"' at the end of string");
         
         code++;
 
@@ -186,7 +181,7 @@ void parser::Tokenizer_Control::handleString(parser::Token* __token) {
         (*code != '"' && *code != '\'') || _back_slash
     );
 
-    if (!isInRange(0)) new Tokenizer_Exception("Expected token '\"' at the end of string", this);
+    if (!isInRange(0)) new Exception_Handle(this, "Expected token '\"' at the end of string");
     code++;
 
     _string_size = code - _incitial_word;
