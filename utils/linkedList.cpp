@@ -1,6 +1,8 @@
 #include "./linkedList.h"
 
+#include "./../parser/ast_nodes.h"
 #include "./../parser/token.h"
+#include "./../parser/ast.h"
 
 #include <iostream>
 #include <string.h>
@@ -35,7 +37,7 @@ utils::Linked_List <type>::Linked_List() : first(NULL), last(NULL), count(0), de
 template <typename type>
 utils::Data_Linked_List <type>* utils::Linked_List <type>::getDataLinkedList(int __index) {
 
-    if (__index < 0) return NULL; utils::Data_Linked_List <type>* _data_ll = first;
+    if (__index < 0 || !count) return NULL; utils::Data_Linked_List <type>* _data_ll = first;
 
     for (int _ = 0; _ < __index; _++) 
         if (_data_ll->next) _data_ll = _data_ll->next; 
@@ -48,6 +50,8 @@ utils::Data_Linked_List <type>* utils::Linked_List <type>::getDataLinkedList(int
 template <typename type>
 bool utils::Linked_List <type>::operator==(Linked_List <type>* __to_compare) {
 
+    if (count != __to_compare->count) return 0;
+
     for (int _ = 0; _ < __to_compare->count; _++)
 
         if (operator[](_) != __to_compare->operator[](_)) return 0;
@@ -59,16 +63,22 @@ bool utils::Linked_List <type>::operator==(Linked_List <type>* __to_compare) {
 template <>
 bool utils::Linked_List <char*>::operator==(Linked_List <char*>* __to_compare) {
 
-    for (int _ = 0; _ < __to_compare->count; _++)
+    if (count != __to_compare->count) return 0;
 
-        if (strcmp(operator[](_), __to_compare->operator[](_))) return 0;
+    for (int _ = 0; _ < __to_compare->count; _++) if (strcmp(operator[](_), __to_compare->operator[](_))) return 0;
 
     return 1;
 
 }
 
 template <typename type>
+bool utils::Linked_List <type>::operator!=(Linked_List <type>* __to_compare) { return !operator==(__to_compare); }
+
+template <typename type>
 type utils::Linked_List <type>::operator[](int __index) { return __index < 0 ? 0 : getDataLinkedList(__index)->object; }
+
+template <typename type>
+void utils::Linked_List <type>::setCount() { Data_Linked_List <type>* _current = first; count = 0; while(_current) { ++count; _current = _current->next; } }
 
 template <typename type>
 void utils::Linked_List <type>::clean() { this->~Linked_List(); first = NULL; last = NULL; count = 0; }
@@ -88,7 +98,13 @@ template <typename type>
 int utils::Linked_List <type>::add(type __to_add) { insert(__to_add, count); return count - 1; }
 
 template <typename type>
-void utils::Linked_List <type>::remove(int __index) { remove(getDataLinkedList(__index)); }
+utils::Data_Linked_List <type>* utils::Linked_List <type>::remove(int __index) {
+    
+    utils::Data_Linked_List <type>* _removed_data_linked_list = getDataLinkedList(__index); remove(_removed_data_linked_list);
+
+    return _removed_data_linked_list;
+      
+}
 
 template <typename type>
 void utils::Linked_List <type>::insert(type __to_add, int __index) {
@@ -184,10 +200,18 @@ int utils::Linked_List <char*>::getPosition(char* _to_compare, bool (*func) (cha
 
 
 
+template class utils::Linked_List <parser::Ast_Node_Code_Block*>;
+template class utils::Linked_List <parser::Ast_Node_Name_Space*>;
+template class utils::Linked_List <parser::Name_Space*>;
+template class utils::Linked_List <parser::Ast_Node*>;
 template class utils::Linked_List <parser::Token*>;
 template class utils::Linked_List <char*>;
 template class utils::Linked_List <int>;
 
+template class utils::Data_Linked_List <parser::Ast_Node_Code_Block*>;
+template class utils::Data_Linked_List <parser::Ast_Node_Name_Space*>;
+template class utils::Data_Linked_List <parser::Name_Space*>;
+template class utils::Data_Linked_List <parser::Ast_Node*>;
 template class utils::Data_Linked_List <parser::Token*>;
 template class utils::Data_Linked_List <char*>;
 template class utils::Data_Linked_List <int>;

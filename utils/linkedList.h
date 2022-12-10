@@ -42,15 +42,19 @@ namespace utils {
 
         bool operator==(Linked_List <type>*);
 
+        bool operator!=(Linked_List <type>*);
+
         type operator[](int);
 
         Data_Linked_List <type>* getDataLinkedList(int);
+
+        void setCount();
 
         void clean();
 
         void printContent();
 
-        int add(type); void remove(int);
+        int add(type); Data_Linked_List <type>* remove(int);
 
         void insert(type, int); void remove(Data_Linked_List <type>*);
 

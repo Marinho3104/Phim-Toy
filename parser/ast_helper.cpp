@@ -1,0 +1,263 @@
+#include "./ast_helper.h"
+
+#include "./../built_in/built_in_definitions.h"
+#include "./../utils/linkedList.h"
+#include "./parser_definitions.h"
+#include "./token_definitions.h"
+#include "./exception_handle.h"
+#include "./token.h"
+#include "./ast.h"
+
+#include <iostream>
+#include <string.h>
+
+parser_helper::Type_Information::~Type_Information() {
+
+}
+
+parser_helper::Type_Information::Type_Information(parser::Ast_Control* __ast_control, parser::Name_Space* __name_space, int __token_id, int __declaration_id, utils::Linked_List <int>* __pointer_operations) 
+    : pointer_level(0), reference_level(0), token_id(__token_id), declaration_id(__declaration_id), ast_control(__ast_control), name_space(__name_space) {
+
+        if (!__pointer_operations) return;
+
+        for (int _ = 0; _ < __pointer_operations->count; _++) 
+        
+            if (__pointer_operations->operator[](_) == TOKEN_POINTER) {
+
+                if (reference_level) 
+
+                    new parser::Exception_Handle(__ast_control, __ast_control->getToken(_ - __ast_control->current_token_position), "Pointer of reference not allowed");
+
+                ++pointer_level;
+
+            }
+
+            else
+
+                if (++reference_level > 2) 
+                    new parser::Exception_Handle(__ast_control, __ast_control->getToken(_ - __ast_control->current_token_position), "Reference of double reference not allowed");
+
+}
+
+parser_helper::Type_Information* parser_helper::Type_Information::generate(parser::Ast_Control* __ast_control, parser::Name_Space* __name_space) {
+
+    utils::Linked_List <int>* _pointer_operations;
+    int _id = __ast_control->getToken(0)->id, _declaration_id = 0;
+
+    if (__name_space) __ast_control->addNameSpace(__name_space);
+
+    if (parser::isPrimitiveTokenId(_id));
+    else if (_id == TOKEN_IDENTIFIER) {
+
+        std::cout << "Not done Type informaiton 1" << std::endl;
+
+        exit(1);
+
+    } else new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected primitive type or user defined type"); // Should never reach this 
+
+    __ast_control->current_token_position++;
+
+    _pointer_operations = getPointerOperations(__ast_control, _id == TOKEN_IDENTIFIER);
+
+    Type_Information* _type_information = new Type_Information(__ast_control, __name_space, _id, _declaration_id, _pointer_operations);
+
+    delete _pointer_operations;
+
+    if (__name_space) __ast_control->popNameSpace();
+
+    return _type_information;
+
+}
+
+parser_helper::Type_Information* parser_helper::Type_Information::generate(parser::Ast_Control* __ast_control, Type_Information* __type_information) {
+
+    utils::Linked_List <int>* _pointer_operations = getPointerOperations(__ast_control, 0);
+
+    Type_Information* _type_information = 
+        new Type_Information(__ast_control, __type_information->name_space, __type_information->token_id, __type_information->declaration_id, _pointer_operations);
+
+    delete _pointer_operations;
+
+    return _type_information;
+
+}
+
+int parser_helper::Type_Information::getByteSize() {
+
+    if (!pointer_level) {
+
+        if (token_id == TOKEN_IDENTIFIER) {
+            std::cout << "TODO get size of user defined type Type Information" << std::endl;
+
+            exit(1);
+        }
+
+        return getSizePrimitiveType(token_id);
+
+    }
+
+    return PRIMITIVES_TYPE_POINTER_SIZE;
+
+}
+
+
+utils::Linked_List <int>* parser_helper::getPointerOperations(parser::Ast_Control* __ast_control, bool __is_user_defined) {
+
+    utils::Linked_List <int>* _pointer_operations = new utils::Linked_List <int>();
+
+    if (__is_user_defined)
+
+        if (__ast_control->getToken(0)->id == TOKEN_MULTIPLICATION || __ast_control->getToken(0)->id == TOKEN_BITWISEAND)
+
+            _pointer_operations->add(
+                __ast_control->getToken(0)->id == TOKEN_MULTIPLICATION ? TOKEN_POINTER : TOKEN_ADDRESS
+            );
+
+        else return _pointer_operations;
+
+    while(__ast_control->getToken(0)->id == TOKEN_POINTER || __ast_control->getToken(0)->id == TOKEN_ADDRESS) 
+        { _pointer_operations->add(__ast_control->getToken(0)->id); __ast_control->current_token_position++; }
+
+    return _pointer_operations;
+
+}
+
+int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
+
+    switch (__ast_control->getToken(0)->id)
+    {
+    case TOKEN_CLOSECURLYBRACKET: return 0;
+    case TOKEN_NAMESPACE: return AST_NODE_NAME_SPACE;
+    default: break;
+    }
+
+    int _backup_position = __ast_control->current_token_position;
+
+    parser::Name_Space* _name_space = getNameSpace(__ast_control);
+
+    if (parser::isPrimitiveTokenId(__ast_control->getToken(0)->id)) {
+
+        Type_Information* _type = Type_Information::generate(__ast_control, _name_space);
+        int _return_type;
+
+        getNameSpace(__ast_control);
+
+        switch (__ast_control->getToken(1)->id)
+        {
+        case TOKEN_EQUAL: case TOKEN_COMMA: case TOKEN_ENDINSTRUCTION: _return_type = AST_NODE_VARIABLE_DECLARATION; break;
+        case TOKEN_OPENPARENTHESES: _return_type = AST_NODE_FUNCTION_DECLARATION; break;
+        default: new parser::Exception_Handle(__ast_control, __ast_control->getToken(1), "Unexpected token"); break;
+        }
+
+        delete _type;
+
+        __ast_control->current_token_position = _backup_position;
+
+        return _return_type;
+
+    }
+
+    new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token");
+
+    return -1;
+
+}
+
+utils::Linked_List <char*>* parser_helper::getNameSpaceScope(parser::Ast_Control* __ast_control) {
+
+    utils::Linked_List <char*>* _scope = new utils::Linked_List <char*>();
+
+    int _expected = TOKEN_IDENTIFIER;
+
+    while(__ast_control->getToken(0)->id == _expected) {
+
+        if (_expected == TOKEN_IDENTIFIER) {
+
+            char* _name = (char*) malloc(strlen(__ast_control->getToken(0)->phr) + 1);
+
+            strcpy(_name, __ast_control->getToken(0)->phr);
+
+            _scope->add(_name);
+
+            _expected = TOKEN_NAMESPACE_OPERATOR;
+
+        } else _expected = TOKEN_IDENTIFIER;
+
+        __ast_control->current_token_position++;
+
+    }
+
+    if (_expected == TOKEN_IDENTIFIER) new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected identifier");
+
+    return _scope;
+
+}
+
+parser::Name_Space* parser_helper::getNameSpace(parser::Ast_Control* __ast_control) {
+
+    if (__ast_control->getToken(0)->id != TOKEN_NAMESPACE_OPERATOR && __ast_control->getToken(1)->id != TOKEN_NAMESPACE_OPERATOR) return NULL;
+    if (__ast_control->getToken(0)->id != TOKEN_IDENTIFIER && __ast_control->getToken(1)->id != TOKEN_IDENTIFIER) return NULL;
+
+    bool _is_global;
+
+    if (_is_global = (__ast_control->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR)) __ast_control->current_token_position++;
+
+    utils::Linked_List <char*>* _name_space_scope = getNameSpaceScope(__ast_control);
+
+    if (!_is_global) {
+
+        utils::Linked_List <char*>* _current_name_space_scope = __ast_control->name_space_chain->last->object->scope;
+
+        char* _name_scope;
+
+        for (int _ = 0; _ < _current_name_space_scope->count; _++) {
+
+            _name_scope = (char*) malloc(strlen(_current_name_space_scope->operator[](_)) + 1);
+
+            strcpy(_name_scope, _current_name_space_scope->operator[](_));
+
+            _name_space_scope->insert(_name_scope, _);
+
+        }
+
+
+    }
+
+    delete _name_space_scope->remove(_name_space_scope->count - 1);
+    __ast_control->current_token_position--;
+
+    parser::Name_Space* _name_space_return = __ast_control->name_space_control->getNameSpace(_name_space_scope);
+
+    // Needs to check if is struct arg
+
+    delete _name_space_scope;
+
+    return _name_space_return;
+
+}
+
+int parser_helper::addName(parser::Ast_Control* __ast_control, char* __to_add) {
+
+    __ast_control->name_space_chain->last->object->addName(__to_add);
+
+    return __ast_control->name_space_chain->last->object->getDeclarationId(__to_add);
+
+}
+
+int parser_helper::getSizePrimitiveType(int __id) {
+
+    switch (__id)
+    {
+    case TOKEN_TYPE_INT: return PRIMITIVES_TYPE_INT_SIZE;
+    case TOKEN_TYPE_BYTE: return PRIMITVES_TYPE_BYTE_SIZE;
+    default: break;
+    }
+
+    new parser::Exception_Handle("Unknow Primitive type not supported");
+
+    return -1;
+
+}
+
+
+

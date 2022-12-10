@@ -1,0 +1,7 @@
+
+
+/* Primitives types size */
+
+#define PRIMITIVES_TYPE_POINTER_SIZE 2
+#define PRIMITIVES_TYPE_INT_SIZE 4
+#define PRIMITVES_TYPE_BYTE_SIZE 1

@@ -1,10 +1,26 @@
 
-namespace built_in {
+namespace test {
 
-    struct Byte {
+    byte ola, adeus;
 
-        byte data;
-
-    };
+    void ::test::ola(int) { int k; }
 
 }
+
+int j;
+
+namespace test {
+
+    int ola;
+
+}
+
+// namespace built_in {
+
+//     struct Byte {
+
+//         byte data;
+
+//     };
+
+// }

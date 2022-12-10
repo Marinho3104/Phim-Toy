@@ -12,7 +12,7 @@ parser::Tokenizer_Control::~Tokenizer_Control() { delete tokens_collection; }
 
 parser::Tokenizer_Control::Tokenizer_Control(char* __code, bool __debug_info) : code(__code), debug_info(__debug_info), initial_position(__code), current_collumn(0) { tokens_collection = new utils::Linked_List <Token*>(); }
  
-void parser::Tokenizer_Control::printDebugInfo() { std::cout << "Tokenizer Control - Debug Info: Token added -> " << tokens_collection->last->object->id << std::endl; }
+void parser::Tokenizer_Control::printDebugInfo() { if (debug_info) std::cout << "\tTokenizer Control - Debug Info: Token added -> " << tokens_collection->last->object->id << std::endl; }
 
 bool parser::Tokenizer_Control::isInRange(int __off) {
 
@@ -24,11 +24,13 @@ bool parser::Tokenizer_Control::isInRange(int __off) {
 
 void parser::Tokenizer_Control::addToken(parser::Token* __to_add) { 
     if (!__to_add) return; 
-    __to_add->collumn_position = current_collumn; __to_add->line_position = initial_position - code;  
+    __to_add->collumn_position = current_collumn; __to_add->line_position = code - initial_position - 1;  
     tokens_collection->add(__to_add); 
 }
 
 void parser::Tokenizer_Control::generate() {
+
+    if (debug_info) std::cout << "\n\t\t--- Tokenizer Control ---\n" << std::endl;
 
     while(*code) {
 

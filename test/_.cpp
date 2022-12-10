@@ -5,6 +5,12 @@
 #include <iostream>
 #include <string.h>
 
+// int {};
+
+namespace ola {
+
+}
+
 int main() {
 
     int _;
