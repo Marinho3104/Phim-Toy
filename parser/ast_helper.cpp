@@ -5,6 +5,7 @@
 #include "./parser_definitions.h"
 #include "./token_definitions.h"
 #include "./exception_handle.h"
+#include "./ast_nodes.h"
 #include "./token.h"
 #include "./ast.h"
 
@@ -128,6 +129,8 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
     {
     case TOKEN_CLOSECURLYBRACKET: return 0;
     case TOKEN_NAMESPACE: return AST_NODE_NAME_SPACE;
+    case TOKEN_OPENCURLYBRACKET: return AST_NODE_CODE_BLOCK;
+    case TOKEN_STRUCT: case TOKEN_CONTRACT: return AST_NODE_STRUCT_DECLARATION;
     default: break;
     }
 
@@ -238,11 +241,24 @@ parser::Name_Space* parser_helper::getNameSpace(parser::Ast_Control* __ast_contr
 
 int parser_helper::addName(parser::Ast_Control* __ast_control, char* __to_add) {
 
-    __ast_control->name_space_chain->last->object->addName(__to_add);
+    if (__ast_control->code_block_chain->last && __ast_control->code_block_chain->last->object) 
+        __ast_control->code_block_chain->last->object->name_tracker->addName(__to_add);
 
-    return __ast_control->name_space_chain->last->object->getDeclarationId(__to_add);
+    else __ast_control->name_space_chain->last->object->addName(__to_add);
+
+    return getDeclarationId(__ast_control, __to_add);
 
 }
+
+int parser_helper::getDeclarationId(parser::Ast_Control* __ast_control, char* __to_check) {
+
+    if (__ast_control->code_block_chain->last && __ast_control->code_block_chain->last->object) 
+        return __ast_control->code_block_chain->last->object->getDeclarationId(__to_check);
+
+    return __ast_control->name_space_chain->last->object->getDeclarationId(__to_check);
+
+}
+
 
 int parser_helper::getSizePrimitiveType(int __id) {
 

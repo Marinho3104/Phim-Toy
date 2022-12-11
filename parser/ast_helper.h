@@ -36,6 +36,8 @@ namespace parser_helper {
 
     int addName(parser::Ast_Control*, char*);
 
+    int getDeclarationId(parser::Ast_Control*, char*);
+
     int getSizePrimitiveType(int);
 
 }

@@ -36,8 +36,11 @@ namespace parser {
         utils::Linked_List <Ast_Node*>* code;
         Name_Tracker* name_tracker;
         Name_Space* name_space;
+        int* declarations_off;
 
         ~Ast_Node_Code_Block(); Ast_Node_Code_Block(Ast_Node_Code_Block*, Name_Space*);
+
+        int getDeclarationId(char*);
 
         static void generate(Ast_Control*);
 
@@ -75,6 +78,25 @@ namespace parser {
         static Ast_Node_Function_Declaration* generate(Ast_Control*);
 
         static utils::Linked_List <Ast_Node*>* getParameters(Ast_Control*);
+
+        int getByteSize();
+
+    };
+
+    struct Ast_Node_Struct_Declaration : public Ast_Node {
+
+        Ast_Node_Name_Space* functions;
+        Ast_Node_Code_Block* fields;
+
+        int declaration_id;
+
+        ~Ast_Node_Struct_Declaration(); 
+        
+        Ast_Node_Struct_Declaration(int, Ast_Node_Name_Space*, Ast_Node_Code_Block*);
+
+        static Ast_Node_Struct_Declaration* generate(Ast_Control*);
+
+        static void setFieldsAndFunctions(Ast_Control*, Ast_Node_Name_Space*, Ast_Node_Code_Block*);
 
         int getByteSize();
 

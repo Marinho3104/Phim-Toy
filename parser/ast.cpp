@@ -225,7 +225,7 @@ void parser::Ast_Control::generate() {
 
     Ast_Node_Name_Space::generate(this, name_space_control->name_spaces->operator[](0));
 
-    if (name_space_chain->count) { std::cout << "Not deleted all environment nodes" << std::endl; exit(1); }
+    if (name_space_chain->count || code_block_chain->count) { std::cout << "Not deleted all environment nodes" << std::endl; exit(1); }
 
 }
 

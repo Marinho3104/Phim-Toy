@@ -3,15 +3,38 @@ namespace test {
 
     byte ola, adeus;
 
-    void ::test::ola(int) { int k; }
+    // void func_test() {
 
+    //     int jaja;
+
+    //     {
+    //         int kk, ol;
+    //     }
+
+    //     int jafoi;
+
+    // }
+
+    struct Test_Struct {
+
+        int j, lol;
+
+        void gh() {
+
+            int po;
+
+        }
+
+
+    };
+    
 }
 
 int j;
 
 namespace test {
 
-    int ola;
+    int mario;
 
 }
 

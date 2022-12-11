@@ -128,7 +128,7 @@ void utils::Linked_List <type>::remove(Data_Linked_List <type>* __to_remove) { /
 
     if (!__to_remove) return;
 
-    if (first == last)  { first = NULL; first = NULL; }
+    if (first == last)  { first = NULL; last = NULL; }
 
     else if (__to_remove == first) { first->next->previous = NULL; first = first->next; }
 
@@ -200,6 +200,7 @@ int utils::Linked_List <char*>::getPosition(char* _to_compare, bool (*func) (cha
 
 
 
+template class utils::Linked_List <parser::Ast_Node_Function_Declaration*>;
 template class utils::Linked_List <parser::Ast_Node_Code_Block*>;
 template class utils::Linked_List <parser::Ast_Node_Name_Space*>;
 template class utils::Linked_List <parser::Name_Space*>;
@@ -208,6 +209,7 @@ template class utils::Linked_List <parser::Token*>;
 template class utils::Linked_List <char*>;
 template class utils::Linked_List <int>;
 
+template class utils::Data_Linked_List <parser::Ast_Node_Function_Declaration*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Code_Block*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Name_Space*>;
 template class utils::Data_Linked_List <parser::Name_Space*>;
