@@ -1,7 +1,7 @@
 
 namespace test {
 
-    byte ola, adeus;
+    byte* ola, adeus;
 
     struct Test_Struct {
     
@@ -15,7 +15,7 @@ namespace test {
 
 void test::Test_Struct::func_test() {
 
-  ola(12 + 12, ola) = 12;
+  *(*test_func_out()) = *12;
 
 }
 

@@ -158,6 +158,8 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
     case TOKEN_NAMESPACE: return AST_NODE_NAME_SPACE;
     case TOKEN_OPENCURLYBRACKET: return AST_NODE_CODE_BLOCK;
     case TOKEN_STRUCT: case TOKEN_CONTRACT: return AST_NODE_STRUCT_DECLARATION;
+    case TOKEN_POINTER: case TOKEN_ADDRESS: return AST_NODE_POINTER_OPERATOR;
+    case TOKEN_OPENPARENTHESES: return AST_NODE_PARENTHESIS;
     default: break;
     }
 
@@ -202,6 +204,20 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
     new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token node type");
 
     return -1;
+
+}
+
+parser::Ast_Node* parser_helper::checkNext(parser::Ast_Control* __ast_control, parser::Ast_Node* __node) {
+
+    switch (getNodeType(__ast_control))
+    {
+    case AST_NODE_ASSIGNMENT: return parser::Ast_Node_Assignment::generate(__ast_control, __node); break;
+    
+    default:
+        break;
+    }
+
+    return __node;
 
 }
 

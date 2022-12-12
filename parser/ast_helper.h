@@ -4,7 +4,7 @@
 #define PARSER_AST_HELPER_H
 
 namespace utils { template <typename> struct Linked_List; }
-namespace parser { struct Ast_Control; struct Name_Space; }
+namespace parser { struct Ast_Control; struct Name_Space; struct Ast_Node; }
 
 namespace parser_helper {
 
@@ -31,6 +31,8 @@ namespace parser_helper {
     utils::Linked_List <int>* getPointerOperations(parser::Ast_Control*, bool);
 
     int getNodeType(parser::Ast_Control*);
+
+    parser::Ast_Node* checkNext(parser::Ast_Control*, parser::Ast_Node*);
 
     utils::Linked_List <char*>* getNameSpaceScope(parser::Ast_Control*);
 

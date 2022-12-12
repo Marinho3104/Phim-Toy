@@ -146,7 +146,7 @@ namespace parser {
 
         ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
-        static Ast_Node* generate(Ast_Control*);
+        static Ast_Node* generate(Ast_Control*, bool);
 
     };
 
@@ -172,9 +172,30 @@ namespace parser {
 
         ~Ast_Node_Function_Call(); Ast_Node_Function_Call(utils::Linked_List <Ast_Node_Expression*>*, Name_Space*, int);
 
-        static Ast_Node* generate(Ast_Control*);
+        static Ast_Node* generate(Ast_Control*, bool);
 
         static utils::Linked_List <Ast_Node_Expression*>* getParameters(Ast_Control*);
+
+    };
+
+    struct Ast_Node_Pointer_Operator : public Ast_Node {
+
+        int pointer_level;
+        Ast_Node* value;
+
+        ~Ast_Node_Pointer_Operator(); Ast_Node_Pointer_Operator(int, Ast_Node*);
+
+        static Ast_Node* generate(Ast_Control*, bool);
+
+    };
+
+    struct Ast_Node_Parenthesis : public Ast_Node {
+
+        Ast_Node_Expression* value;
+
+        ~Ast_Node_Parenthesis(); Ast_Node_Parenthesis(Ast_Node_Expression*);
+
+        static Ast_Node* generate(Ast_Control*, bool);
 
     };
 
