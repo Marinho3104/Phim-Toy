@@ -152,7 +152,9 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
 
     switch (__ast_control->getToken(0)->id)
     {
-    case TOKEN_CLOSECURLYBRACKET: return 0;
+    case TOKEN_CLOSECURLYBRACKET: return GET_NODE_TYPE_TOKEN_CLOSE_CURLY_BRACKET;
+    case TOKEN_ENDINSTRUCTION: return GET_NODE_TYPE_TOKEN_END_INSTRUCTION;
+    case TOKEN_CLOSEPARENTHESES: return GET_NODE_TYPE_TOKEN_CLOSE_CURLY_BRACKET;
     case TOKEN_NAMESPACE: return AST_NODE_NAME_SPACE;
     case TOKEN_OPENCURLYBRACKET: return AST_NODE_CODE_BLOCK;
     case TOKEN_STRUCT: case TOKEN_CONTRACT: return AST_NODE_STRUCT_DECLARATION;
@@ -169,8 +171,7 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
         int _return_type;
 
         try { _type = Type_Information::generate(__ast_control, _name_space); }
-        catch(...) { _return_type = AST_NODE_VARIABLE; goto reset; }
-
+        catch(...) { _return_type = (__ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) ? AST_NODE_FUNCTION_CALL : AST_NODE_VARIABLE; goto reset; }
 
         getNameSpace(__ast_control);
 
@@ -194,7 +195,11 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
 
     else if (parser::isAssignmentOperator(__ast_control->getToken(0)->id)) return AST_NODE_ASSIGNMENT;
 
-    new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token");
+    else if (parser::isExpressionOperator(__ast_control->getToken(0)->id)) return AST_NODE_EXPRESSION;
+
+    std::cout << __ast_control->getToken(0)->id << std::endl;
+
+    new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token node type");
 
     return -1;
 

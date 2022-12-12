@@ -21,6 +21,7 @@ namespace parser {
     bool isImplicitValue(int);
     bool isExpressionOperator(int);
     bool isAssignmentOperator(int);
+    bool isSingleAssignmentOperator(int);
 
     
 

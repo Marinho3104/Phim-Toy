@@ -120,7 +120,7 @@ namespace parser {
 
         ~Ast_Node_Expression(); Ast_Node_Expression(Ast_Node*, Ast_Node_Expression*, int);
 
-        static Ast_Node_Expression* generate(Ast_Control*, int);
+        static Ast_Node_Expression* generate(Ast_Control*, int, bool);
 
         static Ast_Node* getValue(Ast_Control*, int);
 
@@ -146,7 +146,7 @@ namespace parser {
 
         ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
 
-        static Ast_Node_Variable* generate(Ast_Control*);
+        static Ast_Node* generate(Ast_Control*);
 
     };
 
@@ -159,6 +159,22 @@ namespace parser {
         ~Ast_Node_Assignment(); Ast_Node_Assignment(Ast_Node*, Ast_Node_Expression*, int);
 
         static Ast_Node_Assignment* generate(Ast_Control*, Ast_Node*);
+        
+        static Ast_Node_Assignment* generate(Ast_Control*);
+
+    };
+
+    struct Ast_Node_Function_Call : public Ast_Node {
+
+        utils::Linked_List <Ast_Node_Expression*>* parameters;
+        Name_Space* name_space;
+        int declaration_id;
+
+        ~Ast_Node_Function_Call(); Ast_Node_Function_Call(utils::Linked_List <Ast_Node_Expression*>*, Name_Space*, int);
+
+        static Ast_Node* generate(Ast_Control*);
+
+        static utils::Linked_List <Ast_Node_Expression*>* getParameters(Ast_Control*);
 
     };
 

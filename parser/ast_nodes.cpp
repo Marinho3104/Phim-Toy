@@ -108,7 +108,7 @@ void parser::Ast_Node_Name_Space::setDeclarations(Ast_Control* __ast_control) {
 
         switch (parser_helper::getNodeType(__ast_control))
         {
-        case 0: __ast_control->current_token_position++; goto out;
+        case GET_NODE_TYPE_TOKEN_CLOSE_CURLY_BRACKET: __ast_control->current_token_position++; goto out;
         case AST_NODE_NAME_SPACE: parser::Ast_Node_Name_Space::generate(__ast_control); continue;
         case AST_NODE_VARIABLE_DECLARATION: _temp = parser::Ast_Node_Variable_Declaration::generate(__ast_control); break;
         case AST_NODE_FUNCTION_DECLARATION: declarations->add(parser::Ast_Node_Function_Declaration::generate(__ast_control)); continue;
@@ -207,7 +207,7 @@ void parser::Ast_Node_Code_Block::setCode(Ast_Control* __ast_control) {
 
         switch (parser_helper::getNodeType(__ast_control))
         {
-        case 0: __ast_control->current_token_position++; goto out;
+        case GET_NODE_TYPE_TOKEN_CLOSE_CURLY_BRACKET: __ast_control->current_token_position++; goto out;
         case AST_NODE_VARIABLE_DECLARATION: _temp = parser::Ast_Node_Variable_Declaration::generate(__ast_control); break;
         case AST_NODE_CODE_BLOCK: 
 
@@ -221,10 +221,12 @@ void parser::Ast_Node_Code_Block::setCode(Ast_Control* __ast_control) {
 
         case AST_NODE_VARIABLE: if (!_expression_value_id) _expression_value_id = AST_NODE_VARIABLE;
         case AST_NODE_VALUE: if (!_expression_value_id) _expression_value_id = AST_NODE_VALUE;
+        case AST_NODE_ASSIGNMENT: if (!_expression_value_id) _expression_value_id = AST_NODE_ASSIGNMENT;
+        case AST_NODE_FUNCTION_CALL: if (!_expression_value_id) _expression_value_id = AST_NODE_FUNCTION_CALL;
 
             code->add(
                 parser::Ast_Node_Expression::generate(
-                    __ast_control, _expression_value_id
+                    __ast_control, _expression_value_id, 1
                 )
             );
 
@@ -584,7 +586,7 @@ parser::Ast_Node_Expression::~Ast_Node_Expression() {
 parser::Ast_Node_Expression::Ast_Node_Expression(Ast_Node* __value, Ast_Node_Expression* __expression, int __operator_id) 
     : Ast_Node(AST_NODE_EXPRESSION), value(__value), expression(__expression), operator_id(__operator_id) {}
 
-parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* __ast_control, int __value_node_id) {
+parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* __ast_control, int __value_node_id, bool _expect_end_instruction) {
 
     __ast_control->printDebugInfo("Ast Node Expression Created");
 
@@ -600,14 +602,19 @@ parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(Ast_Control* 
             __ast_control,
             parser_helper::getNodeType(
                 __ast_control
-            )
+            ),
+            _expect_end_instruction
         );
     
     }
 
-    else if (__ast_control->getToken(0)->id == TOKEN_ENDINSTRUCTION) __ast_control->current_token_position++;
+    else if (_expect_end_instruction) {
 
-    else new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected ';' token");
+        if (__ast_control->getToken(0)->id == TOKEN_ENDINSTRUCTION) __ast_control->current_token_position++;
+
+        else new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected ';' token");
+
+    }
 
     parser::Ast_Node_Expression* _expression_node = (parser::Ast_Node_Expression*) malloc(sizeof(parser::Ast_Node_Expression));
     new (_expression_node) parser::Ast_Node_Expression(_value, _expression, _operator_id);
@@ -624,10 +631,14 @@ parser::Ast_Node* parser::Ast_Node_Expression::getValue(Ast_Control* __ast_contr
     {
     case AST_NODE_VARIABLE: return parser::Ast_Node_Variable::generate(__ast_control);
     case AST_NODE_VALUE: return parser::Ast_Node_Value::generate(__ast_control);
+    case AST_NODE_ASSIGNMENT: return parser::Ast_Node_Assignment::generate(__ast_control);
+    case AST_NODE_FUNCTION_CALL: return parser::Ast_Node_Function_Call::generate(__ast_control);
     default: break;
     }
 
     new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expression dont support given node");
+
+    return NULL;
 
 }
 
@@ -670,7 +681,7 @@ parser::Ast_Node_Variable::~Ast_Node_Variable() {}
 parser::Ast_Node_Variable::Ast_Node_Variable(Name_Space* __name_space, int __declaration_id, bool __is_global) 
     : Ast_Node(AST_NODE_VARIABLE), name_space(__name_space), declaration_id(__declaration_id), is_global(__is_global) {}
 
-parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __ast_control) {
+parser::Ast_Node* parser::Ast_Node_Variable::generate(Ast_Control* __ast_control) {
 
     __ast_control->printDebugInfo("Ast Node Variable Created");
     
@@ -691,6 +702,12 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate(Ast_Control* __as
     parser::Ast_Node_Variable* _variable_node = (parser::Ast_Node_Variable*) malloc(sizeof(parser::Ast_Node_Variable));
 
     new (_variable_node) parser::Ast_Node_Variable(_name_space, _declaration_id, _is_global);
+
+    switch (parser_helper::getNodeType(__ast_control))
+    {
+    case AST_NODE_ASSIGNMENT: return parser::Ast_Node_Assignment::generate(__ast_control, _variable_node); break;
+    default: break;
+    }
 
     std::cout << "Variable declaration id -> " << _declaration_id << std::endl;
     std::cout << "Variable is -> " << (_is_global ? "global" : "local") << std::endl;
@@ -719,13 +736,16 @@ parser::Ast_Node_Assignment* parser::Ast_Node_Assignment::generate(Ast_Control* 
     if (!parser::isAssignmentOperator(__ast_control->getToken(0)->id)) new Exception_Handle(__ast_control, __ast_control->getToken(0), "Excpected a token assignment operator");
 
     int _token_id = __ast_control->getToken(0)->id;
+    __ast_control->current_token_position++;
 
     parser::Ast_Node_Assignment* _assignment_node = (parser::Ast_Node_Assignment*) malloc(sizeof(parser::Ast_Node_Assignment)); 
     
     // Confirm if expression node type is correct TODO
 
     new (_assignment_node) parser::Ast_Node_Assignment(
-        __target, parser::Ast_Node_Expression::generate(__ast_control, parser_helper::getNodeType(__ast_control)), _token_id
+        __target, 
+        parser::isSingleAssignmentOperator(_token_id) ? NULL :  parser::Ast_Node_Expression::generate(__ast_control, parser_helper::getNodeType(__ast_control), 0), 
+        _token_id
     );
 
     __ast_control->printDebugInfo("Ast Node Assignment End");
@@ -735,7 +755,104 @@ parser::Ast_Node_Assignment* parser::Ast_Node_Assignment::generate(Ast_Control* 
 
 }
 
+parser::Ast_Node_Assignment* parser::Ast_Node_Assignment::generate(Ast_Control* __ast_control) {
 
+    __ast_control->printDebugInfo("Ast Node Assignment Created");
+
+    int _token_id = __ast_control->getToken(0)->id;
+    __ast_control->current_token_position++;
+    Ast_Node* _target;
+
+    if (!parser::isSingleAssignmentOperator(_token_id)) new Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected Single Assignment token '++' or '--'");
+
+    switch (parser_helper::getNodeType(__ast_control))
+    {
+    case AST_NODE_VARIABLE: _target = parser::Ast_Node_Variable::generate(__ast_control); break;
+    default: new Exception_Handle(__ast_control, __ast_control->getToken(0), "Assignment dont support given node");
+    }
+
+    parser::Ast_Node_Assignment* _assignment_node = (parser::Ast_Node_Assignment*) malloc(sizeof(parser::Ast_Node_Assignment)); 
+
+    new (_assignment_node) parser::Ast_Node_Assignment(
+        _target, NULL, _token_id
+    );
+
+    __ast_control->printDebugInfo("Ast Node Assignment End");
+
+    return _assignment_node;
+
+}
+
+
+parser::Ast_Node_Function_Call::~Ast_Node_Function_Call() { delete parameters; }
+
+parser::Ast_Node_Function_Call::Ast_Node_Function_Call(utils::Linked_List <Ast_Node_Expression*>* __parameters, Name_Space* __name_space, int __declaration_id)
+    : Ast_Node(AST_NODE_FUNCTION_CALL), parameters(__parameters), name_space(__name_space), declaration_id(__declaration_id) {}
+
+parser::Ast_Node* parser::Ast_Node_Function_Call::generate(Ast_Control* __ast_control) {
+
+    __ast_control->printDebugInfo("Ast Node Function Call Created");
+
+    Name_Space* _function_call_name_space = parser_helper::getNameSpace(__ast_control);
+
+    if (_function_call_name_space) { __ast_control->addNameSpace(_function_call_name_space); __ast_control->addCodeBlockNode(NULL); }
+
+    if (__ast_control->getToken(0)->id != TOKEN_IDENTIFIER) new Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected token identifier");
+    int _declaration_id = parser_helper::getDeclarationId(__ast_control, __ast_control->getToken(0)->phr);
+    __ast_control->current_token_position++;
+
+    if (_declaration_id == -1) new Exception_Handle(__ast_control, __ast_control->getToken(0), "Undefined name");
+
+    utils::Linked_List <Ast_Node_Expression*>* _parameters = getParameters(__ast_control);
+
+    parser::Ast_Node_Function_Call* _function_call_node = (parser::Ast_Node_Function_Call*) malloc(sizeof(parser::Ast_Node_Function_Call));
+
+    new (_function_call_node) parser::Ast_Node_Function_Call(
+        _parameters, _function_call_name_space, _declaration_id
+    );
+
+    if (_function_call_name_space) { __ast_control->popNameSpace(); __ast_control->popCodeBlockNode(); }
+
+    __ast_control->printDebugInfo("Ast Node Function Call End");
+
+    switch (parser_helper::getNodeType(__ast_control))
+    {
+    case AST_NODE_ASSIGNMENT: return parser::Ast_Node_Assignment::generate(__ast_control, _function_call_node); break;
+    default: break;
+    }
+
+    return _function_call_node;
+
+}
+
+utils::Linked_List <parser::Ast_Node_Expression*>* parser::Ast_Node_Function_Call::getParameters(Ast_Control* __ast_control) {
+
+    utils::Linked_List <parser::Ast_Node_Expression*>* _parameters = new utils::Linked_List <parser::Ast_Node_Expression*>();
+
+    __ast_control->current_token_position++;
+
+    while (__ast_control->getToken(0)->id != TOKEN_CLOSEPARENTHESES) {
+
+        _parameters->add(
+            parser::Ast_Node_Expression::generate(
+                __ast_control, parser_helper::getNodeType(__ast_control), 0
+            )
+        );
+
+        switch (__ast_control->getToken(0)->id)
+        {
+        case TOKEN_COMMA: __ast_control->current_token_position++; 
+        case TOKEN_CLOSEPARENTHESES: break;
+        default: new Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token"); break;
+        }
+
+    }
+
+    __ast_control->current_token_position++;
+
+    return _parameters;
+
+}
 
 
 

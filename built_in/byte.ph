@@ -15,7 +15,7 @@ namespace test {
 
 void test::Test_Struct::func_test() {
 
-  ola + adeus;
+  ola(12 + 12, ola) = 12;
 
 }
 
