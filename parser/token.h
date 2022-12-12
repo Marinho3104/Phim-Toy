@@ -20,6 +20,7 @@ namespace parser {
     bool isPrimitiveTokenId(int);
     bool isImplicitValue(int);
     bool isExpressionOperator(int);
+    bool isAssignmentOperator(int);
 
     
 

@@ -24,6 +24,8 @@ namespace parser_helper {
 
         int getByteSize();
 
+        static int getByteSize(int);
+
     };
 
     utils::Linked_List <int>* getPointerOperations(parser::Ast_Control*, bool);
@@ -37,6 +39,8 @@ namespace parser_helper {
     int addName(parser::Ast_Control*, char*);
 
     int getDeclarationId(parser::Ast_Control*, char*);
+
+    bool isGlobalDeclaration(parser::Ast_Control*, char*);
 
     int getSizePrimitiveType(int);
 

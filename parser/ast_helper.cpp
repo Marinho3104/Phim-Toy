@@ -54,9 +54,10 @@ parser_helper::Type_Information* parser_helper::Type_Information::generate(parse
 
         parser::Ast_Node_Name_Space* _name_space_node = __ast_control->getNameSpaceNodeFromNameSpace(__ast_control->name_space_chain->last->object);
 
-        if (_declaration_id == -1 || !_name_space_node->getStructDeclaration(_declaration_id)) 
+        if (_declaration_id == -1 || !_name_space_node->getStructDeclaration(_declaration_id)) {
+            if (__name_space) __ast_control->popNameSpace();
             new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Undefined type");
-
+        }
     }
     else new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected primitive type or user defined type"); // Should never reach this 
 
@@ -102,6 +103,20 @@ int parser_helper::Type_Information::getByteSize() {
     }
 
     return PRIMITIVES_TYPE_POINTER_SIZE;
+
+}
+
+int parser_helper::Type_Information::getByteSize(int __token_id) {
+
+    switch (__token_id)
+    {
+    case TOKEN_NUMBERINT: return 4;    
+    default: break;
+    }
+
+    new parser::Exception_Handle("Implicit value token id invalid");
+
+    return -1;
 
 }
 
@@ -151,11 +166,11 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
     if (parser::isPrimitiveTokenId(__ast_control->getToken(0)->id) || __ast_control->getToken(0)->id == TOKEN_IDENTIFIER) { // Accept struct
 
         Type_Information* _type;
+        int _return_type;
 
         try { _type = Type_Information::generate(__ast_control, _name_space); }
-        catch(...) { return AST_NODE_VARIABLE; }
+        catch(...) { _return_type = AST_NODE_VARIABLE; goto reset; }
 
-        int _return_type;
 
         getNameSpace(__ast_control);
 
@@ -167,7 +182,8 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
         }
 
         delete _type;
-
+        
+    reset:
         __ast_control->current_token_position = _backup_position;
 
         return _return_type;
@@ -175,6 +191,8 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
     }
 
     else if (parser::isImplicitValue(__ast_control->getToken(0)->id)) return AST_NODE_VALUE;
+
+    else if (parser::isAssignmentOperator(__ast_control->getToken(0)->id)) return AST_NODE_ASSIGNMENT;
 
     new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token");
 
@@ -302,13 +320,28 @@ int parser_helper::addName(parser::Ast_Control* __ast_control, char* __to_add) {
 
 int parser_helper::getDeclarationId(parser::Ast_Control* __ast_control, char* __to_check) {
 
-    if (__ast_control->code_block_chain->last && __ast_control->code_block_chain->last->object) 
-        return __ast_control->code_block_chain->last->object->getDeclarationId(__to_check);
+    int _declaration_id;
+
+    if (__ast_control->code_block_chain->last && __ast_control->code_block_chain->last->object) {
+
+        _declaration_id = __ast_control->code_block_chain->last->object->getDeclarationId(__to_check);
+
+        if (_declaration_id != -1) return _declaration_id;
+
+    } 
 
     return __ast_control->name_space_chain->last->object->getDeclarationId(__to_check);
 
 }
 
+bool parser_helper::isGlobalDeclaration(parser::Ast_Control* __ast_control, char* __to_check) {
+
+    if (__ast_control->code_block_chain->last && __ast_control->code_block_chain->last->object) 
+        return __ast_control->code_block_chain->last->object->isGlobalDeclaration(__to_check);
+
+    return 1; 
+
+}
 
 int parser_helper::getSizePrimitiveType(int __id) {
 

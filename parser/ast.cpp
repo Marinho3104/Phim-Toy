@@ -47,10 +47,13 @@ bool parser::Name_Space::addName(char* __name) { return name_tracker->addName(__
 
 int parser::Name_Space::getDeclarationId(char* __name) {
 
+    int _scope_count = scope->count;
     int _id = name_tracker->getDeclarationId(__name);
 
-    if (_id == -1 && scope->count) return name_space_control->getPreviousNameSpace(scope)->getDeclarationId(__name);
+    if (_id == -1 && scope->count) _id = name_space_control->getPreviousNameSpace(scope)->getDeclarationId(__name);
 
+    scope->count = _scope_count;
+    
     return _id;
 
 }
@@ -235,7 +238,8 @@ void parser::Ast_Control::generate() {
 
     Ast_Node_Name_Space::generate(this, name_space_control->name_spaces->operator[](0));
 
-    if (name_space_chain->count || code_block_chain->count) { std::cout << "Not deleted all environment nodes" << std::endl; exit(1); }
+    std::cout << "Name Space Chain -> " << name_space_chain->count << std::endl;
+    std::cout << "Code BlockChain -> " << code_block_chain->count << std::endl;
 
 }
 

@@ -50,7 +50,7 @@ namespace parser {
 
         ~Ast_Node_Code_Block(); Ast_Node_Code_Block(Ast_Node_Code_Block*, Name_Space*);
 
-        int getDeclarationId(char*);
+        int getDeclarationId(char*); bool isGlobalDeclaration(char*);
 
         static void generate(Ast_Control*);
 
@@ -135,6 +135,30 @@ namespace parser {
         static Ast_Node_Value* generate(Ast_Control*);
 
         int getByteSize();
+
+    };
+
+    struct Ast_Node_Variable : public Ast_Node {
+
+        Name_Space* name_space;
+        int declaration_id;
+        bool is_global;
+
+        ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
+
+        static Ast_Node_Variable* generate(Ast_Control*);
+
+    };
+
+    struct Ast_Node_Assignment : public Ast_Node {
+
+        Ast_Node* target;
+        Ast_Node_Expression* value;
+        int token_id;
+
+        ~Ast_Node_Assignment(); Ast_Node_Assignment(Ast_Node*, Ast_Node_Expression*, int);
+
+        static Ast_Node_Assignment* generate(Ast_Control*, Ast_Node*);
 
     };
 

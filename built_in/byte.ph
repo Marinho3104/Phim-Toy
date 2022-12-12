@@ -9,14 +9,15 @@ namespace test {
 
     };
 
+    int test_func_out();
     
 }
 
 void test::Test_Struct::func_test() {
 
-  12 + 12
+  ola + adeus;
 
-;}
+}
 
 //void test::Test_Struct::func_test() {
   //  int j;

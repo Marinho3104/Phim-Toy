@@ -202,6 +202,8 @@ bool parser::isImplicitValue(int __token_id) { return __token_id >= TOKEN_NUMBER
 
 bool parser::isExpressionOperator(int __token_id) { return __token_id >= TOKEN_ADDITION && __token_id <= TOKEN_OR; }
 
+bool parser::isAssignmentOperator(int __token_id) { return __token_id >= TOKEN_ADDITIONASSIGMENT && __token_id <= TOKEN_DECREMENT_LEFT; }
+
 
 
 

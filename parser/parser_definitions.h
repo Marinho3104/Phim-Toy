@@ -11,5 +11,6 @@
 #define AST_NODE_EXPRESSION 6
 #define AST_NODE_VALUE 7
 #define AST_NODE_VARIABLE 8
+#define AST_NODE_ASSIGNMENT 9
 
 #endif
