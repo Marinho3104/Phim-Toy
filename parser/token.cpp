@@ -198,6 +198,10 @@ int parser::getTokenIdImplicitValue(char* _) {
 
 bool parser::isPrimitiveTokenId(int __token_id) { return __token_id >= TOKEN_TYPE_INT && __token_id <= TOKEN_TYPE_BYTE; }
 
+bool parser::isImplicitValue(int __token_id) { return __token_id >= TOKEN_NUMBERINT && __token_id <= TOKEN_STRING; }
+
+bool parser::isExpressionOperator(int __token_id) { return __token_id >= TOKEN_ADDITION && __token_id <= TOKEN_OR; }
+
 
 
 

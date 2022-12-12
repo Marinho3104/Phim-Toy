@@ -82,9 +82,9 @@ namespace parser {
 
         ~Ast_Control(); Ast_Control(Tokenizer_Control*, bool);
 
-        Token* getToken(int);
+        Token* getToken(int); Ast_Node_Name_Space* getNameSpaceNodeFromNameSpace(Name_Space*);
 
-        void printDebugInfo(char*);
+        void printDebugInfo(const char*);
 
         void addNameSpace(Name_Space*); void popNameSpace();
 

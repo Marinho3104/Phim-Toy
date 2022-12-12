@@ -48,13 +48,17 @@ parser_helper::Type_Information* parser_helper::Type_Information::generate(parse
     if (__name_space) __ast_control->addNameSpace(__name_space);
 
     if (parser::isPrimitiveTokenId(_id));
-    else if (_id == TOKEN_IDENTIFIER) {
+    else if (_id == TOKEN_IDENTIFIER) { 
 
-        std::cout << "Not done Type informaiton 1" << std::endl;
+        _declaration_id = parser_helper::getDeclarationId(__ast_control, __ast_control->getToken(0)->phr); 
 
-        exit(1);
+        parser::Ast_Node_Name_Space* _name_space_node = __ast_control->getNameSpaceNodeFromNameSpace(__ast_control->name_space_chain->last->object);
 
-    } else new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected primitive type or user defined type"); // Should never reach this 
+        if (_declaration_id == -1 || !_name_space_node->getStructDeclaration(_declaration_id)) 
+            new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Undefined type");
+
+    }
+    else new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Expected primitive type or user defined type"); // Should never reach this 
 
     __ast_control->current_token_position++;
 
@@ -106,15 +110,21 @@ utils::Linked_List <int>* parser_helper::getPointerOperations(parser::Ast_Contro
 
     utils::Linked_List <int>* _pointer_operations = new utils::Linked_List <int>();
 
-    if (__is_user_defined)
+    if (__is_user_defined) {
 
-        if (__ast_control->getToken(0)->id == TOKEN_MULTIPLICATION || __ast_control->getToken(0)->id == TOKEN_BITWISEAND)
+        if (__ast_control->getToken(0)->id == TOKEN_MULTIPLICATION || __ast_control->getToken(0)->id == TOKEN_BITWISEAND) {
 
             _pointer_operations->add(
                 __ast_control->getToken(0)->id == TOKEN_MULTIPLICATION ? TOKEN_POINTER : TOKEN_ADDRESS
             );
 
+            __ast_control->current_token_position++;
+
+        }
+
         else return _pointer_operations;
+
+    }
 
     while(__ast_control->getToken(0)->id == TOKEN_POINTER || __ast_control->getToken(0)->id == TOKEN_ADDRESS) 
         { _pointer_operations->add(__ast_control->getToken(0)->id); __ast_control->current_token_position++; }
@@ -138,9 +148,13 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
 
     parser::Name_Space* _name_space = getNameSpace(__ast_control);
 
-    if (parser::isPrimitiveTokenId(__ast_control->getToken(0)->id)) {
+    if (parser::isPrimitiveTokenId(__ast_control->getToken(0)->id) || __ast_control->getToken(0)->id == TOKEN_IDENTIFIER) { // Accept struct
 
-        Type_Information* _type = Type_Information::generate(__ast_control, _name_space);
+        Type_Information* _type;
+
+        try { _type = Type_Information::generate(__ast_control, _name_space); }
+        catch(...) { return AST_NODE_VARIABLE; }
+
         int _return_type;
 
         getNameSpace(__ast_control);
@@ -149,7 +163,7 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
         {
         case TOKEN_EQUAL: case TOKEN_COMMA: case TOKEN_ENDINSTRUCTION: _return_type = AST_NODE_VARIABLE_DECLARATION; break;
         case TOKEN_OPENPARENTHESES: _return_type = AST_NODE_FUNCTION_DECLARATION; break;
-        default: new parser::Exception_Handle(__ast_control, __ast_control->getToken(1), "Unexpected token"); break;
+        default: new parser::Exception_Handle(__ast_control, __ast_control->getToken(1), "Unexpected token aqui"); break;
         }
 
         delete _type;
@@ -159,6 +173,8 @@ int parser_helper::getNodeType(parser::Ast_Control* __ast_control) {
         return _return_type;
 
     }
+
+    else if (parser::isImplicitValue(__ast_control->getToken(0)->id)) return AST_NODE_VALUE;
 
     new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Unexpected token");
 
@@ -226,12 +242,46 @@ parser::Name_Space* parser_helper::getNameSpace(parser::Ast_Control* __ast_contr
 
     }
 
-    delete _name_space_scope->remove(_name_space_scope->count - 1);
+    delete _name_space_scope->remove(_name_space_scope->count);
     __ast_control->current_token_position--;
 
     parser::Name_Space* _name_space_return = __ast_control->name_space_control->getNameSpace(_name_space_scope);
 
-    // Needs to check if is struct arg
+    if (!_name_space_return) {
+
+        utils::Data_Linked_List <char*>* _data_linked_struct_name = _name_space_scope->remove(_name_space_scope->count);
+
+        if (_name_space_scope->count) {
+
+            parser::Name_Space* _name_space = __ast_control->name_space_control->getNameSpace(_name_space_scope);
+
+            if (!_name_space) new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Undefined name space");
+
+            __ast_control->addNameSpace(_name_space);
+
+        }
+
+        int _declaration_id = parser_helper::getDeclarationId(__ast_control, _data_linked_struct_name->object);
+
+        delete _data_linked_struct_name;
+
+        if (_declaration_id != -1) {
+
+            parser::Ast_Node_Name_Space* _name_space_node = __ast_control->getNameSpaceNodeFromNameSpace(__ast_control->name_space_chain->last->object);
+
+            if (!_name_space_node) new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Undefined name space");
+
+            parser::Ast_Node_Struct_Declaration* _struct_declaration = _name_space_node->getStructDeclaration(_declaration_id);
+
+            _name_space_return = _struct_declaration->functions->name_space;
+
+        }
+
+        __ast_control->popNameSpace();
+
+    }
+
+    if (!_name_space_return) new parser::Exception_Handle(__ast_control, __ast_control->getToken(0), "Undefined name space");
 
     delete _name_space_scope;
 

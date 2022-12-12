@@ -13,6 +13,10 @@ namespace parser {
     struct Ast_Control;
     struct Name_Space;
 
+    struct Ast_Node_Variable_Declaration;
+    struct Ast_Node_Function_Declaration;
+    struct Ast_Node_Struct_Declaration;
+
     struct Ast_Node { int node_id; virtual ~Ast_Node(); Ast_Node(int); };
 
     struct Ast_Node_Name_Space : public Ast_Node {
@@ -21,6 +25,12 @@ namespace parser {
         Name_Space* name_space;
 
         ~Ast_Node_Name_Space(); Ast_Node_Name_Space(Name_Space*);
+
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int);
+        
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
 
         static void generate(Ast_Control*, Name_Space*);
 
@@ -97,6 +107,32 @@ namespace parser {
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
 
         static void setFieldsAndFunctions(Ast_Control*, Ast_Node_Name_Space*, Ast_Node_Code_Block*);
+
+        int getByteSize();
+
+    };
+
+    struct Ast_Node_Expression : public Ast_Node {
+
+        Ast_Node* value;
+        Ast_Node_Expression* expression;
+        int operator_id;
+
+        ~Ast_Node_Expression(); Ast_Node_Expression(Ast_Node*, Ast_Node_Expression*, int);
+
+        static Ast_Node_Expression* generate(Ast_Control*, int);
+
+        static Ast_Node* getValue(Ast_Control*, int);
+
+    };
+
+    struct Ast_Node_Value : public Ast_Node {
+
+        int implicit_value_position, token_id;
+        
+        ~Ast_Node_Value(); Ast_Node_Value(int, int);
+
+        static Ast_Node_Value* generate(Ast_Control*);
 
         int getByteSize();
 

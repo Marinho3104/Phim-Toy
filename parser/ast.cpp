@@ -58,7 +58,7 @@ int parser::Name_Space::getDeclarationId(char* __name) {
 void parser::Name_Space::printScope() { std::cout << "Name Space Scope -> "; scope->printContent(); }
 
 
-parser::Name_Space_Control::~Name_Space_Control() { /* name_spaces->destroy_content = 0; */ delete name_spaces; }
+parser::Name_Space_Control::~Name_Space_Control() { delete name_spaces; }
 
 parser::Name_Space_Control::Name_Space_Control() : declarations_off(0) { 
     
@@ -189,7 +189,17 @@ parser::Token* parser::Ast_Control::getToken(int __off) {
 
 }
 
-void parser::Ast_Control::printDebugInfo(char* __debug_info) { if (debug_info) std::cout << "\tAst Control - Debug Info: " << __debug_info << std::endl; }
+parser::Ast_Node_Name_Space* parser::Ast_Control::getNameSpaceNodeFromNameSpace(Name_Space* __name_space) {
+
+    for (int _ = 0; _ < name_space_nodes->count; _++)
+
+        if (name_space_nodes->operator[](_)->name_space == __name_space) return name_space_nodes->operator[](_);
+
+    return NULL;
+
+}
+
+void parser::Ast_Control::printDebugInfo(const char* __debug_info) { if (debug_info) std::cout << "\tAst Control - Debug Info: " << __debug_info << std::endl; }
 
 void parser::Ast_Control::addNameSpace(Name_Space* __name_space) { name_space_chain->add(__name_space); }
 
@@ -213,7 +223,7 @@ int parser::Ast_Control::addImplicitValue(char* __value) {
 
     char* __to_add = (char*) malloc(strlen(__value) + 1);
 
-    strcmp(__to_add, __value);
+    strcpy(__to_add, __value);
 
     return implicit_values->add(__to_add);
 

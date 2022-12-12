@@ -18,6 +18,8 @@ namespace parser {
     int getTokenIdImplicitValue(char*);
 
     bool isPrimitiveTokenId(int);
+    bool isImplicitValue(int);
+    bool isExpressionOperator(int);
 
     
 

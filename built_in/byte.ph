@@ -3,40 +3,24 @@ namespace test {
 
     byte ola, adeus;
 
-    // void func_test() {
-
-    //     int jaja;
-
-    //     {
-    //         int kk, ol;
-    //     }
-
-    //     int jafoi;
-
-    // }
-
     struct Test_Struct {
-
-        int j, lol;
-
-        void gh() {
-
-            int po;
-
-        }
-
+    
+        void func_test();
 
     };
+
     
 }
 
-int j;
+void test::Test_Struct::func_test() {
 
-namespace test {
+  12 + 12
 
-    int mario;
+;}
 
-}
+//void test::Test_Struct::func_test() {
+  //  int j;
+//}
 
 // namespace built_in {
 

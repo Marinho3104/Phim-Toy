@@ -203,7 +203,7 @@ void parser::Tokenizer_Control::handleString(parser::Token* __token) {
 
 void parser::Tokenizer_Control::handlePointerOperation(parser::Token* __token) {
 
-    if (!parser::isPrimitiveTokenId(__token->id)) __token->id = __token->id == TOKEN_POINTER ? TOKEN_MULTIPLICATION : TOKEN_BITWISEAND;
+    if (!parser::isPrimitiveTokenId(tokens_collection->last->object->id)) __token->id = __token->id == TOKEN_POINTER ? TOKEN_MULTIPLICATION : TOKEN_BITWISEAND;
 
 }
 
