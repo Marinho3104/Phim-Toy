@@ -38,6 +38,8 @@ namespace parser_helper {
     };
 
 
+    utils::Linked_List <parser::Ast_Node_Variable_Declaration*>* getVariableDeclarationOfLinkedList(utils::Linked_List <parser::Ast_Node*>*);
+
     utils::Linked_List <int>* getPointerOperations(bool);
 
     int getNodeType();
@@ -48,11 +50,11 @@ namespace parser_helper {
 
     int addName(char*);
 
-    parser::Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+    parser::Ast_Node_Variable_Declaration* getVariableDeclaration(int, bool);
 
-    parser::Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <parser::Ast_Node*>*);
+    parser::Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <parser::Ast_Node*>*, bool);
     
-    parser::Ast_Node_Struct_Declaration* getStructDeclaration(int);
+    parser::Ast_Node_Struct_Declaration* getStructDeclaration(int, bool);
 
     void addVariableDeclaration(parser::Ast_Node_Variable_Declaration*);
 

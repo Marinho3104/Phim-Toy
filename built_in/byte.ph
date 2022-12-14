@@ -1,7 +1,15 @@
 
 namespace test {
 
-  byte j, ola, adeus
+  byte j, jj;
+
+  void gg() {
+
+  }
+
+  void gg() {
+
+  }
 
 }
 

@@ -14,7 +14,12 @@ namespace parser_helper {
 namespace parser {
 
     // Forward
+    struct Declaration_Tracker;
     struct Name_Space;
+
+    struct Ast_Node_Variable_Declaration;
+    struct Ast_Node_Function_Declaration;
+    struct Ast_Node_Struct_Declaration;
 
 
     struct Ast_Node {
@@ -37,11 +42,41 @@ namespace parser {
 
         static void generate();
 
+        int getDeclarationId(char*);
 
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <Ast_Node*>*);
+        
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
 
     };
 
-    struct Ast_Node_Code_Block : public Ast_Node {};
+    struct Ast_Node_Code_Block : public Ast_Node {
+
+        Ast_Node_Code_Block* previous_code_block;
+        Declaration_Tracker* declaration_tracker;
+        utils::Linked_List <Ast_Node*>* code;
+        Name_Space* name_space;
+        int* declarations_off;
+
+        ~Ast_Node_Code_Block(); Ast_Node_Code_Block(Ast_Node_Code_Block*, Name_Space*);
+
+        void setCode();
+
+        static void setUp();
+
+        static void generate();
+
+        int getDeclarationId(char*);
+
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <Ast_Node*>*);
+        
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
+
+    };
 
     struct Ast_Node_Variable_Declaration : public Ast_Node {
 
@@ -50,6 +85,8 @@ namespace parser {
         ~Ast_Node_Variable_Declaration(); Ast_Node_Variable_Declaration(int, parser_helper::Type_Information*);
 
         static utils::Linked_List <Ast_Node*>* generate();
+
+        static utils::Linked_List <Ast_Node*>* generateFunctionParameter();
 
         int getByteSize();
 

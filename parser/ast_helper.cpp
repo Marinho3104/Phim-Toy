@@ -106,6 +106,23 @@ int parser_helper::Type_Information::getByteSize() {
 }
 
 
+utils::Linked_List <parser::Ast_Node_Variable_Declaration*>* parser_helper::getVariableDeclarationOfLinkedList(utils::Linked_List <parser::Ast_Node*>* __linked_list) {
+
+    utils::Linked_List <parser::Ast_Node_Variable_Declaration*>* _variable_declarations = 
+        new utils::Linked_List <parser::Ast_Node_Variable_Declaration*>();
+
+    for (int _ = 0; _ < __linked_list->count; _++)
+
+        if (__linked_list->operator[](_)->node_id == AST_NODE_VARIABLE_DECLARATION) 
+
+            _variable_declarations->add(
+                (parser::Ast_Node_Variable_Declaration*) __linked_list->operator[](_)
+            );
+
+    return _variable_declarations;
+    
+}
+
 utils::Linked_List <int>* parser_helper::getPointerOperations(bool __is_user_defined) {
 
     utils::Linked_List <int>* _pointer_operations = new utils::Linked_List <int>();
@@ -279,33 +296,57 @@ int parser_helper::addName(char* __name) {
 
 }
 
-parser::Ast_Node_Variable_Declaration* parser_helper::getVariableDeclaration(int __declaration_id) {
+parser::Ast_Node_Variable_Declaration* parser_helper::getVariableDeclaration(int __declaration_id, bool __single) {
+
+    if (__single) {
+        
+        if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
+            return parser::ast_control->code_block_chain->last->object->declaration_tracker->getVariableDeclaration(__declaration_id);
+
+        return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getVariableDeclaration(__declaration_id);
+    
+    }
 
     if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
+        return parser::ast_control->code_block_chain->last->object->getVariableDeclaration(__declaration_id);
 
-    return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getVariableDeclaration(__declaration_id);
+    return parser::ast_control->name_space_chain->last->object->getVariableDeclaration(__declaration_id);
 
 }
 
-parser::Ast_Node_Function_Declaration* parser_helper::getFunctionDeclaration(int __declaration_id, utils::Linked_List <parser::Ast_Node*>* __parameters) {
+parser::Ast_Node_Function_Declaration* parser_helper::getFunctionDeclaration(int __declaration_id, utils::Linked_List <parser::Ast_Node*>* __parameters, bool __single) {
+
+    if (__single) {
+        
+        if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
+            return parser::ast_control->code_block_chain->last->object->declaration_tracker->getFunctionDeclaration(__declaration_id, __parameters);
+
+        return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getFunctionDeclaration(__declaration_id, __parameters);
+    
+    }
 
     if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
+        return parser::ast_control->code_block_chain->last->object->getFunctionDeclaration(__declaration_id, __parameters);
 
-    return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getFunctionDeclaration(__declaration_id, __parameters);
+    return parser::ast_control->name_space_chain->last->object->getFunctionDeclaration(__declaration_id, __parameters);
 
 }
 
-parser::Ast_Node_Struct_Declaration* parser_helper::getStructDeclaration(int __declaration_id) {
+parser::Ast_Node_Struct_Declaration* parser_helper::getStructDeclaration(int __declaration_id, bool __single) {
+
+    if (__single) {
+        
+        if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
+            return parser::ast_control->code_block_chain->last->object->declaration_tracker->getStructDeclaration(__declaration_id);
+
+        return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getStructDeclaration(__declaration_id);
+    
+    }
 
     if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
+        return parser::ast_control->code_block_chain->last->object->getStructDeclaration(__declaration_id);
 
-    return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getStructDeclaration(__declaration_id);
+    return parser::ast_control->name_space_chain->last->object->getStructDeclaration(__declaration_id);
 
 }
 

@@ -2,6 +2,7 @@
 
 #include "./../utils/linkedList.h"
 #include "./exception_handle.h"
+#include "./ast_helper.h"
 #include "./ast_nodes.h"
 #include "./tokenizer.h"
 
@@ -31,10 +32,39 @@ parser::Ast_Node_Variable_Declaration* parser::Declaration_Tracker::getVariableD
 
 }
 
-//TODO
 parser::Ast_Node_Function_Declaration* parser::Declaration_Tracker::getFunctionDeclaration(int __declaration_id, utils::Linked_List <Ast_Node*>* __parameters) {
 
+    utils::Linked_List <parser::Ast_Node_Variable_Declaration*>* _given_parameters = 
+        parser_helper::getVariableDeclarationOfLinkedList(__parameters), *_found_parameters; 
+    _given_parameters->destroy_content = 0;
+    parser::Ast_Node_Function_Declaration* _function_declaration = NULL;
 
+    for (int _ = 0; _ < function_declarations->count; _++)
+
+        if (function_declarations->operator[](_)->declaration_id == __declaration_id) {
+
+            _function_declaration = function_declarations->operator[](_);
+
+            _found_parameters = parser_helper::getVariableDeclarationOfLinkedList(function_declarations->operator[](_)->parameters);
+            _found_parameters->destroy_content = 0;
+
+            if (_found_parameters->count != _given_parameters->count) { delete _found_parameters; _function_declaration = NULL; continue; }
+
+            for (int _ = 0; _ < _given_parameters->count && _function_declaration; _++)
+
+                if (
+                    (*_found_parameters->operator[](_)->type) != _given_parameters->operator[](_)->type
+                ) _function_declaration = NULL;
+
+            delete _found_parameters;
+
+            if (_function_declaration) break;
+
+        }
+
+    delete _given_parameters;
+
+    return _function_declaration;
 
 }
 
