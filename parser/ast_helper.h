@@ -4,58 +4,63 @@
 #define PARSER_AST_HELPER_H
 
 namespace utils { template <typename> struct Linked_List; }
-namespace parser { struct Ast_Control; struct Name_Space; struct Ast_Node; struct Ast_Node_Variable_Declaration; struct Ast_Node_Function_Declaration; struct Ast_Node_Struct_Declaration; }
+
+namespace parser {
+
+    struct Ast_Node_Variable_Declaration;
+    struct Ast_Node_Function_Declaration;
+    struct Ast_Node_Struct_Declaration;
+    struct Ast_Control;
+    struct Ast_Node;
+
+    struct Name_Space;
+
+}
 
 namespace parser_helper {
 
     struct Type_Information {
 
         parser::Ast_Node_Struct_Declaration* declaration;
-        int pointer_level, reference_level;
-        int token_id;
-
-        parser::Ast_Control* ast_control;
+        int pointer_level, reference_level, token_id;
         parser::Name_Space* name_space;
 
-        ~Type_Information(); Type_Information(parser::Ast_Control*, parser::Name_Space*, int, parser::Ast_Node_Struct_Declaration*, utils::Linked_List <int>*);
+        ~Type_Information(); Type_Information(parser::Name_Space*, parser::Ast_Node_Struct_Declaration*, int, utils::Linked_List <int>*);
 
         bool operator==(Type_Information*); bool operator!=(Type_Information*);
 
-        static Type_Information* generate(parser::Ast_Control*, parser::Name_Space*);
+        static Type_Information* generate();
 
-        static Type_Information* generate(parser::Ast_Control*, Type_Information*);
+        static Type_Information* generate(Type_Information*);
 
         int getByteSize();
 
-        static int getByteSize(int);
-
     };
 
-    utils::Linked_List <int>* getPointerOperations(parser::Ast_Control*, bool);
 
-    int getNodeType(parser::Ast_Control*);
+    utils::Linked_List <int>* getPointerOperations(bool);
 
-    parser::Ast_Node* checkNext(parser::Ast_Control*, parser::Ast_Node*);
+    int getNodeType();
 
-    utils::Linked_List <char*>* getNameSpaceScope(parser::Ast_Control*);
+    utils::Linked_List <char*>* getScope();
 
-    parser::Name_Space* getNameSpace(parser::Ast_Control*);
+    parser::Name_Space* getNameSpace(bool);
 
-    int addName(parser::Ast_Control*, char*);
+    int addName(char*);
 
-    int getDeclarationId(parser::Ast_Control*, char*);
+    parser::Ast_Node_Variable_Declaration* getVariableDeclaration(int);
 
-    bool isGlobalDeclaration(parser::Ast_Control*, char*);
-
-    parser::Ast_Node_Variable_Declaration* getVariableDeclaration(parser::Ast_Control*, int);
-
-    parser::Ast_Node_Function_Declaration* getFunctionDeclaration(parser::Ast_Control*, int, utils::Linked_List <parser::Ast_Node*>*);
+    parser::Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <parser::Ast_Node*>*);
     
-    parser::Ast_Node_Struct_Declaration* getStructDeclaration(parser::Ast_Control*, int);
+    parser::Ast_Node_Struct_Declaration* getStructDeclaration(int);
 
-    bool isDeclared(parser::Ast_Control*, int, utils::Linked_List <parser::Ast_Node*>*);
+    void addVariableDeclaration(parser::Ast_Node_Variable_Declaration*);
 
-    int getSizePrimitiveType(int);
+    void addFunctionDeclaration(parser::Ast_Node_Function_Declaration*);
+    
+    void addStructDeclaration(parser::Ast_Node_Struct_Declaration*);
+
+    
 
 }
 

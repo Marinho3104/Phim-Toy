@@ -4,10 +4,10 @@
 #ifndef PARSER_CONVERTOR_H
 #define PARSER_CONVERTOR_H
 
-#include "./ast_nodes.h"
+#include "./ast_node.h"
 
 namespace byte_code { struct Byte_Code; struct Byte_Code_Block; struct Compiled_Byte_Code; }
-namespace utils { template <typename> struct LinkedList; }
+namespace utils { template <typename> struct Linked_List; }
 
 namespace parser {
 

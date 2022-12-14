@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "transactionNotConfirmed": "plaintext",
+        "new": "cpp"
+    }
+}

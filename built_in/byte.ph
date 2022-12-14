@@ -1,12 +1,8 @@
 
 namespace test {
 
-    int test1(int) {}
+  byte j, ola, adeus
 
-
-    int test1() {}
-
-    
 }
 
 // int j;

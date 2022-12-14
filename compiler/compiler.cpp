@@ -1,6 +1,6 @@
 #include "./compiler.h"
 
-#include "./../parser/convertor.h"
+// #include "./../parser/convertor.h"
 #include "./../parser/tokenizer.h"
 #include "./../utils/common.h"
 #include "./../parser/ast.h"
@@ -8,6 +8,13 @@
 #include "./../byte_code/byte_code.h"
 
 #include <iostream>
+
+namespace parser {
+
+    Name_Space_Control* name_space_control = 0;
+    Ast_Control* ast_control = 0;
+
+}
 
 compiler::Compiler_Control::~Compiler_Control() {}
 
@@ -19,21 +26,25 @@ void compiler::Compiler_Control::generate() {
 
     _tokenizer_control->generate();
 
-    parser::Ast_Control* _ast_control = new parser::Ast_Control(_tokenizer_control, 1);
+    parser::setupAst(_tokenizer_control, 1);
 
-    _ast_control->generate();
+    parser::ast_control->generate();
 
-    parser::Convertor* _convertor = new parser::Convertor(_ast_control, NULL, 1); _convertor->generate();
+    parser::cleanAst();
 
-    byte_code::Compiled_Byte_Code* _compiled = _convertor->getCompiledByteCode();
+    delete _tokenizer_control;
 
-    std::cout << std::endl;
+    // parser::Convertor* _convertor = new parser::Convertor(_ast_control, NULL, 1); _convertor->generate();
 
-    _compiled->print();
+    // byte_code::Compiled_Byte_Code* _compiled = _convertor->getCompiledByteCode();
+
+    // std::cout << std::endl;
+
+    // _compiled->print();
     
-    delete _convertor;
+    // delete _convertor;
 
-    delete _compiled;
+    // delete _compiled;
 
 }
 

@@ -212,7 +212,8 @@ template class utils::Data_Linked_List <byte_code::Compiled_Byte_Code*>;
 
 template class utils::Linked_List <parser::Ast_Node_Function_Declaration*>;
 template class utils::Linked_List <parser::Ast_Node_Variable_Declaration*>;
-template class utils::Linked_List <parser::Ast_Node_Expression*>;
+template class utils::Linked_List <parser::Ast_Node_Struct_Declaration*>;
+// template class utils::Linked_List <parser::Ast_Node_Expression*>;
 template class utils::Linked_List <parser::Ast_Node_Code_Block*>;
 template class utils::Linked_List <parser::Ast_Node_Name_Space*>;
 template class utils::Linked_List <parser::Name_Space*>;
@@ -223,7 +224,8 @@ template class utils::Linked_List <int>;
 
 template class utils::Data_Linked_List <parser::Ast_Node_Function_Declaration*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Variable_Declaration*>;
-template class utils::Data_Linked_List <parser::Ast_Node_Expression*>;
+template class utils::Data_Linked_List <parser::Ast_Node_Struct_Declaration*>;
+// template class utils::Data_Linked_List <parser::Ast_Node_Expression*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Code_Block*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Name_Space*>;
 template class utils::Data_Linked_List <parser::Name_Space*>;
