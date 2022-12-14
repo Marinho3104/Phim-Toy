@@ -1,8 +1,11 @@
 #include "./compiler.h"
 
+#include "./../parser/convertor.h"
 #include "./../parser/tokenizer.h"
 #include "./../utils/common.h"
 #include "./../parser/ast.h"
+
+#include "./../byte_code/byte_code.h"
 
 #include <iostream>
 
@@ -19,8 +22,18 @@ void compiler::Compiler_Control::generate() {
     parser::Ast_Control* _ast_control = new parser::Ast_Control(_tokenizer_control, 1);
 
     _ast_control->generate();
+
+    parser::Convertor* _convertor = new parser::Convertor(_ast_control, NULL, 1); _convertor->generate();
+
+    byte_code::Compiled_Byte_Code* _compiled = _convertor->getCompiledByteCode();
+
+    std::cout << std::endl;
+
+    _compiled->print();
     
-    delete _ast_control;
+    delete _convertor;
+
+    delete _compiled;
 
 }
 

@@ -1,23 +1,16 @@
 
 namespace test {
 
-    byte* ola, adeus;
+    int test1(int) {}
 
-    struct Test_Struct {
-    
-        void func_test();
 
-    };
+    int test1() {}
 
-    int test_func_out();
     
 }
 
-void test::Test_Struct::func_test() {
-
-  *(*test_func_out()) = *12;
-
-}
+// int j;
+//test::Test_Struct l;
 
 //void test::Test_Struct::func_test() {
   //  int j;

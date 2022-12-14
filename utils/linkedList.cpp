@@ -4,6 +4,8 @@
 #include "./../parser/token.h"
 #include "./../parser/ast.h"
 
+#include "./../byte_code/byte_code.h"
+
 #include <iostream>
 #include <string.h>
 
@@ -199,8 +201,17 @@ int utils::Linked_List <char*>::getPosition(char* _to_compare, bool (*func) (cha
 
 
 
+template class utils::Linked_List <byte_code::Byte_Code*>;
+template class utils::Linked_List <byte_code::Byte_Code_Block*>;
+template class utils::Linked_List <byte_code::Compiled_Byte_Code*>;
+
+template class utils::Data_Linked_List <byte_code::Byte_Code*>;
+template class utils::Data_Linked_List <byte_code::Byte_Code_Block*>;
+template class utils::Data_Linked_List <byte_code::Compiled_Byte_Code*>;
+
 
 template class utils::Linked_List <parser::Ast_Node_Function_Declaration*>;
+template class utils::Linked_List <parser::Ast_Node_Variable_Declaration*>;
 template class utils::Linked_List <parser::Ast_Node_Expression*>;
 template class utils::Linked_List <parser::Ast_Node_Code_Block*>;
 template class utils::Linked_List <parser::Ast_Node_Name_Space*>;
@@ -211,6 +222,7 @@ template class utils::Linked_List <char*>;
 template class utils::Linked_List <int>;
 
 template class utils::Data_Linked_List <parser::Ast_Node_Function_Declaration*>;
+template class utils::Data_Linked_List <parser::Ast_Node_Variable_Declaration*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Expression*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Code_Block*>;
 template class utils::Data_Linked_List <parser::Ast_Node_Name_Space*>;

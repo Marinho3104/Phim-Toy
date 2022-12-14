@@ -28,7 +28,7 @@ namespace parser {
 
         Ast_Node_Variable_Declaration* getVariableDeclaration(int);
 
-        Ast_Node_Function_Declaration* getFunctionDeclaration(int);
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <Ast_Node*>*);
         
         Ast_Node_Struct_Declaration* getStructDeclaration(int);
 
@@ -51,6 +51,12 @@ namespace parser {
         ~Ast_Node_Code_Block(); Ast_Node_Code_Block(Ast_Node_Code_Block*, Name_Space*);
 
         int getDeclarationId(char*); bool isGlobalDeclaration(char*);
+
+        Ast_Node_Variable_Declaration* getVariableDeclaration(int);
+
+        Ast_Node_Function_Declaration* getFunctionDeclaration(int);
+        
+        Ast_Node_Struct_Declaration* getStructDeclaration(int);
 
         static void generate(Ast_Control*);
 
@@ -99,10 +105,11 @@ namespace parser {
         Ast_Node_Code_Block* fields;
 
         int declaration_id;
+        bool defined;
 
         ~Ast_Node_Struct_Declaration(); 
         
-        Ast_Node_Struct_Declaration(int, Ast_Node_Name_Space*, Ast_Node_Code_Block*);
+        Ast_Node_Struct_Declaration(int, bool, Ast_Node_Name_Space*, Ast_Node_Code_Block*);
 
         static Ast_Node_Struct_Declaration* generate(Ast_Control*);
 
@@ -120,9 +127,13 @@ namespace parser {
 
         ~Ast_Node_Expression(); Ast_Node_Expression(Ast_Node*, Ast_Node_Expression*, int);
 
+        Ast_Node_Variable_Declaration* getResultVariableDeclaration();
+
         static Ast_Node_Expression* generate(Ast_Control*, int, bool);
 
         static Ast_Node* getValue(Ast_Control*, int);
+
+
 
     };
 
@@ -140,11 +151,12 @@ namespace parser {
 
     struct Ast_Node_Variable : public Ast_Node {
 
+        Ast_Node_Variable_Declaration* declaration;
         Name_Space* name_space;
         int declaration_id;
         bool is_global;
 
-        ~Ast_Node_Variable(); Ast_Node_Variable(Name_Space*, int, bool);
+        ~Ast_Node_Variable(); Ast_Node_Variable(Ast_Node_Variable_Declaration*, Name_Space*, int, bool);
 
         static Ast_Node* generate(Ast_Control*, bool);
 
@@ -167,10 +179,11 @@ namespace parser {
     struct Ast_Node_Function_Call : public Ast_Node {
 
         utils::Linked_List <Ast_Node_Expression*>* parameters;
+        Ast_Node_Function_Declaration* declaration;
         Name_Space* name_space;
         int declaration_id;
 
-        ~Ast_Node_Function_Call(); Ast_Node_Function_Call(utils::Linked_List <Ast_Node_Expression*>*, Name_Space*, int);
+        ~Ast_Node_Function_Call(); Ast_Node_Function_Call(utils::Linked_List <Ast_Node_Expression*>*, Ast_Node_Function_Declaration*, Name_Space*, int);
 
         static Ast_Node* generate(Ast_Control*, bool);
 

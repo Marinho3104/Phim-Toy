@@ -165,7 +165,7 @@ parser::Name_Space* parser::Name_Space_Control::getNameSpaceOrAdd(utils::Linked_
 
 
 parser::Ast_Control::~Ast_Control() { 
-    delete tokenizer_control; delete implicit_values; delete name_space_control; delete name_space_nodes; 
+    delete tokenizer_control; delete name_space_control; delete name_space_nodes; 
 
     delete name_space_chain; delete code_block_chain;
 
@@ -238,8 +238,8 @@ void parser::Ast_Control::generate() {
 
     Ast_Node_Name_Space::generate(this, name_space_control->name_spaces->operator[](0));
 
-    std::cout << "Name Space Chain -> " << name_space_chain->count << std::endl;
-    std::cout << "Code BlockChain -> " << code_block_chain->count << std::endl;
+    // std::cout << "Name Space Chain -> " << name_space_chain->count << std::endl;
+    // std::cout << "Code BlockChain -> " << code_block_chain->count << std::endl;
 
 }
 
