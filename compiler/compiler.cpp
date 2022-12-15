@@ -1,7 +1,7 @@
 #include "./compiler.h"
 
-// #include "./../parser/convertor.h"
 #include "./../parser/tokenizer.h"
+#include "./../parser/convertor.h"
 #include "./../utils/common.h"
 #include "./../parser/ast.h"
 
@@ -13,6 +13,7 @@ namespace parser {
 
     Name_Space_Control* name_space_control = 0;
     Ast_Control* ast_control = 0;
+    Convertor* convertor = 0;
 
 }
 
@@ -29,6 +30,18 @@ void compiler::Compiler_Control::generate() {
     parser::setupAst(_tokenizer_control, 1);
 
     parser::ast_control->generate();
+
+    parser::setUpConvertor(1, 1);
+
+    parser::convertor->generate();
+
+    byte_code::Compiled_Byte_Code* _compiler_byte_code = parser::convertor->getCompiledByteCode();
+
+    _compiler_byte_code->print();
+
+    delete _compiler_byte_code;
+
+    parser::cleanConvertor();
 
     parser::cleanAst();
 

@@ -17,7 +17,7 @@ parser_helper::Type_Information::~Type_Information() {}
 
 parser_helper::Type_Information::Type_Information(
     parser::Name_Space* __name_space, parser::Ast_Node_Struct_Declaration* __declaration, int __token_id, utils::Linked_List <int>* __pointer_operations) 
-        : name_space(__name_space), declaration(__declaration), token_id(token_id), pointer_level(0), reference_level(0) {
+        : name_space(__name_space), declaration(__declaration), token_id(__token_id), pointer_level(0), reference_level(0) {
 
             if (!__pointer_operations) return;
 
@@ -59,12 +59,25 @@ parser_helper::Type_Information* parser_helper::Type_Information::generate() {
 
     parser::Ast_Node_Struct_Declaration* _declaration = NULL;
 
-    if (_name_space) parser::ast_control->addNameSpaceToChain(_name_space);
+    if (_name_space) { parser::ast_control->addNameSpaceToChain(_name_space); parser::ast_control->addCodeBlockToChain(NULL); }
 
     int _id = parser::ast_control->getToken(0)->id;
 
     if (parser::isPrimitiveTokenId(_id));
-    else if (_id == TOKEN_IDENTIFIER) { std::cout << "hey aqui" << std::endl; exit(1); }
+    else if (_id == TOKEN_IDENTIFIER) {
+
+        int _declaration_id = parser_helper::getDeclarationId(parser::ast_control->getToken(0)->phr, 0);
+
+        _declaration = parser_helper::getStructDeclaration(_declaration_id, 0);
+
+        if (_declaration_id == -1 || !_declaration) {
+
+            if (_name_space) { parser::ast_control->popNameSpaceFromChain(); parser::ast_control->popCodeBlockFromChain(); }
+            new parser::Exception_Handle(parser::ast_control, parser::ast_control->getToken(0), "Undefined type");
+
+        }
+
+    }
     else new parser::Exception_Handle(parser::ast_control, parser::ast_control->getToken(0), "Expected primitive type or user defined type"); 
 
     parser::ast_control->current_token_position++;
@@ -75,7 +88,7 @@ parser_helper::Type_Information* parser_helper::Type_Information::generate() {
 
     delete _pointer_operations;
 
-    if (_name_space) parser::ast_control->popNameSpaceFromChain();
+    if (_name_space) { parser::ast_control->popNameSpaceFromChain(); parser::ast_control->popCodeBlockFromChain(); }
 
     return _type_information;
 
@@ -98,8 +111,7 @@ parser_helper::Type_Information* parser_helper::Type_Information::generate(Type_
 int parser_helper::Type_Information::getByteSize() {
 
     if (!pointer_level)
-        ;
-        // return token_id == TOKEN_IDENTIFIER ? declaration->getByteSize() : getSizePrimitiveType(token_id);
+        return token_id == TOKEN_IDENTIFIER ? declaration->getByteSize() : getPrimitiveTypeSize(token_id);
 
     return PRIMITIVES_TYPE_POINTER_SIZE;
 
@@ -155,7 +167,14 @@ int parser_helper::getNodeType() {
     switch (parser::ast_control->getToken(0)->id)
     {
     case TOKEN_CLOSECURLYBRACKET: return -1; break;
+    case TOKEN_OPENCURLYBRACKET: return -2; break;
+    case TOKEN_ENDINSTRUCTION: return -3; break;
+    case TOKEN_CLOSEPARENTHESES: return -4; break;
+    case TOKEN_COMMA: return -5; break;
     case TOKEN_NAMESPACE: return AST_NODE_NAME_SPACE; break;
+    case TOKEN_STRUCT: return AST_NODE_STRUCT_DECLARATION; break;
+    case TOKEN_POINTER: case TOKEN_ADDRESS: return AST_NODE_POINTER_OPERATOR; break;
+    case TOKEN_OPENPARENTHESES: return AST_NODE_PARENTHESIS; break;
     default: break;
     }
 
@@ -171,7 +190,10 @@ int parser_helper::getNodeType() {
         int _node_type;
 
         try { _type = Type_Information::generate(); }
-        catch(...) { _node_type = (parser::ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) ? AST_NODE_FUNCTION_CALL : AST_NODE_VARIABLE; goto return_reset; }
+        catch(...) { 
+            _node_type = (parser::ast_control->getToken(1)->id == TOKEN_OPENPARENTHESES) ? AST_NODE_FUNCTION_CALL : AST_NODE_VARIABLE; 
+            goto return_reset; 
+        }
 
         getNameSpace(0);
 
@@ -184,7 +206,6 @@ int parser_helper::getNodeType() {
 
         delete _type;
 
-
     return_reset:
 
         parser::ast_control->current_token_position = _backup;
@@ -193,6 +214,12 @@ int parser_helper::getNodeType() {
 
     }
     
+    else if (parser::isImplicitValue(parser::ast_control->getToken(0)->id)) return AST_NODE_VALUE;
+
+    else if (parser::isExpressionOperator(parser::ast_control->getToken(0)->id)) return AST_NODE_EXPRESSION;
+
+    else if (parser::isAssignmentOperator(parser::ast_control->getToken(0)->id)) return AST_NODE_ASSIGNMENT;
+
     new parser::Exception_Handle(parser::ast_control, parser::ast_control->getToken(0), "Unexpected token node type");
 
     return -1;
@@ -232,9 +259,8 @@ utils::Linked_List <char*>* parser_helper::getScope() {
 
 parser::Name_Space* parser_helper::getNameSpace(bool _create_name_space) {
 
-    if (parser::ast_control->getToken(0)->id != TOKEN_NAMESPACE_OPERATOR && parser::ast_control->getToken(1)->id != TOKEN_NAMESPACE_OPERATOR && !_create_name_space)
-
-        return NULL;
+    if (parser::ast_control->getToken(0)->id != TOKEN_NAMESPACE_OPERATOR && parser::ast_control->getToken(1)->id != TOKEN_NAMESPACE_OPERATOR && !_create_name_space) return NULL;
+    if (parser::ast_control->getToken(0)->id != TOKEN_IDENTIFIER && parser::ast_control->getToken(1)->id != TOKEN_IDENTIFIER && !_create_name_space) return NULL;
 
     bool _is_global = parser::ast_control->getToken(0)->id == TOKEN_NAMESPACE_OPERATOR;
 
@@ -242,12 +268,11 @@ parser::Name_Space* parser_helper::getNameSpace(bool _create_name_space) {
 
     utils::Linked_List <char*>* _scope = getScope();
 
-    utils::Linked_List <char*>* _current_scope_copy;
+    utils::Linked_List <char*>* _current_scope_copy = new utils::Linked_List <char*>();
 
     if (!_is_global) {
 
         utils::Linked_List <char*>* _current_scope = parser::ast_control->name_space_chain->last->object->name_space->scope;
-        _current_scope_copy = new utils::Linked_List <char*>();
         char* _name_copy;
 
         for (int _ = 0; _ < _current_scope->count; _++) {
@@ -272,11 +297,9 @@ parser::Name_Space* parser_helper::getNameSpace(bool _create_name_space) {
     parser::Name_Space* _name_space = 
         _create_name_space ? parser::name_space_control->getNameSpaceOrAdd(_scope) : parser::name_space_control->getNameSpace(_scope);
 
-    // Check for for struct functions etc...
-
     if (!_name_space) new parser::Exception_Handle(parser::ast_control, parser::ast_control->getToken(0), "Undefined name space");
-    if (_create_name_space && !_is_global) delete _current_scope_copy;
-
+    
+    _current_scope_copy->destroy_content = 0; delete _current_scope_copy;
 
     delete _scope;
 
@@ -286,13 +309,45 @@ parser::Name_Space* parser_helper::getNameSpace(bool _create_name_space) {
 
 int parser_helper::addName(char* __name) {
 
-    if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
+    if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object) {
+     
+        parser::ast_control->code_block_chain->last->object->declaration_tracker->addName(__name);
 
-    else parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->addName(__name);
+        return parser::ast_control->code_block_chain->last->object->declaration_tracker->getDeclarationId(__name);
+
+    }
+
+    parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->addName(__name);
 
     return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getDeclarationId(__name);
+
+}
+
+int parser_helper::getDeclarationId(char* __name, bool __single) {
+
+    if (__single) {
+        
+        if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
+            return parser::ast_control->code_block_chain->last->object->declaration_tracker->getDeclarationId(__name);
+
+        return parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->getDeclarationId(__name);
+    
+    }
+
+    if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
+        return parser::ast_control->code_block_chain->last->object->getDeclarationId(__name);
+
+    return parser::ast_control->name_space_chain->last->object->getDeclarationId(__name);
+
+
+}
+
+bool parser_helper::isGlobalDeclaration(char* __name) {
+
+    if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
+        return parser::ast_control->code_block_chain->last->object->isGlobalDeclaration(__name);
+
+    return 1;
 
 }
 
@@ -353,8 +408,7 @@ parser::Ast_Node_Struct_Declaration* parser_helper::getStructDeclaration(int __d
 void parser_helper::addVariableDeclaration(parser::Ast_Node_Variable_Declaration* __variable_declaration) {
 
     if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
+        parser::ast_control->code_block_chain->last->object->declaration_tracker->variable_declarations->add(__variable_declaration);
 
     else parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->variable_declarations->add(__variable_declaration);
 
@@ -364,9 +418,8 @@ void parser_helper::addFunctionDeclaration(parser::Ast_Node_Function_Declaration
 
 
     if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
-
+        parser::ast_control->code_block_chain->last->object->declaration_tracker->function_declarations->add(__function_declaration);
+        
     else parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->function_declarations->add(__function_declaration);
 
 }
@@ -374,9 +427,23 @@ void parser_helper::addFunctionDeclaration(parser::Ast_Node_Function_Declaration
 void parser_helper::addStructDeclaration(parser::Ast_Node_Struct_Declaration* __struct_declaration) {
 
     if (parser::ast_control->code_block_chain->last && parser::ast_control->code_block_chain->last->object)
-        ;
-        // parser::ast_control->code_block_chain->last->object->
+        parser::ast_control->code_block_chain->last->object->declaration_tracker->struct_declarations->add(__struct_declaration);
 
     else parser::ast_control->name_space_chain->last->object->name_space->declaration_tracker->struct_declarations->add(__struct_declaration);
 
 }
+
+int parser_helper::getPrimitiveTypeSize(int __token_id) {
+
+    switch (__token_id)
+    {
+    case TOKEN_TYPE_BYTE: return PRIMITVES_TYPE_BYTE_SIZE; break;
+    case TOKEN_TYPE_INT: return PRIMITIVES_TYPE_INT_SIZE; break;
+    default: break;
+    }
+
+    new parser::Exception_Handle("Primitive Type not defined");
+
+}
+
+

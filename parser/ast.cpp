@@ -181,7 +181,7 @@ parser::Name_Space* parser::Name_Space_Control::getPreviousNameSpace(Name_Space*
     int _backup = __name_space->scope->count;
     parser::Name_Space* _name_space = NULL;
 
-    if (_name_space->scope->count) 
+    if (__name_space->scope->count) 
 
         do __name_space->scope->count--;
 
@@ -221,7 +221,7 @@ parser::Token* parser::Ast_Control::getToken(int __off) {
 
 }
 
-void parser::Ast_Control::printDebugInfo(const char* __info) { if (debug_mode) std::cout << "Ast Control - Debug Info: " << __info << std::endl; }
+void parser::Ast_Control::printDebugInfo(const char* __info) { if (debug_mode) std::cout << "\tAst Control - Debug Info: " << __info << std::endl; }
 
 void parser::Ast_Control::addNameSpaceNode(Ast_Node_Name_Space* __name_space_node) {
 

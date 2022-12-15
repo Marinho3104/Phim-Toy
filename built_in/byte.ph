@@ -1,15 +1,33 @@
 
-namespace test {
+int j;
 
-  byte j, jj;
+namespace kk {
 
-  void gg() {
+  byte l;
+
+  struct Test {
+
+    int k, l, o;
+
+    void func_test() {
+
+      int l;
+
+      12 + l;
+
+    }
+
+  };
+
+  void func() {
+
+    byte ol, k, kk, mk;
+
+    // func();
 
   }
 
-  void gg() {
-
-  }
+  Test ola;
 
 }
 

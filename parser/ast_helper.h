@@ -50,6 +50,8 @@ namespace parser_helper {
 
     int addName(char*);
 
+    int getDeclarationId(char*, bool); bool isGlobalDeclaration(char*);
+
     parser::Ast_Node_Variable_Declaration* getVariableDeclaration(int, bool);
 
     parser::Ast_Node_Function_Declaration* getFunctionDeclaration(int, utils::Linked_List <parser::Ast_Node*>*, bool);
@@ -61,6 +63,8 @@ namespace parser_helper {
     void addFunctionDeclaration(parser::Ast_Node_Function_Declaration*);
     
     void addStructDeclaration(parser::Ast_Node_Struct_Declaration*);
+
+    int getPrimitiveTypeSize(int);
 
     
 

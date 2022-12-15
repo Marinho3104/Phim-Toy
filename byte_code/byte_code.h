@@ -4,6 +4,7 @@
 #define BYTE_CODE_H
 
 namespace utils { template <typename> struct Linked_List; }
+namespace parser { struct Name_Space; }
 
 namespace byte_code {
 
@@ -19,6 +20,7 @@ namespace byte_code {
     struct Byte_Code_Block {
 
         utils::Linked_List <Byte_Code*>* block;
+        parser::Name_Space* name_space;
 
         ~Byte_Code_Block(); Byte_Code_Block(utils::Linked_List <Byte_Code*>*);
 

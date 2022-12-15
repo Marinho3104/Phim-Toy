@@ -68,7 +68,7 @@ namespace parser {
 
         static void generate();
 
-        int getDeclarationId(char*);
+        int getDeclarationId(char*); bool isGlobalDeclaration(char*);
 
         Ast_Node_Variable_Declaration* getVariableDeclaration(int);
 
@@ -99,6 +99,8 @@ namespace parser {
         Ast_Node_Code_Block* body;
         Name_Space* name_space;
 
+        int body_position;
+
         ~Ast_Node_Function_Declaration(); Ast_Node_Function_Declaration(int, parser_helper::Type_Information*, utils::Linked_List <Ast_Node*>*, Ast_Node_Code_Block*, Name_Space*);
 
         static Ast_Node_Function_Declaration* generate();
@@ -109,7 +111,110 @@ namespace parser {
 
     };
 
-    struct Ast_Node_Struct_Declaration : public Ast_Node {};
+    struct Ast_Node_Struct_Declaration : public Ast_Node {
+
+        Ast_Node_Name_Space* functions;
+        Ast_Node_Code_Block* fields;
+        bool defined;
+
+        ~Ast_Node_Struct_Declaration(); Ast_Node_Struct_Declaration(int, Ast_Node_Name_Space*, Ast_Node_Code_Block*, bool);
+
+        static void set(Ast_Node_Name_Space*, Ast_Node_Code_Block*);
+
+        static Ast_Node_Struct_Declaration* generate();
+
+        static void ignoreCodeBlock();
+
+        int getByteSize();
+
+    };
+
+    struct Ast_Node_Expression : public Ast_Node {
+
+        Ast_Node* value;
+        Ast_Node_Expression* expression;
+        int operator_id;
+
+        ~Ast_Node_Expression(); Ast_Node_Expression(Ast_Node*, Ast_Node_Expression*, int);
+
+        static Ast_Node_Expression* generate(int);
+
+        static Ast_Node* getValue(int);
+
+        static bool checkNext(Ast_Node**);
+
+    };
+
+    struct Ast_Node_Value : public Ast_Node {
+
+        int implicit_value_position, token_id;
+
+        ~Ast_Node_Value(); Ast_Node_Value(int, int);
+
+        static Ast_Node_Value* generate();
+
+    };
+
+    struct Ast_Node_Variable : public Ast_Node {
+
+        Ast_Node_Variable_Declaration* declaration;
+        bool is_global;
+
+        ~Ast_Node_Variable(); Ast_Node_Variable(int, Ast_Node_Variable_Declaration*, bool);
+
+        static Ast_Node_Variable* generate();
+
+    };
+
+    struct Ast_Node_Function_Call : public Ast_Node {
+
+        utils::Linked_List <Ast_Node_Expression*>* parameters;
+        Ast_Node_Function_Declaration* declaration;
+        
+        ~Ast_Node_Function_Call(); Ast_Node_Function_Call(int, utils::Linked_List <Ast_Node_Expression*>*, Ast_Node_Function_Declaration*);
+
+        static Ast_Node_Function_Call* generate();
+
+        static utils::Linked_List <Ast_Node_Expression*>* getParameters();
+
+        static utils::Linked_List <Ast_Node*>* getParametersFromExpressions(utils::Linked_List <Ast_Node_Expression*>*);
+
+    };
+
+    struct Ast_Node_Pointer_Operator : public Ast_Node {
+
+        int pointer_level;
+        Ast_Node* value;
+
+        ~Ast_Node_Pointer_Operator(); Ast_Node_Pointer_Operator(int, Ast_Node*);
+
+        static Ast_Node_Pointer_Operator* generate();
+
+    };
+
+    struct Ast_Node_Parenthesis : public Ast_Node {
+
+        Ast_Node_Expression* expression;
+
+        ~Ast_Node_Parenthesis(); Ast_Node_Parenthesis(Ast_Node_Expression*);
+
+        static Ast_Node_Parenthesis* generate();
+
+    };
+
+    struct Ast_Node_Assignment : public Ast_Node {
+
+        Ast_Node* target;
+        Ast_Node_Expression* expression;
+        int token_id;
+
+        ~Ast_Node_Assignment(); Ast_Node_Assignment(Ast_Node*, Ast_Node_Expression*, int);
+
+        static Ast_Node_Assignment* generate(Ast_Node*);
+
+        static Ast_Node_Assignment* generate();
+
+    };
 
 }
 
