@@ -31,6 +31,8 @@ namespace parser_helper {
 
     byte_code::Byte_Code* getByteCodeFromVariable(parser::Ast_Node_Variable*);
 
+    byte_code::Byte_Code* getByteCodeFromFunctionCall(parser::Ast_Node_Function_Call*);
+
 
 
 

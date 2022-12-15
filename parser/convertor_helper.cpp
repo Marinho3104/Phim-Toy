@@ -97,6 +97,15 @@ utils::Linked_List <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNode(p
 
         goto _return;
 
+    case AST_NODE_FUNCTION_CALL:
+
+        _byte_code->add(
+            getByteCodeFromFunctionCall(
+                (parser::Ast_Node_Function_Call*) __node
+            )
+        );
+
+        goto _return;
     
     default: break;
     }
@@ -275,5 +284,21 @@ byte_code::Byte_Code* parser_helper::getByteCodeFromVariable(parser::Ast_Node_Va
 
 }
 
+byte_code::Byte_Code* parser_helper::getByteCodeFromFunctionCall(parser::Ast_Node_Function_Call* __function_call_node) {
 
+    parser::convertor->printDebugInformation("Byte Code for node Function Call");
+
+    // Parameters ?? TODO
+
+    byte_code::Byte_Code* _function_call = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_function_call) byte_code::Byte_Code(
+        BYTE_CODE_CALL, __function_call_node->declaration->body_position
+    );
+
+    parser::convertor->printDebugInformation("Byte Code for node Function Call End");
+
+    return _function_call;
+
+}
 

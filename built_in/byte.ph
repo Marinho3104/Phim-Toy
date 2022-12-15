@@ -13,7 +13,7 @@ namespace kk {
 
       int l;
 
-      12 + l;
+      12 + l * l;
 
     }
 
@@ -23,7 +23,7 @@ namespace kk {
 
     byte ol, k, kk, mk;
 
-    // func();
+    func();
 
   }
 
