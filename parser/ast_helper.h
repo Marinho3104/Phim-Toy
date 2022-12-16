@@ -10,6 +10,7 @@ namespace parser {
     struct Ast_Node_Variable_Declaration;
     struct Ast_Node_Function_Declaration;
     struct Ast_Node_Struct_Declaration;
+    struct Ast_Node_Expression;
     struct Ast_Control;
     struct Ast_Node;
 
@@ -37,6 +38,17 @@ namespace parser_helper {
 
     };
 
+    struct Expression_Variable_Declaration {
+
+        parser::Ast_Node_Variable_Declaration* declaration;
+        Expression_Variable_Declaration* expression;
+        int operator_id;
+
+        ~Expression_Variable_Declaration(); Expression_Variable_Declaration(parser::Ast_Node_Variable_Declaration*, Expression_Variable_Declaration*, int);
+
+        static Expression_Variable_Declaration* generate(parser::Ast_Node_Expression*);
+
+    };
 
     utils::Linked_List <parser::Ast_Node_Variable_Declaration*>* getVariableDeclarationOfLinkedList(utils::Linked_List <parser::Ast_Node*>*);
 
@@ -66,7 +78,9 @@ namespace parser_helper {
 
     int getPrimitiveTypeSize(int);
 
-    
+    parser::Ast_Node_Variable_Declaration* getTypeInformationFromExpression(parser::Ast_Node_Expression*);
+
+    int expressionPriority(int);    
 
 }
 

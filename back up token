@@ -127,3 +127,32 @@
 
 #define TOKEN_ADDITION_BINARY 116
 #define TOKEN_SUBTRACTION_BINARY 117
+
+
+
+
+
+
+
+
+
+
+
+
+
+    utils::Linked_List <char*>* _scope = new utils::Linked_List <char*>();
+
+    _scope->add(
+        (char*) "built_in"
+    );
+
+    _scope->add(
+        (char*) "Int"
+    );
+
+    parser::Ast_Node_Name_Space* _name_space_node = parser::built_in_ast_control->getNameSpaceNodeFromNameSpaceScope(_scope);
+
+    std::cout << "ADRESSSSSSSS ->>>>>>>>>>>>> " << _name_space_node << std::endl;
+
+    _scope->destroy_content = 0; delete _scope;
+

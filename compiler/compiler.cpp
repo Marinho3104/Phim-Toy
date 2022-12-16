@@ -32,7 +32,7 @@ void compiler::Compiler::generate() {
 
     parser::tokenizer_control->generate();
 
-    parser::setUpAst(0);
+    parser::setUpAst(1);
 
     parser::ast_control->generate();
 

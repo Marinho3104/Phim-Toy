@@ -1,5 +1,6 @@
 #include "./built_in.h"
 
+#include "./../parser/ast_helper.h"
 #include "./../utils/linkedList.h"
 #include "./../parser/tokenizer.h"
 #include "./../parser/ast_nodes.h"
@@ -37,24 +38,10 @@ void compiler::Built_In::generate() {
 
 }
 
-parser_helper::Type_Information* compiler::Built_In::getReturnTypeOfExpression(parser::Ast_Node_Expression* __expression_node) {
+parser_helper::Type_Information* compiler::Built_In::getReturnTypeOfExpression(parser_helper::Expression_Variable_Declaration* __expression_node) {
 
-    utils::Linked_List <char*>* _scope = new utils::Linked_List <char*>();
-
-    _scope->add(
-        (char*) "built_in"
-    );
-
-    _scope->add(
-        (char*) "Byte"
-    );
-
-    parser::Ast_Node_Name_Space* _name_space_node = parser::built_in_ast_control->getNameSpaceNodeFromNameSpaceScope(_scope);
-
-    std::cout << "ADRESSSSSSSS ->>>>>>>>>>>>>" << _name_space_node << std::endl;
-
-    _scope->destroy_content = 0; delete _scope;
-
+    
+    
 
     return NULL;
 

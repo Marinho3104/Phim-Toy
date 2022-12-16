@@ -144,12 +144,12 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Name_Space::getFunctionD
         
         if (_previous) {
 
-            
             Ast_Node_Name_Space* _name_space_node = ast_control->getNameSpaceNodeFromNameSpace(_previous);
 
             return _name_space_node->getFunctionDeclaration(__declaration_id, __parameters);
         
-        }   
+        }
+
     }
 
     return _function_declaration;
@@ -585,7 +585,7 @@ void parser::Ast_Node_Struct_Declaration::set(Ast_Node_Name_Space* __functions, 
    //std::cout << "Fields " << std::endl;
     while(ast_control->getToken(0)->id != TOKEN_CLOSECURLYBRACKET) {
 
-       //std::cout << parser_helper::getNodeType() << std::endl;
+       std::cout << parser_helper::getNodeType() << std::endl;
 
         switch (parser_helper::getNodeType())
         {
@@ -617,7 +617,7 @@ void parser::Ast_Node_Struct_Declaration::set(Ast_Node_Name_Space* __functions, 
 
             break;
         
-        default: new Exception_Handle(ast_control, ast_control->getToken(0), "Node not supported in struct declaration"); break;
+        default: new Exception_Handle(ast_control, ast_control->getToken(0), "Node not supported in struct declaration heyu"); break;
         }
 
     }
@@ -652,7 +652,7 @@ void parser::Ast_Node_Struct_Declaration::set(Ast_Node_Name_Space* __functions, 
 
             break;
         
-        default: new Exception_Handle(ast_control, ast_control->getToken(0), "Node not supported in struct declaration"); break;
+        default: new Exception_Handle(ast_control, ast_control->getToken(0), "Node not supported in struct declaration aqui"); break;
         }
 
     }
@@ -745,6 +745,11 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
 
     ast_control->current_token_position++;
 
+    parser::Ast_Node_Struct_Declaration* _struct_declaration_return = (parser::Ast_Node_Struct_Declaration*) malloc(sizeof(parser::Ast_Node_Struct_Declaration));
+    new (_struct_declaration_return) parser::Ast_Node_Struct_Declaration(_declaration_id, _functions, _fields, _defined);
+
+    parser_helper::addStructDeclaration(_struct_declaration_return);
+
     switch (ast_control->getToken(0)->id)
     {
     case TOKEN_OPENCURLYBRACKET: ast_control->current_token_position++; set(_functions, _fields); break; 
@@ -754,11 +759,6 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Struct_Declaration::genera
 
     if (ast_control->getToken(0)->id != TOKEN_ENDINSTRUCTION) new Exception_Handle(ast_control, ast_control->getToken(0), "Expected token ';'");
     ast_control->current_token_position++;
-
-    parser::Ast_Node_Struct_Declaration* _struct_declaration_return = (parser::Ast_Node_Struct_Declaration*) malloc(sizeof(parser::Ast_Node_Struct_Declaration));
-    new (_struct_declaration_return) parser::Ast_Node_Struct_Declaration(_declaration_id, _functions, _fields, _defined);
-
-    parser_helper::addStructDeclaration(_struct_declaration_return);
 
     ast_control->printDebugInfo("Ast Node Struct Declaration End");
 
@@ -966,7 +966,7 @@ parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate() {
     
     if (_function_call_name_space) { ast_control->popNameSpaceFromChain(); ast_control->popCodeBlockFromChain(); }
 
-    delete _parameters_variable_declarations; // normal delete or destroy_content
+    _parameters_variable_declarations->destroy_content = 0; delete _parameters_variable_declarations;
 
     ast_control->printDebugInfo("Ast Node Function Call End");
 
@@ -1008,13 +1008,10 @@ utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Function_Call::getParam
 
 
     utils::Linked_List <parser::Ast_Node*>* _parameters_variable_declarations = new utils::Linked_List <parser::Ast_Node*>();
-    parser_helper::Type_Information* _type_information;
 
-    for (int _ = 0; _ < __expression_parameters->count; _++) {
+    for (int _ = 0; _ < __expression_parameters->count; _++)
 
-        _type_information = compiler::Built_In::getReturnTypeOfExpression(__expression_parameters->operator[](_));
-
-    }
+        _parameters_variable_declarations->add(parser_helper::getTypeInformationFromExpression(__expression_parameters->operator[](_)));
 
     return _parameters_variable_declarations;
 

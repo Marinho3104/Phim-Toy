@@ -3,7 +3,11 @@ namespace built_in {
 
   struct Byte {
 
-    
+    Byte addition(Byte);
+
+  };
+
+  struct Int {
 
   };
 

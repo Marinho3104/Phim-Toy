@@ -23,6 +23,7 @@ namespace parser {
 
 namespace parser_helper {
 
+    struct Expression_Variable_Declaration;
     struct Type_Information;
 
 }
@@ -37,7 +38,7 @@ namespace compiler {
 
         void generate();
 
-        static parser_helper::Type_Information* getReturnTypeOfExpression(parser::Ast_Node_Expression*);    
+        static parser_helper::Type_Information* getReturnTypeOfExpression(parser_helper::Expression_Variable_Declaration*);    
 
     };
 

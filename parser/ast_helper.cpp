@@ -1,6 +1,7 @@
 #include "./ast_helper.h"
 
 #include "./../built_in/built_in_definitions.h"
+#include "./../compiler/built_in.h"
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
 #include "./token_definitions.h"
@@ -51,7 +52,7 @@ bool parser_helper::Type_Information::operator==(Type_Information* __to_compare)
 
 }
 
-bool parser_helper::Type_Information::operator!=(Type_Information* __to_compare) { return operator!=(__to_compare); }
+bool parser_helper::Type_Information::operator!=(Type_Information* __to_compare) { return !this->operator==(__to_compare); }
 
 parser_helper::Type_Information* parser_helper::Type_Information::generate() {
 
@@ -114,6 +115,39 @@ int parser_helper::Type_Information::getByteSize() {
         return token_id == TOKEN_IDENTIFIER ? declaration->getByteSize() : getPrimitiveTypeSize(token_id);
 
     return PRIMITIVES_TYPE_POINTER_SIZE;
+
+}
+
+
+parser_helper::Expression_Variable_Declaration::~Expression_Variable_Declaration() { if (expression) delete expression; }
+
+parser_helper::Expression_Variable_Declaration::Expression_Variable_Declaration(
+    parser::Ast_Node_Variable_Declaration* __declaration, Expression_Variable_Declaration* __expression, int __operation_id) 
+        : declaration(__declaration), expression(__expression), operator_id(__operation_id) {}
+
+parser_helper::Expression_Variable_Declaration* parser_helper::Expression_Variable_Declaration::generate(parser::Ast_Node_Expression* __expression_node) {
+
+    parser::Ast_Node_Variable_Declaration* _declaration;
+
+    switch (__expression_node->value->node_id)
+    {
+    case AST_NODE_VALUE: break;
+    case AST_NODE_VARIABLE: _declaration = ((parser::Ast_Node_Variable*) __expression_node->value)->declaration; break;
+    case AST_NODE_FUNCTION_CALL: break;
+    case AST_NODE_POINTER_OPERATOR: break;
+    case AST_NODE_PARENTHESIS: break;
+    case AST_NODE_ASSIGNMENT: break;
+    default:
+        break;
+    }    
+
+    parser_helper::Expression_Variable_Declaration* _expression_variable_declaration = new parser_helper::Expression_Variable_Declaration(
+        _declaration,
+        __expression_node->expression ? generate(__expression_node->expression) : NULL,
+        __expression_node->operator_id
+    );
+
+    return _expression_variable_declaration;
 
 }
 
@@ -447,5 +481,54 @@ int parser_helper::getPrimitiveTypeSize(int __token_id) {
     return -1;
 
 }
+
+parser::Ast_Node_Variable_Declaration* parser_helper::getTypeInformationFromExpression(parser::Ast_Node_Expression* __expression_node) {
+
+    parser_helper::Expression_Variable_Declaration* _expression_variable_declaration = parser_helper::Expression_Variable_Declaration::generate(__expression_node), 
+    *_temp = _expression_variable_declaration;
+    parser_helper::Type_Information* _type_information;
+    int _current_expression_priority = 2;
+
+    while(_current_expression_priority < 6 && _expression_variable_declaration->expression) {
+
+        while(_temp) {
+
+            if (parser::isPrimitiveTokenId(_temp->declaration->type->token_id)) {
+
+                _type_information = compiler::Built_In::getReturnTypeOfExpression(_temp);
+
+                std::cout << _type_information << std::endl;
+
+                exit(1);
+
+            }
+
+            else {
+
+            }
+
+        }
+
+    }
+
+    parser::Ast_Node_Variable_Declaration* _return = _expression_variable_declaration->declaration;
+
+    delete _expression_variable_declaration;
+
+    return _return;
+
+}
+
+int parser_helper::expressionPriority(int __token_id) {
+
+    if (__token_id >= TOKEN_MULTIPLICATION && __token_id <= TOKEN_MODULUS) return 2;
+    if (__token_id >= TOKEN_ADDITION && __token_id <= TOKEN_SUBTRACTION) return 3;
+    if (__token_id >= TOKEN_BITWISEAND && __token_id <= TOKEN_BITWISERIGHTSHIFT) return 4;
+    if (__token_id >= TOKEN_AND && __token_id <= TOKEN_NOT) return 5;
+
+    return 6;
+
+}
+
 
 
