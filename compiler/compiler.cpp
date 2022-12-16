@@ -1,37 +1,42 @@
 #include "./compiler.h"
 
+#include "./../byte_code/byte_code.h"
 #include "./../parser/tokenizer.h"
 #include "./../parser/convertor.h"
 #include "./../utils/common.h"
 #include "./../parser/ast.h"
-
-#include "./../byte_code/byte_code.h"
+#include "./built_in.h"
 
 #include <iostream>
 
+
 namespace parser {
 
-    Name_Space_Control* name_space_control = 0;
-    Ast_Control* ast_control = 0;
+    Name_Space_Control* name_space_control = 0, *built_in_name_space_control = 0;
+    Ast_Control* ast_control = 0, *built_in_ast_control = 0;
+    Tokenizer_Control* tokenizer_control = 0;
     Convertor* convertor = 0;
 
 }
 
-compiler::Compiler_Control::~Compiler_Control() {}
 
-compiler::Compiler_Control::Compiler_Control(char* __code) : code(__code) {}
+compiler::Compiler::~Compiler() { delete built_in; }
 
-void compiler::Compiler_Control::generate() {
+compiler::Compiler::Compiler(char* __code) : code(__code) { generateBuiltIn(); }
 
-    parser::Tokenizer_Control* _tokenizer_control = new parser::Tokenizer_Control(code, 1);
+void compiler::Compiler::generate() {
 
-    _tokenizer_control->generate();
+    std::cout << "\n\n ------------------------- Generating -------------------------\n" << std::endl;
 
-    parser::setupAst(_tokenizer_control, 1);
+    parser::setUpTokenizer(code, 0);
+
+    parser::tokenizer_control->generate();
+
+    parser::setUpAst(0);
 
     parser::ast_control->generate();
 
-    parser::setUpConvertor(1, 1);
+    parser::setUpConvertor(0);
 
     parser::convertor->generate();
 
@@ -41,39 +46,15 @@ void compiler::Compiler_Control::generate() {
 
     delete _compiler_byte_code;
 
-    parser::cleanConvertor();
+    parser::cleanTokenizer();
 
     parser::cleanAst();
 
-    delete _tokenizer_control;
-
-    // parser::Convertor* _convertor = new parser::Convertor(_ast_control, NULL, 1); _convertor->generate();
-
-    // byte_code::Compiled_Byte_Code* _compiled = _convertor->getCompiledByteCode();
-
-    // std::cout << std::endl;
-
-    // _compiled->print();
-    
-    // delete _convertor;
-
-    // delete _compiled;
+    parser::cleanConvertor();
 
 }
 
+void compiler::Compiler::generateBuiltIn() { built_in = new Built_In(); }
 
-compiler::Compiler::~Compiler() {}
 
-compiler::Compiler::Compiler(char* _code) : code(_code) { generateBuiltIn(); }
 
-void compiler::Compiler::generateBuiltIn() {
-
-    char* _built_in_content = utils::getFileContent("./../built_in/byte.ph");
-
-    compiler::Compiler_Control* built_in = new Compiler_Control(_built_in_content); built_in->generate();
-
-    delete built_in;
-    
-    free(_built_in_content);
-
-}

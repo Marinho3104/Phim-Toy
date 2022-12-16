@@ -8,7 +8,10 @@ namespace utils { template <typename> struct Linked_List; }
 namespace parser {
 
     // Forward
+    struct Tokenizer_Control;
     struct Token;
+
+    extern Tokenizer_Control* tokenizer_control;
 
     struct Tokenizer_Control {
 
@@ -46,6 +49,10 @@ namespace parser {
         char* getIdentifierData();
 
     };
+
+    void setUpTokenizer(char*, bool);
+
+    void cleanTokenizer();
 
 }
 

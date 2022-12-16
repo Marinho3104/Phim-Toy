@@ -231,3 +231,7 @@ char* parser::Tokenizer_Control::getIdentifierData() {
 }
 
 
+void parser::setUpTokenizer(char* __code, bool __debug_mode) { tokenizer_control = new Tokenizer_Control(__code, __debug_mode); }
+
+void parser::cleanTokenizer() { delete tokenizer_control; }
+

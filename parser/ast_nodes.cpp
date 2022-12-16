@@ -1,5 +1,6 @@
 #include "./ast_nodes.h"
 
+#include "./../compiler/built_in.h"
 #include "./../utils/linkedList.h"
 #include "./parser_definitions.h"
 #include "./exception_handle.h"
@@ -27,7 +28,7 @@ void parser::Ast_Node_Name_Space::setDeclarations() {
     utils::Linked_List <Ast_Node*>* _temp;
     int _node_type;
 
-    while(ast_control->current_token_position < ast_control->tokenizer_control->tokens_collection->count) {
+    while(ast_control->current_token_position < tokenizer_control->tokens_collection->count) {
 
         _temp = NULL;
 
@@ -192,7 +193,7 @@ void parser::Ast_Node_Code_Block::setCode() {
     utils::Linked_List <Ast_Node*>* _temp;
     int _node_type;
 
-    while(ast_control->current_token_position < ast_control->tokenizer_control->tokens_collection->count) {
+    while(ast_control->current_token_position < tokenizer_control->tokens_collection->count) {
 
         _temp = NULL;
 
@@ -381,7 +382,7 @@ utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::g
         if (parser_helper::getVariableDeclaration(_declaration_id, 1)) 
             new Exception_Handle(ast_control, ast_control->getToken(0), "Redefinition of variable name");
 
-        std::cout << "Declaration -> " << _declaration_id << std::endl;
+       //std::cout << "Declaration -> " << _declaration_id << std::endl;
 
         _variable_declaration = (Ast_Node_Variable_Declaration*) malloc(sizeof(Ast_Node_Variable_Declaration));
         new (_variable_declaration) Ast_Node_Variable_Declaration(_declaration_id, _type);
@@ -391,7 +392,7 @@ utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::g
 
         switch (ast_control->getToken(0)->id)
         {
-        case TOKEN_EQUAL: std::cout << "TODO assign in variable declaration" << std::endl; exit(1); break;
+        case TOKEN_EQUAL://std::cout << "TODO assign in variable declaration" << std::endl; exit(1); break;
         case TOKEN_COMMA: ast_control->current_token_position++; _type = parser_helper::Type_Information::generate(_type); break;
         case TOKEN_ENDINSTRUCTION: break;
         default: new Exception_Handle(ast_control, ast_control->getToken(0), "Unexpected token");
@@ -517,7 +518,7 @@ parser::Ast_Node_Function_Declaration* parser::Ast_Node_Function_Declaration::ge
 
     if (_function_declaration_name_space) ast_control->popNameSpaceFromChain();
 
-    std::cout << "Function declaration id -> " << _declaration_id << std::endl;
+   //std::cout << "Function declaration id -> " << _declaration_id << std::endl;
 
     ast_control->printDebugInfo("Ast Node Function Declaration End");
     
@@ -581,10 +582,10 @@ void parser::Ast_Node_Struct_Declaration::set(Ast_Node_Name_Space* __functions, 
     utils::Linked_List <Ast_Node*>* _temp;
 
     // Fields
-    std::cout << "Fields " << std::endl;
+   //std::cout << "Fields " << std::endl;
     while(ast_control->getToken(0)->id != TOKEN_CLOSECURLYBRACKET) {
 
-        std::cout << parser_helper::getNodeType() << std::endl;
+       //std::cout << parser_helper::getNodeType() << std::endl;
 
         switch (parser_helper::getNodeType())
         {
@@ -624,7 +625,7 @@ void parser::Ast_Node_Struct_Declaration::set(Ast_Node_Name_Space* __functions, 
     ast_control->current_token_position = _backup;
 
     // Functions
-    std::cout << "Functions " << std::endl;
+   //std::cout << "Functions " << std::endl;
     while(ast_control->getToken(0)->id != TOKEN_CLOSECURLYBRACKET) {
 
         switch (parser_helper::getNodeType())
@@ -919,8 +920,8 @@ parser::Ast_Node_Variable* parser::Ast_Node_Variable::generate() {
         _declaration_id, _declaration, _is_global
     );
 
-    std::cout << "Variable declaration id -> " << _declaration_id << std::endl;
-    std::cout << "Variable is -> " << (_is_global ? "global" : "local") << std::endl;
+   //std::cout << "Variable declaration id -> " << _declaration_id << std::endl;
+   //std::cout << "Variable is -> " << (_is_global ? "global" : "local") << std::endl;
 
     if (_name_space) { ast_control->popNameSpaceFromChain(); ast_control->popCodeBlockFromChain(); }
 
@@ -1003,9 +1004,17 @@ utils::Linked_List <parser::Ast_Node_Expression*>* parser::Ast_Node_Function_Cal
 
 }
 
-utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Function_Call::getParametersFromExpressions(utils::Linked_List <Ast_Node_Expression*>*) {
+utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Function_Call::getParametersFromExpressions(utils::Linked_List <Ast_Node_Expression*>* __expression_parameters) {
+
 
     utils::Linked_List <parser::Ast_Node*>* _parameters_variable_declarations = new utils::Linked_List <parser::Ast_Node*>();
+    parser_helper::Type_Information* _type_information;
+
+    for (int _ = 0; _ < __expression_parameters->count; _++) {
+
+        _type_information = compiler::Built_In::getReturnTypeOfExpression(__expression_parameters->operator[](_));
+
+    }
 
     return _parameters_variable_declarations;
 

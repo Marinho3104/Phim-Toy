@@ -201,8 +201,8 @@ parser::Ast_Control::~Ast_Control() {
     delete name_space_chain;
 }
 
-parser::Ast_Control::Ast_Control(Tokenizer_Control* __tokenizer_control, bool __debug_mode) 
-    : tokenizer_control(__tokenizer_control), debug_mode(__debug_mode), current_token_position(0) {
+parser::Ast_Control::Ast_Control(bool __debug_mode) 
+    : debug_mode(__debug_mode), current_token_position(0) {
 
         name_space_nodes = new utils::Linked_List <Ast_Node_Name_Space*>();
         implicit_values = new utils::Linked_List <char*>();
@@ -244,6 +244,24 @@ parser::Ast_Node_Name_Space* parser::Ast_Control::getNameSpaceNodeFromNameSpace(
     for (int _ = 0; _ < name_space_nodes->count; _++)
 
         if (name_space_nodes->operator[](_)->name_space == __name_space) return name_space_nodes->operator[](_);
+
+    return NULL;
+
+}
+
+parser::Ast_Node_Name_Space* parser::Ast_Control::getNameSpaceNodeFromNameSpaceScope(utils::Linked_List <char*>* __scope) {
+
+    utils::Linked_List <char*>* _current_scope;
+
+    for (int _ = 0; _ < name_space_nodes->count; _++) {
+
+        _current_scope = name_space_nodes->operator[](_)->name_space->scope;
+
+        if (*_current_scope != __scope) continue;
+
+        return name_space_nodes->operator[](_);
+
+    }
 
     return NULL;
 
@@ -296,8 +314,8 @@ void parser::Ast_Control::generate() {
 }
 
 
-void parser::setupAst(Tokenizer_Control* __tokenizer_control, bool __debug_mode) {
-    ast_control = new Ast_Control(__tokenizer_control, __debug_mode);
+void parser::setUpAst(bool __debug_mode) {
+    ast_control = new Ast_Control(__debug_mode);
     name_space_control = new Name_Space_Control();
 }
 

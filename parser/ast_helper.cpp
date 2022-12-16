@@ -444,6 +444,8 @@ int parser_helper::getPrimitiveTypeSize(int __token_id) {
 
     new parser::Exception_Handle("Primitive Type not defined");
 
+    return -1;
+
 }
 
 

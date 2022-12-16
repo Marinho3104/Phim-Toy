@@ -1,33 +1,12 @@
 
-int j;
+namespace built_in {
 
-namespace kk {
+  struct Byte {
 
-  byte l;
-
-  struct Test {
-
-    int k, l, o;
-
-    void func_test() {
-
-      int l;
-
-      12 + l * l;
-
-    }
+    
 
   };
 
-  void func() {
-
-    byte ol, k, kk, mk;
-
-    func();
-
-  }
-
-  Test ola;
 
 }
 

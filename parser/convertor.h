@@ -21,9 +21,9 @@ namespace parser {
     struct Convertor {
 
         utils::Linked_List <byte_code::Byte_Code_Block*>* byte_code_blocks;
-        bool built_in, debug_mode;
+        bool debug_mode;
 
-        ~Convertor(); Convertor(bool, bool);
+        ~Convertor(); Convertor(bool);
 
         void printDebugInformation(const char*);
 
@@ -31,13 +31,13 @@ namespace parser {
 
         void setBlocks();
 
-        int setBlock(Ast_Node_Function_Declaration*);
+        void setBlock(Ast_Node_Function_Declaration*);
 
         byte_code::Compiled_Byte_Code* getCompiledByteCode();
 
     };
 
-    void setUpConvertor(bool, bool);
+    void setUpConvertor(bool);
 
     void cleanConvertor();
 

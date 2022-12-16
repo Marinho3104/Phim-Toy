@@ -23,6 +23,8 @@ namespace parser {
 
 
     extern Name_Space_Control* name_space_control;
+    extern Tokenizer_Control* tokenizer_control;
+    extern Ast_Control* built_in_ast_control;
     extern Ast_Control* ast_control;
 
 
@@ -87,18 +89,19 @@ namespace parser {
         utils::Linked_List <Ast_Node_Name_Space*>* name_space_chain;
         utils::Linked_List <Ast_Node_Code_Block*>* code_block_chain;
 
-        Tokenizer_Control* tokenizer_control;
         int current_token_position;
         bool debug_mode;
 
 
-        ~Ast_Control(); Ast_Control(Tokenizer_Control*, bool);
+        ~Ast_Control(); Ast_Control(bool);
 
         Token* getToken(int); void printDebugInfo(const char*);
 
         void addNameSpaceNode(Ast_Node_Name_Space*);
 
         Ast_Node_Name_Space* getNameSpaceNodeFromNameSpace(Name_Space*);
+
+        Ast_Node_Name_Space* getNameSpaceNodeFromNameSpaceScope(utils::Linked_List <char*>*);
 
         void addNameSpaceToChain(Name_Space*); void addNameSpaceToChain(Ast_Node_Name_Space*); void popNameSpaceFromChain();
 
@@ -110,7 +113,7 @@ namespace parser {
 
     };
 
-    void setupAst(Tokenizer_Control*, bool);
+    void setUpAst(bool);
 
     void cleanAst();
 

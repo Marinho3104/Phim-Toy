@@ -10,7 +10,7 @@
 
 parser::Convertor::~Convertor() { delete byte_code_blocks; }
 
-parser::Convertor::Convertor(bool __built_in, bool __debug_mode) : built_in(__built_in), debug_mode(__debug_mode) {
+parser::Convertor::Convertor(bool __debug_mode) : debug_mode(__debug_mode) {
     byte_code_blocks = new utils::Linked_List <byte_code::Byte_Code_Block*>();
 }
 
@@ -60,7 +60,7 @@ void parser::Convertor::setBlocks() {
 
 }
 
-int parser::Convertor::setBlock(Ast_Node_Function_Declaration* __function_declaration) {
+void parser::Convertor::setBlock(Ast_Node_Function_Declaration* __function_declaration) {
 
     utils::Linked_List <byte_code::Byte_Code*>* _byte_code = new utils::Linked_List <byte_code::Byte_Code*>(), *_temp;
 
@@ -102,7 +102,7 @@ byte_code::Compiled_Byte_Code* parser::Convertor::getCompiledByteCode() {
 
 }
 
-void parser::setUpConvertor(bool __built_in, bool __debug_mode) { convertor = new Convertor(__built_in, __debug_mode); }
+void parser::setUpConvertor(bool __debug_mode) { convertor = new Convertor(__debug_mode); }
 
 void parser::cleanConvertor() { delete convertor; }
 

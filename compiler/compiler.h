@@ -3,17 +3,13 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
-namespace parser {
-
-    struct Tokenizer_Control;
-
-}
-
 namespace compiler {
 
-    struct Compiler_Control {
+    // Forward
+    struct Built_In;
 
-        parser::Tokenizer_Control* tokenizer_control;
+
+    struct Compiler_Control {
 
         char* code;
 
@@ -25,6 +21,7 @@ namespace compiler {
 
     struct Compiler {
 
+        Built_In* built_in;
         char* code;
 
         ~Compiler(); Compiler(char*);
