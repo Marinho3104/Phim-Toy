@@ -65,6 +65,7 @@ parser_helper::Type_Information* parser_helper::Type_Information::generate() {
     int _id = parser::ast_control->getToken(0)->id;
 
     if (parser::isPrimitiveTokenId(_id));
+    else if (parser::isPrimitiveTokenId(_id)) _id = getTokenTypeIdFromImplicitValueTokenType(_id);
     else if (_id == TOKEN_IDENTIFIER) {
 
         int _declaration_id = parser_helper::getDeclarationId(parser::ast_control->getToken(0)->phr, 0);
@@ -119,27 +120,54 @@ int parser_helper::Type_Information::getByteSize() {
 }
 
 
-parser_helper::Expression_Variable_Declaration::~Expression_Variable_Declaration() { if (expression) delete expression; }
+parser_helper::Expression_Variable_Declaration::~Expression_Variable_Declaration() { if (declaration) delete declaration; if (expression) delete expression; }
 
 parser_helper::Expression_Variable_Declaration::Expression_Variable_Declaration(
     parser::Ast_Node_Variable_Declaration* __declaration, Expression_Variable_Declaration* __expression, int __operation_id) 
         : declaration(__declaration), expression(__expression), operator_id(__operation_id) {}
 
+void parser_helper::Expression_Variable_Declaration::replace(parser_helper::Type_Information* __type_information, int __position) {
+
+    Expression_Variable_Declaration* _expression = this, *_cpy = NULL;
+
+    for (int _ = 0; _ < __position; _++)
+
+        _expression = _expression->expression;
+
+    _expression->declaration->type = __type_information;
+
+    _cpy = _expression->expression;
+
+    if (_expression->expression->expression) {  _expression->expression = _expression->expression->expression; }
+
+    else _expression->expression = NULL;
+
+    _expression->expression = NULL;
+
+    delete _cpy;
+
+}
+
 parser_helper::Expression_Variable_Declaration* parser_helper::Expression_Variable_Declaration::generate(parser::Ast_Node_Expression* __expression_node) {
 
-    parser::Ast_Node_Variable_Declaration* _declaration;
+    parser_helper::Type_Information* _type_information;
 
     switch (__expression_node->value->node_id)
     {
-    case AST_NODE_VALUE: break;
-    case AST_NODE_VARIABLE: _declaration = ((parser::Ast_Node_Variable*) __expression_node->value)->declaration; break;
-    case AST_NODE_FUNCTION_CALL: break;
+    case AST_NODE_VALUE: _type_information = ((parser::Ast_Node_Value*) __expression_node->value)->type; break;
+    case AST_NODE_VARIABLE: _type_information = ((parser::Ast_Node_Variable*) __expression_node->value)->declaration->type; break;
+    case AST_NODE_FUNCTION_CALL: _type_information = ((parser::Ast_Node_Function_Call*) __expression_node->value)->declaration->return_type; break;
     case AST_NODE_POINTER_OPERATOR: break;
     case AST_NODE_PARENTHESIS: break;
     case AST_NODE_ASSIGNMENT: break;
     default:
         break;
     }    
+
+    parser::Ast_Node_Variable_Declaration* _declaration = new parser::Ast_Node_Variable_Declaration(
+        -1, _type_information
+    );
+    _declaration->delete_type = 0;
 
     parser_helper::Expression_Variable_Declaration* _expression_variable_declaration = new parser_helper::Expression_Variable_Declaration(
         _declaration,
@@ -467,6 +495,20 @@ void parser_helper::addStructDeclaration(parser::Ast_Node_Struct_Declaration* __
 
 }
 
+int parser_helper::getTokenTypeIdFromImplicitValueTokenType(int __token_id) {
+
+    switch (__token_id)
+    {
+    case TOKEN_NUMBERINT: return TOKEN_TYPE_INT; break;
+    default: break;
+    }
+
+    parser::Exception_Handle("Implicit token id not done");
+
+    return -1;
+
+}
+
 int parser_helper::getPrimitiveTypeSize(int __token_id) {
 
     switch (__token_id)
@@ -488,30 +530,45 @@ parser::Ast_Node_Variable_Declaration* parser_helper::getTypeInformationFromExpr
     *_temp = _expression_variable_declaration;
     parser_helper::Type_Information* _type_information;
     int _current_expression_priority = 2;
+    int _count;
 
     while(_current_expression_priority < 6 && _expression_variable_declaration->expression) {
 
+        _count = 0;
+
         while(_temp) {
 
-            if (parser::isPrimitiveTokenId(_temp->declaration->type->token_id)) {
+            if (expressionPriority(_temp->operator_id) == _current_expression_priority) {
 
-                _type_information = compiler::Built_In::getReturnTypeOfExpression(_temp);
+                if (parser::isPrimitiveTokenId(_temp->declaration->type->token_id)) {
 
-                std::cout << _type_information << std::endl;
+                    _type_information = compiler::Built_In::getReturnTypeOfExpression(_temp);
 
-                exit(1);
+                    _expression_variable_declaration->replace(_type_information, _count);
+
+                    // exit(1);
+
+                }
+
+                else {
+
+                }
 
             }
 
-            else {
-
-            }
+            _temp = _temp->expression;
+            _count++;
 
         }
+
+        _current_expression_priority++;
+
+        _temp = _expression_variable_declaration;
 
     }
 
     parser::Ast_Node_Variable_Declaration* _return = _expression_variable_declaration->declaration;
+    _expression_variable_declaration->declaration = NULL;
 
     delete _expression_variable_declaration;
 

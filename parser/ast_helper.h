@@ -46,6 +46,8 @@ namespace parser_helper {
 
         ~Expression_Variable_Declaration(); Expression_Variable_Declaration(parser::Ast_Node_Variable_Declaration*, Expression_Variable_Declaration*, int);
 
+        void replace(parser_helper::Type_Information*, int);
+
         static Expression_Variable_Declaration* generate(parser::Ast_Node_Expression*);
 
     };
@@ -75,6 +77,8 @@ namespace parser_helper {
     void addFunctionDeclaration(parser::Ast_Node_Function_Declaration*);
     
     void addStructDeclaration(parser::Ast_Node_Struct_Declaration*);
+
+    int getTokenTypeIdFromImplicitValueTokenType(int);
 
     int getPrimitiveTypeSize(int);
 

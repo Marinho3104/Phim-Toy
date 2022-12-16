@@ -320,7 +320,7 @@ parser::Ast_Node_Variable_Declaration* parser::Ast_Node_Code_Block::getVariableD
 
 }
 
-parser::Ast_Node_Function_Declaration* parser::Ast_Node_Code_Block::getFunctionDeclaration(int __declaration_id, utils::Linked_List <Ast_Node*>* __parameters) {
+parser::Ast_Node_Function_Declaration* parser::Ast_Node_Code_Block::getFunctionDeclaration(int __declaration_id, utils::Linked_List <Ast_Node*>* __parameters) { 
 
     parser::Ast_Node_Function_Declaration* _function_declaration = declaration_tracker->getFunctionDeclaration(__declaration_id, __parameters);
 
@@ -356,10 +356,10 @@ parser::Ast_Node_Struct_Declaration* parser::Ast_Node_Code_Block::getStructDecla
 }
 
 
-parser::Ast_Node_Variable_Declaration::~Ast_Node_Variable_Declaration() { delete type; }
+parser::Ast_Node_Variable_Declaration::~Ast_Node_Variable_Declaration() { if (delete_type) delete type; }
 
 parser::Ast_Node_Variable_Declaration::Ast_Node_Variable_Declaration(int __declaration_id, parser_helper::Type_Information* __type) 
-    : Ast_Node(AST_NODE_VARIABLE_DECLARATION, __declaration_id), type(__type) {}
+    : Ast_Node(AST_NODE_VARIABLE_DECLARATION, __declaration_id), type(__type), delete_type(1) {}
 
 utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Variable_Declaration::generate() {
 
@@ -867,10 +867,16 @@ bool parser::Ast_Node_Expression::checkNext(Ast_Node** __value) {
 }
 
 
-parser::Ast_Node_Value::~Ast_Node_Value() {} 
+parser::Ast_Node_Value::~Ast_Node_Value() { delete type; } 
 
 parser::Ast_Node_Value::Ast_Node_Value(int __implicit_value_position, int __token_id)
-    : Ast_Node(AST_NODE_VALUE, -1), implicit_value_position(__implicit_value_position), token_id(__token_id) {}
+    : Ast_Node(AST_NODE_VALUE, -1), implicit_value_position(__implicit_value_position), token_id(__token_id) {
+
+        type = new parser_helper::Type_Information(
+            NULL, NULL, parser_helper::getTokenTypeIdFromImplicitValueTokenType(token_id), NULL
+        );
+
+    }
 
 parser::Ast_Node_Value* parser::Ast_Node_Value::generate() {
 
@@ -966,6 +972,10 @@ parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate() {
     
     if (_function_call_name_space) { ast_control->popNameSpaceFromChain(); ast_control->popCodeBlockFromChain(); }
 
+    for (int _ = 0; _ < _parameters_variable_declarations->count; _++)
+
+        delete _parameters_variable_declarations->operator[](_);
+        
     _parameters_variable_declarations->destroy_content = 0; delete _parameters_variable_declarations;
 
     ast_control->printDebugInfo("Ast Node Function Call End");

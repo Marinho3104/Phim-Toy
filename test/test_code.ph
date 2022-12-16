@@ -2,13 +2,14 @@
 
 namespace meu_espaco {
 
-    byte* k;
+    byte k, lol;
+    int ola;
 
-    int gg(int*) {
+    int gg(int) {
 
         int j;
 
-        gg(k);
+        gg(12 + 12);
 
     }
 

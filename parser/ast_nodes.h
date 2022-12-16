@@ -81,6 +81,7 @@ namespace parser {
     struct Ast_Node_Variable_Declaration : public Ast_Node {
 
         parser_helper::Type_Information* type;
+        bool delete_type;
 
         ~Ast_Node_Variable_Declaration(); Ast_Node_Variable_Declaration(int, parser_helper::Type_Information*);
 
@@ -148,6 +149,7 @@ namespace parser {
     struct Ast_Node_Value : public Ast_Node {
 
         int implicit_value_position, token_id;
+        parser_helper::Type_Information* type;
 
         ~Ast_Node_Value(); Ast_Node_Value(int, int);
 

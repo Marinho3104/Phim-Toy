@@ -7,6 +7,10 @@ namespace utils { template <typename> struct Linked_List; }
 
 namespace parser {
 
+    struct Ast_Node_Function_Declaration;
+    struct Ast_Node_Variable_Declaration;
+    struct Ast_Node_Struct_Declaration;
+    struct Ast_Node_Name_Space;
     struct Ast_Node_Expression;
     struct Name_Space_Control;
     struct Tokenizer_Control;
@@ -37,6 +41,8 @@ namespace compiler {
         char* getBuiltInCode();
 
         void generate();
+
+        static parser::Ast_Node_Function_Declaration* getFunctionDeclaration(parser_helper::Expression_Variable_Declaration*);
 
         static parser_helper::Type_Information* getReturnTypeOfExpression(parser_helper::Expression_Variable_Declaration*);    
 
