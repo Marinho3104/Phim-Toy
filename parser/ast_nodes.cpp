@@ -798,6 +798,7 @@ int parser::Ast_Node_Struct_Declaration::getByteSize() {
 parser::Ast_Node_Expression::~Ast_Node_Expression() {
     if (value) value->~Ast_Node(); free(value);
     if (expression) expression->~Ast_Node_Expression(); free(expression);
+    delete result_type;
 }
  
 parser::Ast_Node_Expression::Ast_Node_Expression(Ast_Node* __value, Ast_Node_Expression* __expression, int __operation)
@@ -830,6 +831,10 @@ parser::Ast_Node_Expression* parser::Ast_Node_Expression::generate(int __value_n
 
     parser::Ast_Node_Expression* _expression_node = (parser::Ast_Node_Expression*) malloc(sizeof(parser::Ast_Node_Expression));
     new (_expression_node) parser::Ast_Node_Expression(_value, _expression, _operator_id);
+
+    _expression_node->result_type = parser_helper::getVariableDeclarationTypeFromExpression(
+        _expression_node
+    );
 
     ast_control->printDebugInfo("Ast Node Expression End");
 
@@ -873,11 +878,11 @@ parser::Ast_Node_Value::Ast_Node_Value(int __implicit_value_position, int __toke
     : Ast_Node(AST_NODE_VALUE, -1), implicit_value_position(__implicit_value_position), token_id(__token_id) {
 
         type = new parser_helper::Type_Information(
-            NULL, NULL, parser_helper::getTokenTypeIdFromImplicitValueTokenType(token_id), NULL
+            NULL, NULL, parser_helper::getTokenTypeIdFromImplicitValueTokenType (token_id), NULL
         );
 
     }
-
+ 
 parser::Ast_Node_Value* parser::Ast_Node_Value::generate() {
 
     ast_control->printDebugInfo("Ast Node Value Created");
@@ -971,11 +976,7 @@ parser::Ast_Node_Function_Call* parser::Ast_Node_Function_Call::generate() {
     new (_function_call_node) parser::Ast_Node_Function_Call(_declaration_id, _parameters_expressions, _function_declaration);
     
     if (_function_call_name_space) { ast_control->popNameSpaceFromChain(); ast_control->popCodeBlockFromChain(); }
-
-    for (int _ = 0; _ < _parameters_variable_declarations->count; _++)
-
-        delete _parameters_variable_declarations->operator[](_);
-        
+ 
     _parameters_variable_declarations->destroy_content = 0; delete _parameters_variable_declarations;
 
     ast_control->printDebugInfo("Ast Node Function Call End");
@@ -1021,17 +1022,28 @@ utils::Linked_List <parser::Ast_Node*>* parser::Ast_Node_Function_Call::getParam
 
     for (int _ = 0; _ < __expression_parameters->count; _++)
 
-        _parameters_variable_declarations->add(parser_helper::getTypeInformationFromExpression(__expression_parameters->operator[](_)));
+        _parameters_variable_declarations->add(
+            __expression_parameters->operator[](_)->result_type
+        );
 
     return _parameters_variable_declarations;
 
 }
 
 
-parser::Ast_Node_Pointer_Operator::~Ast_Node_Pointer_Operator() { if (value) value->~Ast_Node(); free(value); }
+parser::Ast_Node_Pointer_Operator::~Ast_Node_Pointer_Operator() { if (value) value->~Ast_Node(); free(value); delete type; }
 
-parser::Ast_Node_Pointer_Operator::Ast_Node_Pointer_Operator(int __pointer_level, Ast_Node* __value) 
-    : Ast_Node(AST_NODE_POINTER_OPERATOR, -1), pointer_level(__pointer_level), value(__value) {}
+parser::Ast_Node_Pointer_Operator::Ast_Node_Pointer_Operator(int __pointer_level, Ast_Node* __value, parser_helper::Type_Information* __type) 
+    : Ast_Node(AST_NODE_POINTER_OPERATOR, -1), pointer_level(__pointer_level), value(__value), type(__type) 
+        { 
+                type->pointer_level = __type->pointer_level;
+                type->reference_level = __type->reference_level;
+            
+                type->pointer_level += pointer_level; 
+                
+                if (type->pointer_level < 0) new parser::Exception_Handle(ast_control, ast_control->getToken(0), "Error in pointer operation"); 
+                
+}
 
 parser::Ast_Node_Pointer_Operator* parser::Ast_Node_Pointer_Operator::generate() {
 
@@ -1039,10 +1051,11 @@ parser::Ast_Node_Pointer_Operator* parser::Ast_Node_Pointer_Operator::generate()
     
     int _pointer_level = 0;
     Ast_Node* _value;
+    parser_helper::Type_Information* _type = NULL;
 
     while(ast_control->getToken(0)->id == TOKEN_POINTER || ast_control->getToken(0)->id == TOKEN_ADDRESS) {
 
-        _pointer_level += ast_control->getToken(0)->id == TOKEN_POINTER ? 1 : -1;
+        _pointer_level += ast_control->getToken(0)->id == TOKEN_POINTER ? -1 : 1;
 
         ast_control->current_token_position++;
 
@@ -1050,16 +1063,26 @@ parser::Ast_Node_Pointer_Operator* parser::Ast_Node_Pointer_Operator::generate()
     
     switch (parser_helper::getNodeType())
     {
-    case AST_NODE_VARIABLE: _value = Ast_Node_Variable::generate(); break;
+    case AST_NODE_VARIABLE: 
+        _value = Ast_Node_Variable::generate(); 
+        _type = ((parser::Ast_Node_Variable*) _value)->declaration->type;
+        break;
     // case AST_NODE_VALUE: _value = Ast_Node_Value::generate(); break;
-    case AST_NODE_FUNCTION_CALL: _value = Ast_Node_Function_Call::generate(); break;
-    case AST_NODE_PARENTHESIS: _value = Ast_Node_Parenthesis::generate(); break;
+    case AST_NODE_FUNCTION_CALL: 
+        _value = Ast_Node_Function_Call::generate(); 
+        _type = ((parser::Ast_Node_Function_Call*) _value)->declaration->return_type;
+        break;
+    case AST_NODE_PARENTHESIS: 
+        _value = Ast_Node_Parenthesis::generate(); 
+        // _type = ((parser::Ast_Node_Parenthesis*) _value) 
+        // parser_helper::getVariableDeclarationTypeFromExpression
+        break;
     default: new Exception_Handle(ast_control, ast_control->getToken(0), "Node not supported in Pointer Operator");
     }
 
     parser::Ast_Node_Pointer_Operator* _pointer_operator_node = (parser::Ast_Node_Pointer_Operator*) malloc(sizeof(parser::Ast_Node_Pointer_Operator));
     new (_pointer_operator_node) parser::Ast_Node_Pointer_Operator(
-        _pointer_level, _value
+        _pointer_level, _value, new parser_helper::Type_Information(_type->name_space, _type->declaration, _type->token_id, NULL)
     );
 
     ast_control->printDebugInfo("Ast Node Pointer Operator End");

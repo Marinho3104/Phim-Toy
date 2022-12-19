@@ -157,8 +157,8 @@ parser_helper::Expression_Variable_Declaration* parser_helper::Expression_Variab
     case AST_NODE_VALUE: _type_information = ((parser::Ast_Node_Value*) __expression_node->value)->type; break;
     case AST_NODE_VARIABLE: _type_information = ((parser::Ast_Node_Variable*) __expression_node->value)->declaration->type; break;
     case AST_NODE_FUNCTION_CALL: _type_information = ((parser::Ast_Node_Function_Call*) __expression_node->value)->declaration->return_type; break;
-    case AST_NODE_POINTER_OPERATOR: break;
-    case AST_NODE_PARENTHESIS: break;
+    case AST_NODE_POINTER_OPERATOR: _type_information = ((parser::Ast_Node_Pointer_Operator*) __expression_node->value)->type; break;
+    case AST_NODE_PARENTHESIS: _type_information = ((parser::Ast_Node_Parenthesis*) __expression_node->value)->expression->result_type->type; break;
     case AST_NODE_ASSIGNMENT: break;
     default:
         break;
@@ -524,7 +524,7 @@ int parser_helper::getPrimitiveTypeSize(int __token_id) {
 
 }
 
-parser::Ast_Node_Variable_Declaration* parser_helper::getTypeInformationFromExpression(parser::Ast_Node_Expression* __expression_node) {
+parser::Ast_Node_Variable_Declaration* parser_helper::getVariableDeclarationTypeFromExpression(parser::Ast_Node_Expression* __expression_node) {
 
     parser_helper::Expression_Variable_Declaration* _expression_variable_declaration = parser_helper::Expression_Variable_Declaration::generate(__expression_node), 
     *_temp = _expression_variable_declaration;

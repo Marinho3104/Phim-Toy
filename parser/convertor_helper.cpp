@@ -121,6 +121,22 @@ utils::Linked_List <byte_code::Byte_Code*>* parser_helper::getByteCodeFromNode(p
         );
 
         break;
+
+    case AST_NODE_POINTER_OPERATOR:
+
+        _byte_code = getByteCodeFromPointerOperator(
+            (parser::Ast_Node_Pointer_Operator*) __node
+        );
+
+        break;
+
+    case AST_NODE_PARENTHESIS:
+
+        _byte_code = getByteCodeFromParenthesis(
+            (parser::Ast_Node_Parenthesis*) __node
+        );
+
+        break;
     
     default: 
         std::cout << __node->node_id << std::endl;
@@ -301,4 +317,48 @@ byte_code::Byte_Code* parser_helper::getByteCodeFromFunctionCall(parser::Ast_Nod
     return _function_call;
 
 }
+
+utils::Linked_List <byte_code::Byte_Code*>* parser_helper::getByteCodeFromPointerOperator(parser::Ast_Node_Pointer_Operator* __pointer_operator_node) {
+
+    parser::convertor->printDebugInformation("Byte Code for node Pointer Operator");
+
+    utils::Linked_List <byte_code::Byte_Code*>* _byte_codes = new utils::Linked_List <byte_code::Byte_Code*>();
+
+    utils::Linked_List <byte_code::Byte_Code*>* _call_byte_code = getByteCodeFromNode(__pointer_operator_node->value);
+
+    _byte_codes->join(
+        _call_byte_code
+    );
+
+    _call_byte_code->destroy_content = 0; delete _call_byte_code;
+
+    byte_code::Byte_Code* _pointer_level = (byte_code::Byte_Code*) malloc(sizeof(byte_code::Byte_Code));
+
+    new (_pointer_level) byte_code::Byte_Code(
+        __pointer_operator_node->pointer_level > 0 ? BYTE_CODE_POINTER_LEVEL_UP : BYTE_CODE_POINTER_LEVEL_DOWN, 
+        __pointer_operator_node->pointer_level > 0 ? __pointer_operator_node->pointer_level : __pointer_operator_node->pointer_level * -1
+    );
+
+    _byte_codes->add(_pointer_level);
+
+    parser::convertor->printDebugInformation("Byte Code for node Pointer Operator End");
+
+    return _byte_codes;
+
+}
+
+utils::Linked_List <byte_code::Byte_Code*>* parser_helper::getByteCodeFromParenthesis(parser::Ast_Node_Parenthesis* __parenthesis_node) {
+
+    parser::convertor->printDebugInformation("Byte Code for node Parenthesis");
+
+    utils::Linked_List <byte_code::Byte_Code*>* _byte_code = getByteCodeFromExpression(
+        __parenthesis_node->expression
+    );
+
+    parser::convertor->printDebugInformation("Byte Code for node Parenthesis End");
+
+    return _byte_code;
+
+}
+
 

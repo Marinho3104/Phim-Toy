@@ -33,6 +33,10 @@ namespace parser_helper {
 
     byte_code::Byte_Code* getByteCodeFromFunctionCall(parser::Ast_Node_Function_Call*);
 
+    utils::Linked_List <byte_code::Byte_Code*>* getByteCodeFromPointerOperator(parser::Ast_Node_Pointer_Operator*);
+
+    utils::Linked_List <byte_code::Byte_Code*>* getByteCodeFromParenthesis(parser::Ast_Node_Parenthesis*);
+
 
 
 

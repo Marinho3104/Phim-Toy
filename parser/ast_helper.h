@@ -82,7 +82,7 @@ namespace parser_helper {
 
     int getPrimitiveTypeSize(int);
 
-    parser::Ast_Node_Variable_Declaration* getTypeInformationFromExpression(parser::Ast_Node_Expression*);
+    parser::Ast_Node_Variable_Declaration* getVariableDeclarationTypeFromExpression(parser::Ast_Node_Expression*);
 
     int expressionPriority(int);    
 

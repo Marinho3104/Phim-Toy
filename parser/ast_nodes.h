@@ -132,8 +132,9 @@ namespace parser {
 
     struct Ast_Node_Expression : public Ast_Node {
 
-        Ast_Node* value;
+        Ast_Node_Variable_Declaration* result_type;
         Ast_Node_Expression* expression;
+        Ast_Node* value;
         int operator_id;
 
         ~Ast_Node_Expression(); Ast_Node_Expression(Ast_Node*, Ast_Node_Expression*, int);
@@ -188,7 +189,9 @@ namespace parser {
         int pointer_level;
         Ast_Node* value;
 
-        ~Ast_Node_Pointer_Operator(); Ast_Node_Pointer_Operator(int, Ast_Node*);
+        parser_helper::Type_Information* type;
+
+        ~Ast_Node_Pointer_Operator(); Ast_Node_Pointer_Operator(int, Ast_Node*, parser_helper::Type_Information*);
 
         static Ast_Node_Pointer_Operator* generate();
 
